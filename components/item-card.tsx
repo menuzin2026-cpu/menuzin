@@ -43,7 +43,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
   }
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       {/* Pop-up confirmation */}
       {showPopup && (
         <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none popup-fade-animation">
