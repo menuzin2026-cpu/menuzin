@@ -63,28 +63,39 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
       )}
 
       <div
-        className="rounded-2xl overflow-hidden border cursor-pointer backdrop-blur-xl"
+        className="rounded-2xl overflow-hidden border cursor-pointer backdrop-blur-xl flex flex-col h-full"
         style={{
           background: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: `0 0 20px var(--auto-primary-glow, rgba(128, 0, 32, 0.35)), 0 8px 32px 0 var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)`
+          boxShadow: `0 0 20px var(--auto-primary-glow, rgba(128, 0, 32, 0.35)), 0 8px 32px 0 var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)`,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          minHeight: '100%',
         }}
         onClick={() => onItemClick(item.id)}
       >
-        {/* Image */}
-        <div className="aspect-square w-full relative">
+        {/* Image Container - Fixed Height */}
+        <div className="w-full h-40 relative flex items-center justify-center" style={{
+          backgroundColor: 'var(--auto-surface-bg-2, rgba(255, 255, 255, 0.05))',
+          minHeight: '160px',
+        }}>
           {item.imageMediaId ? (
             <Image
               src={`/assets/${item.imageMediaId}`}
               alt={getLocalizedText(item, currentLang)}
               fill
-              className="object-cover"
+              className="object-contain"
               sizes="(max-width: 768px) 50vw, 33vw"
               unoptimized={true}
               priority={priority}
               loading={priority ? 'eager' : 'lazy'}
+              style={{
+                objectFit: 'contain',
+                padding: '8px',
+              }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-white/60 bg-gradient-to-br from-[#5C0015]/30 to-[#800020]/30">
@@ -107,8 +118,8 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
           )}
         </div>
 
-        {/* Content */}
-        <div className="p-2 backdrop-blur-sm" style={{
+        {/* Content - Fixed at bottom */}
+        <div className="p-2 backdrop-blur-sm flex-shrink-0" style={{
           background: 'rgba(255, 255, 255, 0.05)'
         }}>
           <h3 

@@ -882,7 +882,7 @@ function MenuPageContent() {
                   </div>
                   
                   {/* Items Grid */}
-                  <div className="grid grid-cols-2 gap-1.5 sm:gap-3 pb-6 w-full">
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-3 pb-6 w-full items-stretch">
                     {items.map((item, index) => {
                       const basketItem = Array.isArray(basket) ? basket.find((bi) => bi?.id === item?.id) : null
                       // Only prioritize first 2 items for faster initial load
