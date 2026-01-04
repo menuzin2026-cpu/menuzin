@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,6 +54,7 @@ export default function FeedbackPage() {
 
       if (response.ok) {
         alert('Thank you for your feedback!')
+        // Use client-side routing to preserve state
         router.push(`/${slug}/menu`)
       } else {
         alert('Failed to submit feedback. Please try again.')
@@ -99,9 +101,9 @@ export default function FeedbackPage() {
             boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
           }}
         >
-          <button
-            onClick={() => router.push(`/${slug}/menu`)}
-            className="mb-4 text-sm sm:text-base transition-colors"
+          <Link
+            href={`/${slug}/menu`}
+            className="mb-4 text-sm sm:text-base transition-colors inline-block"
             style={{ color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))' }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = 'var(--auto-text-primary, #FFFFFF)'
@@ -111,7 +113,7 @@ export default function FeedbackPage() {
             }}
           >
             ← Back to Menu
-          </button>
+          </Link>
           <h1 
             className="text-2xl sm:text-3xl font-bold mb-2"
             style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}

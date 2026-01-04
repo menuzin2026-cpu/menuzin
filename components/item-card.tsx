@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Plus, Check } from 'lucide-react'
 import { Language } from '@/lib/i18n'
 import { getLocalizedText } from '@/lib/i18n'
 import { formatPrice } from '@/lib/utils'
-import { OptimizedImage } from './optimized-image'
 
 interface Item {
   id: string
@@ -75,12 +75,13 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
         {/* Image */}
         <div className="aspect-square w-full relative">
           {item.imageMediaId ? (
-            <OptimizedImage
+            <Image
               src={`/assets/${item.imageMediaId}`}
               alt={getLocalizedText(item, currentLang)}
-              className="w-full h-full"
-              aspectRatio="square"
+              fill
+              className="object-cover"
               sizes="(max-width: 768px) 50vw, 33vw"
+              unoptimized={true}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-white/60 bg-gradient-to-br from-[#5C0015]/30 to-[#800020]/30">

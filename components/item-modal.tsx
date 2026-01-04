@@ -1,10 +1,10 @@
 'use client'
 
+import Image from 'next/image'
 import { X } from 'lucide-react'
 import { Language } from '@/lib/i18n'
 import { getLocalizedText, getLocalizedDescription } from '@/lib/i18n'
 import { formatPrice } from '@/lib/utils'
-import { OptimizedImage } from './optimized-image'
 
 interface Item {
   id: string
@@ -58,13 +58,14 @@ export function ItemModal({ item, currentLang, isOpen, onClose }: ItemModalProps
         {/* Image */}
         <div className="w-full aspect-square relative">
           {item.imageMediaId ? (
-            <OptimizedImage
+            <Image
               src={`/assets/${item.imageMediaId}`}
               alt={getLocalizedText(item, currentLang)}
-              className="w-full h-full rounded-t-3xl"
-              aspectRatio="square"
-              priority={true}
+              fill
+              className="object-cover rounded-t-3xl"
               sizes="(max-width: 768px) 100vw, 400px"
+              priority
+              unoptimized={true}
             />
           ) : (
             <div 

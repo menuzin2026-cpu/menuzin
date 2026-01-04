@@ -1,6 +1,6 @@
 'use client'
 
-import { OptimizedImage } from './optimized-image'
+import Image from 'next/image'
 
 interface MenuHeaderProps {
   logoUrl?: string
@@ -19,17 +19,19 @@ export function MenuHeader({ logoUrl }: MenuHeaderProps) {
       <div className="flex items-center justify-center max-w-7xl mx-auto w-full">
         {/* Centered Logo */}
         {logoUrl ? (
-          <img
+          <Image
             src={logoUrl}
             alt="Restaurant Logo"
+            width={120}
+            height={32}
             className="object-contain"
             style={{ 
               height: 'var(--header-logo-size, 32px)',
               width: 'auto',
               maxWidth: '100%'
             }}
-            loading="eager"
-            decoding="async"
+            priority
+            unoptimized={logoUrl.startsWith('/assets/')}
           />
         ) : (
           <div 

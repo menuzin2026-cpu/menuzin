@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 interface PoweredByFooterProps {
   footerLogoUrl?: string | null
 }
@@ -35,11 +37,15 @@ export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
       >
         <span className="text-sm font-medium">Powered by</span>
         {footerLogoUrl && (
-          <img
+          <Image
             src={footerLogoUrl}
             alt="Menuzin"
+            width={60}
+            height={18}
             className="h-4 w-auto object-contain"
             style={{ maxHeight: '18px' }}
+            priority
+            unoptimized={footerLogoUrl.startsWith('/assets/')}
           />
         )}
       </a>
