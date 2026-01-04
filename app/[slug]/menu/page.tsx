@@ -625,7 +625,7 @@ function MenuPageContent() {
         className="fixed left-0 right-0 z-20 px-2 sm:px-4 py-4 w-full"
         style={{
           position: 'fixed',
-          bottom: footerLogoUrl ? 'calc(48px + env(safe-area-inset-bottom, 0))' : 'env(safe-area-inset-bottom, 0)',
+          bottom: footerLogoUrl ? 'calc(24px + env(safe-area-inset-bottom, 0))' : 'env(safe-area-inset-bottom, 0)',
           left: 0,
           right: 0,
           zIndex: 20,
