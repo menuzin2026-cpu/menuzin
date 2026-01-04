@@ -24,72 +24,11 @@ export async function GET(request: NextRequest) {
     console.log('[DEBUG] All restaurants in DB:', JSON.stringify(allRestaurants, null, 2))
 
     // Query by slug - no fallback to first restaurant
-    let restaurant = await prisma.restaurant.findUnique({
-      where: { slug },
-      include: {
-        logo: {
-          select: {
-            id: true,
-            mimeType: true,
-            size: true,
-          },
-        },
-        footerLogo: {
-          select: {
-            id: true,
-            mimeType: true,
-            size: true,
-          },
-        },
-        welcomeBackground: {
-          select: {
-            id: true,
-            mimeType: true,
-            size: true,
-          },
-        },
-      },
-    })
-
-    // DEBUG: Log query result
-    console.log('[DEBUG] Query result for slug "' + slug + '":', restaurant ? 'FOUND' : 'NOT FOUND')
-
-    // Auto-create "legends-restaurant" if it doesn't exist (only for this specific slug)
-    if (!restaurant && slug === 'legends-restaurant') {
-      console.log('[DEBUG] Auto-creating legends-restaurant...')
-      restaurant = await prisma.restaurant.upsert({
-        where: { slug: 'legends-restaurant' },
-        update: {},
-        create: {
-          slug: 'legends-restaurant',
-          nameKu: 'رێستۆرانتی لێجەندز',
-          nameEn: 'Legends Restaurant',
-          nameAr: 'مطعم الأساطير',
-          googleMapsUrl: 'https://maps.google.com',
-          phoneNumber: '+9647501234567',
-          brandColors: {
-            menuGradientStart: '#5C0015',
-            menuGradientEnd: '#800020',
-            headerText: '#FFFFFF',
-            headerIcons: '#FFFFFF',
-            activeTab: '#FFFFFF',
-            inactiveTab: '#CCCCCC',
-            categoryCardBg: '#4A5568',
-            itemCardBg: '#4A5568',
-            itemNameText: '#FFFFFF',
-            itemDescText: '#E2E8F0',
-            priceText: '#FBBF24',
-            dividerLine: '#718096',
-            modalBg: '#2D3748',
-            modalOverlay: 'rgba(0,0,0,0.7)',
-            buttonBg: '#800020',
-            buttonText: '#FFFFFF',
-            feedbackCardBg: '#4A5568',
-            feedbackCardText: '#FFFFFF',
-            welcomeOverlayColor: '#000000',
-            welcomeOverlayOpacity: 0.5,
-          },
-        },
+    // Try to include footerLogo, but handle gracefully if column doesn't exist
+    let restaurant: any = null
+    try {
+      restaurant = await prisma.restaurant.findUnique({
+        where: { slug },
         include: {
           logo: {
             select: {
@@ -114,12 +53,166 @@ export async function GET(request: NextRequest) {
           },
         },
       })
+    } catch (error: any) {
+      // If footerLogo relation fails (column doesn't exist), retry without it
+      if (error?.message?.includes('footerLogo') || error?.code === 'P2021') {
+        console.warn('footerLogo column not found, querying without it')
+        restaurant = await prisma.restaurant.findUnique({
+          where: { slug },
+          include: {
+            logo: {
+              select: {
+                id: true,
+                mimeType: true,
+                size: true,
+              },
+            },
+            welcomeBackground: {
+              select: {
+                id: true,
+                mimeType: true,
+                size: true,
+              },
+            },
+          },
+        })
+      } else {
+        throw error
+      }
+    }
+
+    // DEBUG: Log query result
+    console.log('[DEBUG] Query result for slug "' + slug + '":', restaurant ? 'FOUND' : 'NOT FOUND')
+
+    // Auto-create "legends-restaurant" if it doesn't exist (only for this specific slug)
+    if (!restaurant && slug === 'legends-restaurant') {
+      console.log('[DEBUG] Auto-creating legends-restaurant...')
+      try {
+        restaurant = await prisma.restaurant.upsert({
+          where: { slug: 'legends-restaurant' },
+          update: {},
+          create: {
+            slug: 'legends-restaurant',
+            nameKu: 'رێستۆرانتی لێجەندز',
+            nameEn: 'Legends Restaurant',
+            nameAr: 'مطعم الأساطير',
+            googleMapsUrl: 'https://maps.google.com',
+            phoneNumber: '+9647501234567',
+            brandColors: {
+              menuGradientStart: '#5C0015',
+              menuGradientEnd: '#800020',
+              headerText: '#FFFFFF',
+              headerIcons: '#FFFFFF',
+              activeTab: '#FFFFFF',
+              inactiveTab: '#CCCCCC',
+              categoryCardBg: '#4A5568',
+              itemCardBg: '#4A5568',
+              itemNameText: '#FFFFFF',
+              itemDescText: '#E2E8F0',
+              priceText: '#FBBF24',
+              dividerLine: '#718096',
+              modalBg: '#2D3748',
+              modalOverlay: 'rgba(0,0,0,0.7)',
+              buttonBg: '#800020',
+              buttonText: '#FFFFFF',
+              feedbackCardBg: '#4A5568',
+              feedbackCardText: '#FFFFFF',
+              welcomeOverlayColor: '#000000',
+              welcomeOverlayOpacity: 0.5,
+            },
+          },
+          include: {
+            logo: {
+              select: {
+                id: true,
+                mimeType: true,
+                size: true,
+              },
+            },
+            footerLogo: {
+              select: {
+                id: true,
+                mimeType: true,
+                size: true,
+              },
+            },
+            welcomeBackground: {
+              select: {
+                id: true,
+                mimeType: true,
+                size: true,
+              },
+            },
+          },
+        })
+      } catch (error: any) {
+        // If footerLogo relation fails, retry without it
+        if (error?.message?.includes('footerLogo') || error?.code === 'P2021') {
+          console.warn('footerLogo column not found in upsert, retrying without it')
+          restaurant = await prisma.restaurant.upsert({
+            where: { slug: 'legends-restaurant' },
+            update: {},
+            create: {
+              slug: 'legends-restaurant',
+              nameKu: 'رێستۆرانتی لێجەندز',
+              nameEn: 'Legends Restaurant',
+              nameAr: 'مطعم الأساطير',
+              googleMapsUrl: 'https://maps.google.com',
+              phoneNumber: '+9647501234567',
+              brandColors: {
+                menuGradientStart: '#5C0015',
+                menuGradientEnd: '#800020',
+                headerText: '#FFFFFF',
+                headerIcons: '#FFFFFF',
+                activeTab: '#FFFFFF',
+                inactiveTab: '#CCCCCC',
+                categoryCardBg: '#4A5568',
+                itemCardBg: '#4A5568',
+                itemNameText: '#FFFFFF',
+                itemDescText: '#E2E8F0',
+                priceText: '#FBBF24',
+                dividerLine: '#718096',
+                modalBg: '#2D3748',
+                modalOverlay: 'rgba(0,0,0,0.7)',
+                buttonBg: '#800020',
+                buttonText: '#FFFFFF',
+                feedbackCardBg: '#4A5568',
+                feedbackCardText: '#FFFFFF',
+                welcomeOverlayColor: '#000000',
+                welcomeOverlayOpacity: 0.5,
+              },
+            },
+            include: {
+              logo: {
+                select: {
+                  id: true,
+                  mimeType: true,
+                  size: true,
+                },
+              },
+              welcomeBackground: {
+                select: {
+                  id: true,
+                  mimeType: true,
+                  size: true,
+                },
+              },
+            },
+          })
+        } else {
+          throw error
+        }
+      }
       console.log('[DEBUG] Auto-created legends-restaurant:', restaurant.id)
     }
 
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant not found for slug: ' + slug }, { status: 404 })
     }
+
+    // Safely access footerLogoMediaId and footerLogo - may not exist if migration hasn't run
+    const footerLogoMediaId = (restaurant as any).footerLogoMediaId || null
+    const footerLogo = (restaurant as any).footerLogo || null
 
     return NextResponse.json(
       {
@@ -129,8 +222,8 @@ export async function GET(request: NextRequest) {
         nameAr: restaurant.nameAr,
         logoMediaId: restaurant.logoMediaId,
         logo: restaurant.logo,
-        footerLogoMediaId: restaurant.footerLogoMediaId,
-        footerLogo: restaurant.footerLogo,
+        footerLogoMediaId: footerLogoMediaId,
+        footerLogo: footerLogo,
         welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
         welcomeBackground: restaurant.welcomeBackground,
         welcomeOverlayColor: restaurant.welcomeOverlayColor,

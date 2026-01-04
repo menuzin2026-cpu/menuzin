@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
     }
 
+    // Safely access footerLogoMediaId - may not exist if migration hasn't run
+    const footerLogoMediaId = (restaurant as any).footerLogoMediaId || null
+
     return NextResponse.json({
       nameKu: restaurant.nameKu,
       nameEn: restaurant.nameEn,
@@ -31,7 +34,7 @@ export async function GET(request: NextRequest) {
       welcomeOverlayOpacity: restaurant.welcomeOverlayOpacity,
       welcomeTextEn: restaurant.welcomeTextEn || '',
       logoMediaId: restaurant.logoMediaId,
-      footerLogoMediaId: restaurant.footerLogoMediaId,
+      footerLogoMediaId: footerLogoMediaId,
       welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
     })
   } catch (error) {
@@ -114,8 +117,17 @@ export async function PUT(request: NextRequest) {
     if (body.logoMediaId !== undefined) {
       updateData.logoMediaId = body.logoMediaId
     }
+    // Only update footerLogoMediaId if column exists (migration applied)
+    // Check if column exists by trying to access it safely
     if (body.footerLogoMediaId !== undefined) {
-      updateData.footerLogoMediaId = body.footerLogoMediaId
+      const testValue = (restaurant as any).footerLogoMediaId
+      // If we can access it (even if null), the column exists
+      if (testValue !== undefined) {
+        updateData.footerLogoMediaId = body.footerLogoMediaId
+      } else {
+        // Column doesn't exist yet, skip this field
+        console.warn('footerLogoMediaId column not found, skipping update')
+      }
     }
     if (body.welcomeBackgroundMediaId !== undefined) {
       updateData.welcomeBackgroundMediaId = body.welcomeBackgroundMediaId
@@ -131,6 +143,9 @@ export async function PUT(request: NextRequest) {
       data: updateData,
     })
 
+    // Safely access footerLogoMediaId - may not exist if migration hasn't run
+    const updatedFooterLogoMediaId = (updated as any).footerLogoMediaId || null
+
     return NextResponse.json({
       nameKu: updated.nameKu,
       nameEn: updated.nameEn,
@@ -142,7 +157,7 @@ export async function PUT(request: NextRequest) {
       welcomeOverlayOpacity: updated.welcomeOverlayOpacity,
       welcomeTextEn: updated.welcomeTextEn || '',
       logoMediaId: updated.logoMediaId,
-      footerLogoMediaId: updated.footerLogoMediaId,
+      footerLogoMediaId: updatedFooterLogoMediaId,
       welcomeBackgroundMediaId: updated.welcomeBackgroundMediaId,
     })
   } catch (error: any) {
