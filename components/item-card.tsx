@@ -69,7 +69,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: `0 0 20px var(--auto-primary-glow, rgba(128, 0, 32, 0.35)), 0 8px 32px 0 var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)`,
+          boxShadow: 'none',
           margin: 0,
           padding: 0,
         }}
@@ -144,7 +144,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
                   ? 'var(--auto-lighter-surface, rgba(84, 28, 36, 0.9))' 
                   : 'var(--app-bg, #400810)',
                 color: 'var(--auto-text-primary, #FFFFFF)',
-                boxShadow: 'none'
+                boxShadow: `0 0 12px var(--auto-primary-glow-subtle, rgba(64, 8, 16, 0.25)), 0 4px 16px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), inset 0 1px 0 rgba(255, 255, 255, 0.2)`
               }}
               aria-label="Add to basket"
             >
