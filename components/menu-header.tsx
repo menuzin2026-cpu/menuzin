@@ -6,6 +6,9 @@ interface MenuHeaderProps {
   logoUrl?: string
 }
 
+// Low-quality base64 placeholder for blur effect
+const blurDataURL = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjMyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMzIiIGZpbGw9IiM0MDA4MTAiLz48L3N2Zz4='
+
 export function MenuHeader({ logoUrl }: MenuHeaderProps) {
   return (
     <header 
@@ -31,6 +34,8 @@ export function MenuHeader({ logoUrl }: MenuHeaderProps) {
               maxWidth: '100%'
             }}
             priority
+            placeholder="blur"
+            blurDataURL={blurDataURL}
             unoptimized={logoUrl.startsWith('/assets/')}
           />
         ) : (

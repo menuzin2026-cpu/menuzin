@@ -8,6 +8,9 @@ interface PoweredByFooterProps {
 
 const PLATFORM_URL = 'https://www.menuzin.com'
 
+// Low-quality base64 placeholder for blur effect
+const blurDataURL = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjE4IiBmaWxsPSIjNDAwODEwIi8+PC9zdmc+'
+
 export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
   // Don't render if no logo is provided
   if (!footerLogoUrl) {
@@ -44,7 +47,9 @@ export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
             height={18}
             className="h-4 w-auto object-contain"
             style={{ maxHeight: '18px' }}
-            priority
+            loading="eager"
+            placeholder="blur"
+            blurDataURL={blurDataURL}
             unoptimized={footerLogoUrl.startsWith('/assets/')}
           />
         )}

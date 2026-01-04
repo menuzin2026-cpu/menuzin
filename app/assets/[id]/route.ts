@@ -27,6 +27,7 @@ export async function GET(
       'Content-Type': media.mimeType,
       'Accept-Ranges': 'bytes',
       'Cache-Control': 'public, max-age=31536000, immutable', // Cache for 1 year - media is immutable per ID
+      'CDN-Cache-Control': 'public, max-age=31536000, immutable', // Vercel Edge Cache for 1 year
     }
 
     // Handle Range requests for video streaming (critical for mobile)

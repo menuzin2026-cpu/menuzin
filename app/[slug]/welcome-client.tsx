@@ -229,51 +229,58 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
         >
           {/* Show video ONLY if we confirmed it's a video */}
           {backgroundMimeType?.startsWith('video/') && shouldLoadVideo && !prefersReducedMotion ? (
-            <video
-              ref={videoRef}
-              key={`video-${restaurant.welcomeBackgroundMediaId}-${restaurant.updatedAt || Date.now()}`}
-              autoPlay
-              muted
-              playsInline
-              loop
-              preload="metadata"
-              disablePictureInPicture
-              controls={false}
-              crossOrigin="anonymous"
-              poster={posterImage || undefined}
-              className="w-full h-full object-cover absolute inset-0"
+            <div 
+              className="w-full h-full absolute inset-0"
               style={{ 
-                zIndex: 2, 
-                opacity: 1, 
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-              onLoadedData={() => {
-                const v = videoRef.current
-                if (v) {
-                  v.muted = true
-                  v.play().catch(() => {})
-                }
-              }}
-              onCanPlay={() => {
-                const v = videoRef.current
-                if (v) {
-                  v.muted = true
-                  v.play().catch(() => {})
-                }
-              }}
-              onError={() => {
-                // Silently handle video load errors
+                zIndex: 2,
+                backgroundColor: 'var(--app-bg, #400810)', // Prevent white flash while loading
               }}
             >
-              <source 
-                src={`/assets/${restaurant.welcomeBackgroundMediaId}?v=${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`} 
-                type="video/mp4" 
-              />
-            </video>
+              <video
+                ref={videoRef}
+                key={`video-${restaurant.welcomeBackgroundMediaId}-${restaurant.updatedAt || Date.now()}`}
+                autoPlay
+                muted
+                playsInline
+                loop
+                preload="auto"
+                disablePictureInPicture
+                controls={false}
+                crossOrigin="anonymous"
+                poster={posterImage || undefined}
+                className="w-full h-full object-cover absolute inset-0"
+                style={{ 
+                  opacity: 1, 
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                onLoadedData={() => {
+                  const v = videoRef.current
+                  if (v) {
+                    v.muted = true
+                    v.play().catch(() => {})
+                  }
+                }}
+                onCanPlay={() => {
+                  const v = videoRef.current
+                  if (v) {
+                    v.muted = true
+                    v.play().catch(() => {})
+                  }
+                }}
+                onError={() => {
+                  // Silently handle video load errors
+                }}
+              >
+                <source 
+                  src={`/assets/${restaurant.welcomeBackgroundMediaId}?v=${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`} 
+                  type="video/mp4" 
+                />
+              </video>
+            </div>
           ) : backgroundMimeType && !backgroundMimeType.startsWith('video/') ? (
             /* Show image ONLY if we confirmed it's an image */
             <img
