@@ -18,6 +18,8 @@ model Restaurant {
   nameAr                   String
   logoMediaId              String?
   logo                     Media?    @relation("RestaurantLogo", fields: [logoMediaId], references: [id])
+  footerLogoMediaId        String?
+  footerLogo               Media?    @relation("RestaurantFooterLogo", fields: [footerLogoMediaId], references: [id])
   welcomeBackgroundMediaId String?
   welcomeBackground        Media?    @relation("WelcomeBackground", fields: [welcomeBackgroundMediaId], references: [id])
   welcomeOverlayColor      String    @default("#000000")
@@ -101,29 +103,30 @@ model AdminUser {
 }
 
 model Media {
-  id                 String       @id @default(cuid())
-  mimeType           String
-  bytes              Bytes // BYTEA in PostgreSQL
-  size               Int // Size in bytes
-  createdAt          DateTime     @default(now())
-  restaurantLogos    Restaurant[] @relation("RestaurantLogo")
-  welcomeBackgrounds Restaurant[] @relation("WelcomeBackground")
-  categoryImages     Category[]   @relation("CategoryImage")
-  itemImages         Item[]       @relation("ItemImage")
+  id                    String       @id @default(cuid())
+  mimeType              String
+  bytes                 Bytes // BYTEA in PostgreSQL
+  size                  Int // Size in bytes
+  createdAt             DateTime     @default(now())
+  restaurantLogos       Restaurant[] @relation("RestaurantLogo")
+  restaurantFooterLogos Restaurant[] @relation("RestaurantFooterLogo")
+  welcomeBackgrounds    Restaurant[] @relation("WelcomeBackground")
+  categoryImages        Category[]   @relation("CategoryImage")
+  itemImages            Item[]       @relation("ItemImage")
 }
 
 model UiSettings {
-  id                  String   @id @default("ui-settings-1")
-  sectionTitleSize    Int      @default(22)
-  categoryTitleSize   Int      @default(16)
-  itemNameSize        Int      @default(14)
-  itemDescriptionSize Int      @default(14)
-  itemPriceSize       Int      @default(16)
-  headerLogoSize      Int      @default(32)
-  bottomNavSectionSize Int     @default(13)
-  bottomNavCategorySize Int     @default(13)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                    String   @id @default("ui-settings-1")
+  sectionTitleSize      Int      @default(22)
+  categoryTitleSize     Int      @default(16)
+  itemNameSize          Int      @default(14)
+  itemDescriptionSize   Int      @default(14)
+  itemPriceSize         Int      @default(16)
+  headerLogoSize        Int      @default(32)
+  bottomNavSectionSize  Int      @default(13)
+  bottomNavCategorySize Int      @default(13)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 model Theme {

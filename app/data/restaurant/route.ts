@@ -34,6 +34,13 @@ export async function GET(request: NextRequest) {
             size: true,
           },
         },
+        footerLogo: {
+          select: {
+            id: true,
+            mimeType: true,
+            size: true,
+          },
+        },
         welcomeBackground: {
           select: {
             id: true,
@@ -91,6 +98,13 @@ export async function GET(request: NextRequest) {
               size: true,
             },
           },
+          footerLogo: {
+            select: {
+              id: true,
+              mimeType: true,
+              size: true,
+            },
+          },
           welcomeBackground: {
             select: {
               id: true,
@@ -115,6 +129,8 @@ export async function GET(request: NextRequest) {
         nameAr: restaurant.nameAr,
         logoMediaId: restaurant.logoMediaId,
         logo: restaurant.logo,
+        footerLogoMediaId: restaurant.footerLogoMediaId,
+        footerLogo: restaurant.footerLogo,
         welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
         welcomeBackground: restaurant.welcomeBackground,
         welcomeOverlayColor: restaurant.welcomeOverlayColor,

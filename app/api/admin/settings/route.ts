@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
       welcomeOverlayOpacity: restaurant.welcomeOverlayOpacity,
       welcomeTextEn: restaurant.welcomeTextEn || '',
       logoMediaId: restaurant.logoMediaId,
+      footerLogoMediaId: restaurant.footerLogoMediaId,
       welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
     })
   } catch (error) {
@@ -113,6 +114,9 @@ export async function PUT(request: NextRequest) {
     if (body.logoMediaId !== undefined) {
       updateData.logoMediaId = body.logoMediaId
     }
+    if (body.footerLogoMediaId !== undefined) {
+      updateData.footerLogoMediaId = body.footerLogoMediaId
+    }
     if (body.welcomeBackgroundMediaId !== undefined) {
       updateData.welcomeBackgroundMediaId = body.welcomeBackgroundMediaId
     }
@@ -138,6 +142,7 @@ export async function PUT(request: NextRequest) {
       welcomeOverlayOpacity: updated.welcomeOverlayOpacity,
       welcomeTextEn: updated.welcomeTextEn || '',
       logoMediaId: updated.logoMediaId,
+      footerLogoMediaId: updated.footerLogoMediaId,
       welcomeBackgroundMediaId: updated.welcomeBackgroundMediaId,
     })
   } catch (error: any) {

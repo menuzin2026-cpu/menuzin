@@ -9,6 +9,7 @@ import { ItemCard } from '@/components/item-card'
 import { ItemModal } from '@/components/item-modal'
 import { SearchDrawer } from '@/components/search-drawer'
 import { BasketDrawer } from '@/components/basket-drawer'
+import { PoweredByFooter } from '@/components/powered-by-footer'
 import { Language } from '@/lib/i18n'
 import { getLocalizedText } from '@/lib/i18n'
 import { detectOverflow } from '@/lib/debug-overflow'
@@ -74,6 +75,7 @@ function MenuPageContent() {
   const [isBasketOpen, setIsBasketOpen] = useState(false)
   const [basket, setBasket] = useState<BasketItem[]>([])
   const [restaurant, setRestaurant] = useState<any>(null)
+  const [footerLogoUrl, setFooterLogoUrl] = useState<string | null>(null)
   const [allItems, setAllItems] = useState<Item[]>([])
   const [shouldAnimateBasket, setShouldAnimateBasket] = useState(false)
   const [isFirstAdd, setIsFirstAdd] = useState(false)
@@ -192,6 +194,11 @@ function MenuPageContent() {
         }
         const data = await res.json()
         setRestaurant(data)
+        if (data.footerLogoMediaId) {
+          setFooterLogoUrl(`/assets/${data.footerLogoMediaId}`)
+        } else {
+          setFooterLogoUrl(null)
+        }
       } catch (error) {
         console.error('Error fetching restaurant:', error)
         if (retryCount < 1) {
@@ -615,10 +622,10 @@ function MenuPageContent() {
 
       {/* Fixed Sections and Categories Box - Bottom of page */}
       <div 
-        className="fixed bottom-0 left-0 right-0 z-20 px-2 sm:px-4 py-4 w-full"
+        className="fixed left-0 right-0 z-20 px-2 sm:px-4 py-4 w-full"
         style={{
           position: 'fixed',
-          bottom: 0,
+          bottom: footerLogoUrl ? 'calc(48px + env(safe-area-inset-bottom, 0))' : 'env(safe-area-inset-bottom, 0)',
           left: 0,
           right: 0,
           zIndex: 20,
@@ -920,6 +927,9 @@ function MenuPageContent() {
         currentLang={currentLang}
         onQuantityChange={handleQuantityChange}
       />
+
+      {/* Powered By Footer */}
+      <PoweredByFooter footerLogoUrl={footerLogoUrl} />
     </div>
   )
 }

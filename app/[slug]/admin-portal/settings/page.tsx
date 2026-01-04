@@ -18,6 +18,7 @@ interface RestaurantSettings {
   welcomeOverlayOpacity: number
   welcomeTextEn: string
   logoMediaId: string | null
+  footerLogoMediaId: string | null
   welcomeBackgroundMediaId: string | null
 }
 
@@ -35,14 +36,18 @@ export default function SettingsPage() {
     welcomeOverlayOpacity: 0.5,
     welcomeTextEn: '',
     logoMediaId: null,
+    footerLogoMediaId: null,
     welcomeBackgroundMediaId: null,
   })
   const [isLoading, setIsLoading] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [footerLogoFile, setFooterLogoFile] = useState<File | null>(null)
+  const [footerLogoPreview, setFooterLogoPreview] = useState<string | null>(null)
   const [backgroundFile, setBackgroundFile] = useState<File | null>(null)
   const [backgroundPreview, setBackgroundPreview] = useState<string | null>(null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingFooterLogo, setUploadingFooterLogo] = useState(false)
   const [uploadingBackground, setUploadingBackground] = useState(false)
   const [appBgColor, setAppBgColor] = useState<string>('#400810')
 
@@ -76,6 +81,9 @@ export default function SettingsPage() {
         setSettings(data)
         if (data.logoMediaId) {
           setLogoPreview(`/assets/${data.logoMediaId}`)
+        }
+        if (data.footerLogoMediaId) {
+          setFooterLogoPreview(`/assets/${data.footerLogoMediaId}`)
         }
         if (data.welcomeBackgroundMediaId) {
           setBackgroundPreview(`/assets/${data.welcomeBackgroundMediaId}`)
@@ -122,6 +130,45 @@ export default function SettingsPage() {
     } finally {
       setUploadingLogo(false)
       setLogoFile(null)
+    }
+  }
+
+  const handleFooterLogoUpload = async (file: File) => {
+    setUploadingFooterLogo(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/media/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload footer logo')
+      }
+
+      const { id: mediaId } = await response.json()
+      
+      // Update settings with new footer logo
+      const updateResponse = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...settings, footerLogoMediaId: mediaId, slug }),
+      })
+
+      if (updateResponse.ok) {
+        setSettings({ ...settings, footerLogoMediaId: mediaId })
+        toast.success('Footer logo uploaded successfully!')
+      } else {
+        throw new Error('Failed to update footer logo')
+      }
+    } catch (error: any) {
+      console.error('Error uploading footer logo:', error)
+      toast.error(error.message || 'Failed to upload footer logo')
+    } finally {
+      setUploadingFooterLogo(false)
+      setFooterLogoFile(null)
     }
   }
 
@@ -215,6 +262,19 @@ export default function SettingsPage() {
       }
       reader.readAsDataURL(file)
       handleLogoUpload(file)
+    }
+  }
+
+  const handleFooterLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setFooterLogoFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFooterLogoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      handleFooterLogoUpload(file)
     }
   }
 
@@ -331,6 +391,51 @@ export default function SettingsPage() {
                   </label>
                   {uploadingLogo && (
                     <p className="text-sm text-white/70">Uploading logo...</p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Footer Logo (for &quot;Powered by&quot; bar)
+                </label>
+                <div className="space-y-2">
+                  {footerLogoPreview && (
+                    <div className="relative inline-block">
+                      <img
+                        src={footerLogoPreview}
+                        alt="Footer Logo"
+                        className="h-24 w-auto object-contain rounded-lg border-2 border-white/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFooterLogoPreview(null)
+                          setSettings({ ...settings, footerLogoMediaId: null })
+                        }}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:bg-white/5 transition-colors">
+                    {!footerLogoPreview && (
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-8 h-8 mb-2 text-white/70" />
+                        <p className="text-sm text-white/70">Click to upload footer logo</p>
+                        <p className="text-xs text-white/50 mt-1">PNG, JPG, WEBP (max 5MB)</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleFooterLogoChange}
+                      disabled={uploadingFooterLogo}
+                    />
+                  </label>
+                  {uploadingFooterLogo && (
+                    <p className="text-sm text-white/70">Uploading footer logo...</p>
                   )}
                 </div>
               </div>
