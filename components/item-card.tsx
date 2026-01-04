@@ -43,7 +43,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
   }
 
   return (
-    <div className="relative h-full flex flex-col">
+    <div className="relative h-full flex flex-col" style={{ margin: 0, padding: 0 }}>
       {/* Pop-up confirmation */}
       {showPopup && (
         <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none popup-fade-animation">
@@ -65,17 +65,21 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
       <div
         className="rounded-2xl overflow-hidden border cursor-pointer backdrop-blur-xl h-full flex flex-col"
         style={{
-          background: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+          backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: `0 0 20px var(--auto-primary-glow, rgba(128, 0, 32, 0.35)), 0 8px 32px 0 var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)`
+          boxShadow: `0 0 20px var(--auto-primary-glow, rgba(128, 0, 32, 0.35)), 0 8px 32px 0 var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)`,
+          margin: 0,
+          padding: 0,
         }}
         onClick={() => onItemClick(item.id)}
       >
         {/* Image */}
         <div className="aspect-square w-full relative" style={{
           backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+          margin: 0,
+          padding: 0,
         }}>
           {item.imageMediaId ? (
             <Image
@@ -111,7 +115,8 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
 
         {/* Content */}
         <div className="p-2 backdrop-blur-sm flex-shrink-0" style={{
-          background: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
+          backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+          margin: 0,
         }}>
           <h3 
             className="font-semibold mb-1 line-clamp-1 break-words"
