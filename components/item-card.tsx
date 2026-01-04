@@ -104,7 +104,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
         </div>
 
         {/* Content */}
-        <div className="p-4 backdrop-blur-sm" style={{
+        <div className="p-2 backdrop-blur-sm" style={{
           background: 'rgba(255, 255, 255, 0.05)'
         }}>
           <h3 
@@ -125,7 +125,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
             </span>
             <button
               onClick={handleAddClick}
-              className={`p-2 rounded-xl transition-all duration-300 backdrop-blur-sm ${
+              className={`p-1.5 rounded-xl transition-all duration-300 backdrop-blur-sm ${
                 isAdding ? 'scale-110' : ''
               }`}
               style={{
@@ -137,7 +137,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
               }}
               aria-label="Add to basket"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
             </button>
           </div>
         </div>

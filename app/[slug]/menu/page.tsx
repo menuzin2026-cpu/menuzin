@@ -882,7 +882,7 @@ function MenuPageContent() {
                   </div>
                   
                   {/* Items Grid */}
-                  <div className="grid grid-cols-2 gap-2 sm:gap-4 pb-6 w-full">
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-3 pb-6 w-full">
                     {items.map((item) => {
                       const basketItem = Array.isArray(basket) ? basket.find((bi) => bi?.id === item?.id) : null
                       return (
