@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAdminSession } from '@/lib/auth'
+import { writeFile } from 'fs/promises'
+import { join } from 'path'
 
 export async function GET(request: NextRequest) {
   try {
@@ -145,6 +147,53 @@ export async function PUT(request: NextRequest) {
 
     // Safely access footerLogoMediaId - may not exist if migration hasn't run
     const updatedFooterLogoMediaId = (updated as any).footerLogoMediaId || null
+
+    // Update the fallback JSON file with the new values
+    try {
+      const fallbackData = {
+        id: 'fallback',
+        nameKu: updated.nameKu,
+        nameEn: updated.nameEn,
+        nameAr: updated.nameAr,
+        logoMediaId: updated.logoMediaId,
+        footerLogoMediaId: updatedFooterLogoMediaId,
+        welcomeBackgroundMediaId: updated.welcomeBackgroundMediaId,
+        welcomeOverlayColor: updated.welcomeOverlayColor,
+        welcomeOverlayOpacity: updated.welcomeOverlayOpacity,
+        welcomeTextEn: updated.welcomeTextEn,
+        googleMapsUrl: updated.googleMapsUrl,
+        phoneNumber: updated.phoneNumber,
+        brandColors: updated.brandColors || {
+          menuGradientStart: '#5C0015',
+          menuGradientEnd: '#800020',
+          headerText: '#FFFFFF',
+          headerIcons: '#FFFFFF',
+          activeTab: '#FFFFFF',
+          inactiveTab: '#CCCCCC',
+          categoryCardBg: '#4A5568',
+          itemCardBg: '#4A5568',
+          itemNameText: '#FFFFFF',
+          itemDescText: '#E2E8F0',
+          priceText: '#FBBF24',
+          dividerLine: '#718096',
+          modalBg: '#2D3748',
+          modalOverlay: 'rgba(0,0,0,0.7)',
+          buttonBg: '#800020',
+          buttonText: '#FFFFFF',
+          feedbackCardBg: '#4A5568',
+          feedbackCardText: '#FFFFFF',
+          welcomeOverlayColor: '#000000',
+          welcomeOverlayOpacity: 0.5,
+        },
+      }
+
+      const filePath = join(process.cwd(), 'data', 'fallback-restaurant.json')
+      await writeFile(filePath, JSON.stringify(fallbackData, null, 2), 'utf-8')
+      console.log('✅ Updated fallback JSON file with admin changes')
+    } catch (error) {
+      console.error('⚠️ Error updating fallback JSON file (non-critical):', error)
+      // Don't fail the request if JSON update fails
+    }
 
     return NextResponse.json({
       nameKu: updated.nameKu,

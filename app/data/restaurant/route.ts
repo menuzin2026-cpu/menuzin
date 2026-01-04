@@ -1,50 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// Default fallback data for when database is unavailable
-const getFallbackData = (slug: string) => ({
-  id: 'fallback',
-  nameKu: 'رێستۆرانتی',
-  nameEn: 'Restaurant',
-  nameAr: 'مطعم',
-  logoMediaId: null,
-  logo: null,
-  footerLogoMediaId: null,
-  footerLogo: null,
-  welcomeBackgroundMediaId: null,
-  welcomeBackground: null,
-  welcomeOverlayColor: '#000000',
-  welcomeOverlayOpacity: 0.5,
-  welcomeTextEn: null,
-  googleMapsUrl: null,
-  phoneNumber: null,
-  brandColors: {
-    menuGradientStart: '#5C0015',
-    menuGradientEnd: '#800020',
-    headerText: '#FFFFFF',
-    headerIcons: '#FFFFFF',
-    activeTab: '#FFFFFF',
-    inactiveTab: '#CCCCCC',
-    categoryCardBg: '#4A5568',
-    itemCardBg: '#4A5568',
-    itemNameText: '#FFFFFF',
-    itemDescText: '#E2E8F0',
-    priceText: '#FBBF24',
-    dividerLine: '#718096',
-    modalBg: '#2D3748',
-    modalOverlay: 'rgba(0,0,0,0.7)',
-    buttonBg: '#800020',
-    buttonText: '#FFFFFF',
-    feedbackCardBg: '#4A5568',
-    feedbackCardText: '#FFFFFF',
-    welcomeOverlayColor: '#000000',
-    welcomeOverlayOpacity: 0.5,
-  },
-  updatedAt: new Date().toISOString(),
-})
+// Load fallback data from JSON file (updated by admin panel)
+const getFallbackData = async (slug: string) => {
+  try {
+    const filePath = join(process.cwd(), 'data', 'fallback-restaurant.json')
+    const fileContent = await readFile(filePath, 'utf-8')
+    const fallbackData = JSON.parse(fileContent)
+    return {
+      ...fallbackData,
+      logo: null,
+      footerLogo: null,
+      welcomeBackground: null,
+      updatedAt: new Date().toISOString(),
+    }
+  } catch (error) {
+    // If JSON file doesn't exist or can't be read, use hardcoded defaults
+    console.warn('Could not read fallback JSON file, using hardcoded defaults:', error)
+    return {
+      id: 'fallback',
+      nameKu: 'رێستۆرانتی',
+      nameEn: 'Restaurant',
+      nameAr: 'مطعم',
+      logoMediaId: null,
+      logo: null,
+      footerLogoMediaId: null,
+      footerLogo: null,
+      welcomeBackgroundMediaId: null,
+      welcomeBackground: null,
+      welcomeOverlayColor: '#000000',
+      welcomeOverlayOpacity: 0.5,
+      welcomeTextEn: null,
+      googleMapsUrl: null,
+      phoneNumber: null,
+      brandColors: {
+        menuGradientStart: '#5C0015',
+        menuGradientEnd: '#800020',
+        headerText: '#FFFFFF',
+        headerIcons: '#FFFFFF',
+        activeTab: '#FFFFFF',
+        inactiveTab: '#CCCCCC',
+        categoryCardBg: '#4A5568',
+        itemCardBg: '#4A5568',
+        itemNameText: '#FFFFFF',
+        itemDescText: '#E2E8F0',
+        priceText: '#FBBF24',
+        dividerLine: '#718096',
+        modalBg: '#2D3748',
+        modalOverlay: 'rgba(0,0,0,0.7)',
+        buttonBg: '#800020',
+        buttonText: '#FFFFFF',
+        feedbackCardBg: '#4A5568',
+        feedbackCardText: '#FFFFFF',
+        welcomeOverlayColor: '#000000',
+        welcomeOverlayOpacity: 0.5,
+      },
+      updatedAt: new Date().toISOString(),
+    }
+  }
+}
 
 export async function GET(request: NextRequest) {
   // Check environment variables
@@ -52,7 +71,8 @@ export async function GET(request: NextRequest) {
     console.error('[ERROR] DATABASE_URL environment variable is not set')
     const searchParams = request.nextUrl.searchParams
     const slug = searchParams.get('slug') || 'legends-restaurant'
-    return NextResponse.json(getFallbackData(slug), {
+    const fallbackData = await getFallbackData(slug)
+    return NextResponse.json(fallbackData, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         'X-Fallback': 'true',
@@ -138,7 +158,8 @@ export async function GET(request: NextRequest) {
         // If it's a timeout or connection error, return fallback
         if (error?.message?.includes('timeout') || error?.code === 'P1001' || error?.code === 'P1002') {
           console.warn('[WARN] Database connection issue, returning fallback data:', error.message)
-          return NextResponse.json(getFallbackData(slug), {
+          const fallbackData = await getFallbackData(slug)
+          return NextResponse.json(fallbackData, {
             headers: {
               'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
               'X-Fallback': 'true',
@@ -153,17 +174,22 @@ export async function GET(request: NextRequest) {
     if (!restaurant && slug === 'legends-restaurant') {
       console.log('[DEBUG] Auto-creating legends-restaurant...')
       try {
+        // Get fallback data to use as defaults
+        const fallbackData = await getFallbackData(slug)
+        
         restaurant = await prisma.restaurant.upsert({
           where: { slug: 'legends-restaurant' },
           update: {},
           create: {
             slug: 'legends-restaurant',
-            nameKu: 'رێستۆرانتی لێجەندز',
-            nameEn: 'Legends Restaurant',
-            nameAr: 'مطعم الأساطير',
-            googleMapsUrl: 'https://maps.google.com',
-            phoneNumber: '+9647501234567',
-            brandColors: {
+            nameKu: fallbackData.nameKu || 'رێستۆرانتی لێجەندز',
+            nameEn: fallbackData.nameEn || 'Legends Restaurant',
+            nameAr: fallbackData.nameAr || 'مطعم الأساطير',
+            googleMapsUrl: fallbackData.googleMapsUrl || 'https://maps.google.com',
+            phoneNumber: fallbackData.phoneNumber || '+9647501234567',
+            welcomeOverlayColor: fallbackData.welcomeOverlayColor || '#000000',
+            welcomeOverlayOpacity: fallbackData.welcomeOverlayOpacity || 0.5,
+            brandColors: fallbackData.brandColors || {
               menuGradientStart: '#5C0015',
               menuGradientEnd: '#800020',
               headerText: '#FFFFFF',
@@ -214,17 +240,22 @@ export async function GET(request: NextRequest) {
         // If footerLogo relation fails, retry without it
         if (error?.message?.includes('footerLogo') || error?.code === 'P2021') {
           console.warn('footerLogo column not found in upsert, retrying without it')
+          // Get fallback data to use as defaults
+          const fallbackDataRetry = await getFallbackData(slug)
+          
           restaurant = await prisma.restaurant.upsert({
             where: { slug: 'legends-restaurant' },
             update: {},
             create: {
               slug: 'legends-restaurant',
-              nameKu: 'رێستۆرانتی لێجەندز',
-              nameEn: 'Legends Restaurant',
-              nameAr: 'مطعم الأساطير',
-              googleMapsUrl: 'https://maps.google.com',
-              phoneNumber: '+9647501234567',
-              brandColors: {
+              nameKu: fallbackDataRetry.nameKu || 'رێستۆرانتی لێجەندز',
+              nameEn: fallbackDataRetry.nameEn || 'Legends Restaurant',
+              nameAr: fallbackDataRetry.nameAr || 'مطعم الأساطير',
+              googleMapsUrl: fallbackDataRetry.googleMapsUrl || 'https://maps.google.com',
+              phoneNumber: fallbackDataRetry.phoneNumber || '+9647501234567',
+              welcomeOverlayColor: fallbackDataRetry.welcomeOverlayColor || '#000000',
+              welcomeOverlayOpacity: fallbackDataRetry.welcomeOverlayOpacity || 0.5,
+              brandColors: fallbackDataRetry.brandColors || {
                 menuGradientStart: '#5C0015',
                 menuGradientEnd: '#800020',
                 headerText: '#FFFFFF',
@@ -319,7 +350,8 @@ export async function GET(request: NextRequest) {
     // Return fallback data instead of error to prevent frontend crash
     const searchParams = request.nextUrl.searchParams
     const slug = searchParams.get('slug') || 'legends-restaurant'
-    return NextResponse.json(getFallbackData(slug), {
+    const fallbackData = await getFallbackData(slug)
+    return NextResponse.json(fallbackData, {
       status: 200, // Return 200 with fallback data instead of 500
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',

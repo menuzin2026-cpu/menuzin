@@ -1,0 +1,37 @@
+{
+  "id": "fallback",
+  "nameKu": "رێستۆرانتی",
+  "nameEn": "Restaurant",
+  "nameAr": "مطعم",
+  "logoMediaId": null,
+  "footerLogoMediaId": null,
+  "welcomeBackgroundMediaId": null,
+  "welcomeOverlayColor": "#000000",
+  "welcomeOverlayOpacity": 0.5,
+  "welcomeTextEn": null,
+  "googleMapsUrl": null,
+  "phoneNumber": null,
+  "brandColors": {
+    "menuGradientStart": "#5C0015",
+    "menuGradientEnd": "#800020",
+    "headerText": "#FFFFFF",
+    "headerIcons": "#FFFFFF",
+    "activeTab": "#FFFFFF",
+    "inactiveTab": "#CCCCCC",
+    "categoryCardBg": "#4A5568",
+    "itemCardBg": "#4A5568",
+    "itemNameText": "#FFFFFF",
+    "itemDescText": "#E2E8F0",
+    "priceText": "#FBBF24",
+    "dividerLine": "#718096",
+    "modalBg": "#2D3748",
+    "modalOverlay": "rgba(0,0,0,0.7)",
+    "buttonBg": "#800020",
+    "buttonText": "#FFFFFF",
+    "feedbackCardBg": "#4A5568",
+    "feedbackCardText": "#FFFFFF",
+    "welcomeOverlayColor": "#000000",
+    "welcomeOverlayOpacity": 0.5
+  }
+}
+
