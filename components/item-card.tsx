@@ -74,7 +74,9 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
         onClick={() => onItemClick(item.id)}
       >
         {/* Image */}
-        <div className="aspect-square w-full relative">
+        <div className="aspect-square w-full relative" style={{
+          backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+        }}>
           {item.imageMediaId ? (
             <Image
               src={`/assets/${item.imageMediaId}`}
@@ -109,7 +111,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
 
         {/* Content */}
         <div className="p-2 backdrop-blur-sm flex-shrink-0" style={{
-          background: 'rgba(255, 255, 255, 0.05)'
+          background: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
         }}>
           <h3 
             className="font-semibold mb-1 line-clamp-1 break-words"
