@@ -5,37 +5,31 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 /**
- * Creates a PrismaClient instance with proper configuration.
+ * Creates a PrismaClient instance with proper configuration for serverless environments.
  * 
  * IMPORTANT: For serverless environments (Vercel, etc.), ensure your DATABASE_URL
  * uses a connection pooler if available:
  * - Neon: Use the pooled connection string (ends with ?pgbouncer=true)
- * - Supabase: Use the connection pooler port (usually 6543)
+ * - Supabase: Use the connection pooler port (usually 6543) instead of 5432
+ *   Example: postgresql://user:pass@host.region.supabase.co:6543/db?pgbouncer=true
  * - Other providers: Check their documentation for connection pooling options
- * 
- * Example pooled connection string:
- * postgresql://user:pass@host:5432/db?schema=public&connection_limit=10&pool_timeout=10
  */
 const createPrismaClient = () => {
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
   })
 }
 
 /**
  * Prisma Client singleton - ensures only one instance exists across all serverless functions.
  * This prevents connection pool exhaustion in production environments.
+ * 
+ * CRITICAL: In serverless (Vercel), each function invocation could create a new PrismaClient.
+ * Using globalThis ensures we reuse the same instance across all invocations.
  */
 export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
 // Always set global in both dev and production to prevent multiple instances
-// This is critical for serverless environments where each function invocation
-// could otherwise create a new PrismaClient instance
 if (!globalForPrisma.prisma) {
   globalForPrisma.prisma = prisma
 }
@@ -43,7 +37,11 @@ if (!globalForPrisma.prisma) {
 // Graceful shutdown (development only)
 if (process.env.NODE_ENV !== 'production') {
   process.on('beforeExit', async () => {
-    await prisma.$disconnect()
+    try {
+      await prisma.$disconnect()
+    } catch (error) {
+      // Silently handle disconnect errors
+    }
   })
 }
 

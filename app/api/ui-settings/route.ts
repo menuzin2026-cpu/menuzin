@@ -109,11 +109,30 @@ export async function GET() {
     })
   } catch (error: any) {
     console.error('Error fetching UI settings:', error)
+    
+    // Handle connection pool exhaustion - return defaults instead of crashing
+    if (error?.message?.includes('MaxClientsInSessionMode') || 
+        error?.message?.includes('max clients reached') ||
+        error?.code === 'P1001' ||
+        error?.name === 'PrismaClientInitializationError') {
+      console.warn('Database connection pool exhausted, returning defaults. Consider using connection pooler (Supabase port 6543).')
+      return NextResponse.json(DEFAULT_SETTINGS, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'X-Content-Type-Options': 'nosniff',
+          'X-Fallback': 'true',
+        },
+      })
+    }
+    
     // If error is due to missing columns, return defaults
     if (error?.message?.includes('bottomNavSectionSize') || error?.message?.includes('bottomNavCategorySize') || error?.code === 'P2021' || error?.code === 'P2022') {
       console.warn('UiSettings columns missing, returning defaults. Run migration to add columns.')
     }
-    // Return defaults on error
+    
+    // Return defaults on any other error
     return NextResponse.json(DEFAULT_SETTINGS, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
