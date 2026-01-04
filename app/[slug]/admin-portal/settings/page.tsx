@@ -394,51 +394,6 @@ export default function SettingsPage() {
                   )}
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">
-                  Footer Logo (for &quot;Powered by&quot; bar)
-                </label>
-                <div className="space-y-2">
-                  {footerLogoPreview && (
-                    <div className="relative inline-block">
-                      <img
-                        src={footerLogoPreview}
-                        alt="Footer Logo"
-                        className="h-24 w-auto object-contain rounded-lg border-2 border-white/20"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFooterLogoPreview(null)
-                          setSettings({ ...settings, footerLogoMediaId: null })
-                        }}
-                        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:bg-white/5 transition-colors">
-                    {!footerLogoPreview && (
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 mb-2 text-white/70" />
-                        <p className="text-sm text-white/70">Click to upload footer logo</p>
-                        <p className="text-xs text-white/50 mt-1">PNG, JPG, WEBP (max 5MB)</p>
-                      </div>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={handleFooterLogoChange}
-                      disabled={uploadingFooterLogo}
-                    />
-                  </label>
-                  {uploadingFooterLogo && (
-                    <p className="text-sm text-white/70">Uploading footer logo...</p>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
 

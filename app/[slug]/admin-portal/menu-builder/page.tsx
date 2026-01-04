@@ -16,6 +16,7 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
+  DragMoveEvent,
   DragOverlay,
 } from '@dnd-kit/core'
 import {
@@ -315,6 +316,93 @@ export default function MenuBuilderPage() {
     }
   }
 
+  // Auto-scroll during drag
+  const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const lastPointerYRef = useRef<number | null>(null)
+  const scrollSpeed = 15 // pixels per interval
+  const scrollZone = 150 // distance from edge to trigger scroll
+
+  const handleDragMove = (event: DragMoveEvent) => {
+    // Get pointer position from the event
+    const pointerEvent = (event as any).activatorEvent as PointerEvent | TouchEvent | null
+    
+    if (!pointerEvent) {
+      // Fallback: use delta to estimate position
+      if (lastPointerYRef.current !== null) {
+        const currentY = lastPointerYRef.current + (event.delta?.y || 0)
+        lastPointerYRef.current = currentY
+        checkAndScroll(currentY)
+      }
+      return
+    }
+
+    // Get Y coordinate from pointer or touch event
+    let clientY: number
+    if ('touches' in pointerEvent && pointerEvent.touches.length > 0) {
+      clientY = pointerEvent.touches[0].clientY
+    } else if ('clientY' in pointerEvent) {
+      clientY = pointerEvent.clientY
+    } else {
+      return
+    }
+
+    lastPointerYRef.current = clientY
+    checkAndScroll(clientY)
+  }
+
+  const checkAndScroll = (clientY: number) => {
+    const viewportHeight = window.innerHeight
+    const scrollThreshold = scrollZone
+
+    // Clear any existing scroll interval
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current)
+      scrollIntervalRef.current = null
+    }
+
+    // Check if near bottom edge
+    if (clientY > viewportHeight - scrollThreshold) {
+      // Scroll down
+      scrollIntervalRef.current = setInterval(() => {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+        const currentScroll = window.pageYOffset || document.documentElement.scrollTop
+        
+        if (currentScroll < maxScroll) {
+          window.scrollBy({
+            top: scrollSpeed,
+            behavior: 'auto'
+          })
+        } else {
+          // Reached bottom, stop scrolling
+          if (scrollIntervalRef.current) {
+            clearInterval(scrollIntervalRef.current)
+            scrollIntervalRef.current = null
+          }
+        }
+      }, 16) // ~60fps
+    }
+    // Check if near top edge
+    else if (clientY < scrollThreshold) {
+      // Scroll up
+      scrollIntervalRef.current = setInterval(() => {
+        const currentScroll = window.pageYOffset || document.documentElement.scrollTop
+        
+        if (currentScroll > 0) {
+          window.scrollBy({
+            top: -scrollSpeed,
+            behavior: 'auto'
+          })
+        } else {
+          // Reached top, stop scrolling
+          if (scrollIntervalRef.current) {
+            clearInterval(scrollIntervalRef.current)
+            scrollIntervalRef.current = null
+          }
+        }
+      }, 16) // ~60fps
+    }
+  }
+
   // Drag and drop handlers
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -332,12 +420,19 @@ export default function MenuBuilderPage() {
     setHoldingId(null)
     setHoldingType(null)
     
-    // Prevent page scroll during drag
-    document.body.style.overflow = 'hidden'
-    document.body.style.touchAction = 'none'
+    // Don't prevent page scroll - we want auto-scroll to work
+    // document.body.style.overflow = 'hidden'
+    // document.body.style.touchAction = 'none'
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
+    // Clear scroll interval and reset pointer tracking
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current)
+      scrollIntervalRef.current = null
+    }
+    lastPointerYRef.current = null
+
     const { active, over } = event
     
     if (!over || active.id === over.id) {
@@ -460,6 +555,12 @@ export default function MenuBuilderPage() {
     
     setActiveId(null)
     setActiveType(null)
+    
+    // Clear scroll interval
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current)
+      scrollIntervalRef.current = null
+    }
     
     // Restore page scroll after drag
     document.body.style.overflow = ''
@@ -1383,6 +1484,7 @@ export default function MenuBuilderPage() {
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
         >
           <div 
