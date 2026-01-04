@@ -144,7 +144,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
                   ? 'var(--auto-lighter-surface, rgba(84, 28, 36, 0.9))' 
                   : 'var(--app-bg, #400810)',
                 color: 'var(--auto-text-primary, #FFFFFF)',
-                boxShadow: `0 0 12px var(--auto-primary-glow-subtle, rgba(64, 8, 16, 0.25)), 0 4px 16px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), inset 0 1px 0 rgba(255, 255, 255, 0.2)`
+                boxShadow: 'none'
               }}
               aria-label="Add to basket"
             >
