@@ -236,7 +236,7 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
               muted
               playsInline
               loop
-              preload="auto"
+              preload="metadata"
               disablePictureInPicture
               controls={false}
               crossOrigin="anonymous"

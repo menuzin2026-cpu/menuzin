@@ -4,30 +4,82 @@ import { prisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+// Default fallback data for when database is unavailable
+const getFallbackData = (slug: string) => ({
+  id: 'fallback',
+  nameKu: 'رێستۆرانتی',
+  nameEn: 'Restaurant',
+  nameAr: 'مطعم',
+  logoMediaId: null,
+  logo: null,
+  footerLogoMediaId: null,
+  footerLogo: null,
+  welcomeBackgroundMediaId: null,
+  welcomeBackground: null,
+  welcomeOverlayColor: '#000000',
+  welcomeOverlayOpacity: 0.5,
+  welcomeTextEn: null,
+  googleMapsUrl: null,
+  phoneNumber: null,
+  brandColors: {
+    menuGradientStart: '#5C0015',
+    menuGradientEnd: '#800020',
+    headerText: '#FFFFFF',
+    headerIcons: '#FFFFFF',
+    activeTab: '#FFFFFF',
+    inactiveTab: '#CCCCCC',
+    categoryCardBg: '#4A5568',
+    itemCardBg: '#4A5568',
+    itemNameText: '#FFFFFF',
+    itemDescText: '#E2E8F0',
+    priceText: '#FBBF24',
+    dividerLine: '#718096',
+    modalBg: '#2D3748',
+    modalOverlay: 'rgba(0,0,0,0.7)',
+    buttonBg: '#800020',
+    buttonText: '#FFFFFF',
+    feedbackCardBg: '#4A5568',
+    feedbackCardText: '#FFFFFF',
+    welcomeOverlayColor: '#000000',
+    welcomeOverlayOpacity: 0.5,
+  },
+  updatedAt: new Date().toISOString(),
+})
+
 export async function GET(request: NextRequest) {
+  // Check environment variables
+  if (!process.env.DATABASE_URL) {
+    console.error('[ERROR] DATABASE_URL environment variable is not set')
+    const searchParams = request.nextUrl.searchParams
+    const slug = searchParams.get('slug') || 'legends-restaurant'
+    return NextResponse.json(getFallbackData(slug), {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'X-Fallback': 'true',
+      },
+    })
+  }
+
   try {
     // Require slug parameter - no fallback
     const searchParams = request.nextUrl.searchParams
     const slug = searchParams.get('slug')
 
-    // DEBUG: Log received slug
-    console.log('[DEBUG] /data/restaurant - Received slug:', slug)
-
     if (!slug) {
       return NextResponse.json({ error: 'Slug parameter is required' }, { status: 400 })
     }
 
-    // DEBUG: Log all restaurants in DB to see what exists
-    const allRestaurants = await prisma.restaurant.findMany({
-      select: { id: true, slug: true, nameEn: true },
-    })
-    console.log('[DEBUG] All restaurants in DB:', JSON.stringify(allRestaurants, null, 2))
+    // Remove debug logging in production to avoid exposing sensitive info
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] /data/restaurant - Received slug:', slug)
+    }
 
     // Query by slug - no fallback to first restaurant
     // Try to include footerLogo, but handle gracefully if column doesn't exist
     let restaurant: any = null
     try {
-      restaurant = await prisma.restaurant.findUnique({
+      // Set a timeout for database queries to handle slow connections (5 seconds)
+      const queryPromise = prisma.restaurant.findUnique({
         where: { slug },
         include: {
           logo: {
@@ -53,6 +105,12 @@ export async function GET(request: NextRequest) {
           },
         },
       })
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Database query timeout')), 5000)
+      })
+
+      restaurant = await Promise.race([queryPromise, timeoutPromise]) as any
     } catch (error: any) {
       // If footerLogo relation fails (column doesn't exist), retry without it
       if (error?.message?.includes('footerLogo') || error?.code === 'P2021') {
@@ -77,12 +135,19 @@ export async function GET(request: NextRequest) {
           },
         })
       } else {
+        // If it's a timeout or connection error, return fallback
+        if (error?.message?.includes('timeout') || error?.code === 'P1001' || error?.code === 'P1002') {
+          console.warn('[WARN] Database connection issue, returning fallback data:', error.message)
+          return NextResponse.json(getFallbackData(slug), {
+            headers: {
+              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+              'X-Fallback': 'true',
+            },
+          })
+        }
         throw error
       }
     }
-
-    // DEBUG: Log query result
-    console.log('[DEBUG] Query result for slug "' + slug + '":', restaurant ? 'FOUND' : 'NOT FOUND')
 
     // Auto-create "legends-restaurant" if it doesn't exist (only for this specific slug)
     if (!restaurant && slug === 'legends-restaurant') {
@@ -203,7 +268,9 @@ export async function GET(request: NextRequest) {
           throw error
         }
       }
-      console.log('[DEBUG] Auto-created legends-restaurant:', restaurant.id)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DEBUG] Auto-created legends-restaurant:', restaurant.id)
+      }
     }
 
     if (!restaurant) {
@@ -241,12 +308,25 @@ export async function GET(request: NextRequest) {
       }
     )
   } catch (error) {
-    console.error('Error fetching restaurant:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json(
-      { error: 'Internal server error', details: errorMessage },
-      { status: 500 }
-    )
+    // Log full error details on server (never expose to client)
+    const errorDetails = error instanceof Error ? {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+    } : { message: 'Unknown error', error }
+    console.error('[ERROR] Error fetching restaurant:', errorDetails)
+
+    // Return fallback data instead of error to prevent frontend crash
+    const searchParams = request.nextUrl.searchParams
+    const slug = searchParams.get('slug') || 'legends-restaurant'
+    return NextResponse.json(getFallbackData(slug), {
+      status: 200, // Return 200 with fallback data instead of 500
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'X-Fallback': 'true',
+        'X-Error': 'true', // Signal that fallback was used
+      },
+    })
   }
 }
 

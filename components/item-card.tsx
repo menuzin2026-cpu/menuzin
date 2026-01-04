@@ -22,9 +22,10 @@ interface ItemCardProps {
   onItemClick: (itemId: string) => void
   onAddToBasket: (itemId: string) => void
   quantity?: number
+  priority?: boolean
 }
 
-export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quantity = 0 }: ItemCardProps) {
+export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quantity = 0, priority = false }: ItemCardProps) {
   const [showPopup, setShowPopup] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
 
@@ -82,6 +83,8 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
               className="object-cover"
               sizes="(max-width: 768px) 50vw, 33vw"
               unoptimized={true}
+              priority={priority}
+              loading={priority ? 'eager' : 'lazy'}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-white/60 bg-gradient-to-br from-[#5C0015]/30 to-[#800020]/30">
