@@ -319,7 +319,7 @@ export default function MenuBuilderPage() {
   // Auto-scroll during drag
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const lastPointerYRef = useRef<number | null>(null)
-  const scrollSpeed = 15 // pixels per interval
+  const scrollSpeed = 50 // pixels per interval - increased for faster scrolling
   const scrollZone = 150 // distance from edge to trigger scroll
 
   const handleDragMove = (event: DragMoveEvent) => {
