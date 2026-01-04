@@ -93,9 +93,18 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
         if (mimeTypeFromData) {
           // If it's a video and user doesn't prefer reduced motion, start loading it
           if (mimeTypeFromData.startsWith('video/') && !prefersReducedMotion) {
-            setPosterImage(`/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`)
+            const videoUrl = `/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`
+            setPosterImage(videoUrl)
             setShouldLoadVideo(true)
             setBackgroundMimeType(mimeTypeFromData)
+            
+            // Preload the video immediately using link preload
+            const link = document.createElement('link')
+            link.rel = 'preload'
+            link.as = 'video'
+            link.href = videoUrl
+            link.setAttribute('type', 'video/mp4')
+            document.head.appendChild(link)
           } else if (mimeTypeFromData.startsWith('video/')) {
             // User prefers reduced motion, use poster only
             setPosterImage(`/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`)
@@ -121,9 +130,18 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
               if (contentType) {
                 // If it's a video and user doesn't prefer reduced motion, start loading it
                 if (contentType.startsWith('video/') && !prefersReducedMotion) {
-                  setPosterImage(`/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`)
+                  const videoUrl = `/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`
+                  setPosterImage(videoUrl)
                   setShouldLoadVideo(true)
                   setBackgroundMimeType(contentType)
+                  
+                  // Preload the video immediately using link preload
+                  const link = document.createElement('link')
+                  link.rel = 'preload'
+                  link.as = 'video'
+                  link.href = videoUrl
+                  link.setAttribute('type', 'video/mp4')
+                  document.head.appendChild(link)
                 } else if (contentType.startsWith('video/')) {
                   // User prefers reduced motion, use poster only
                   setPosterImage(`/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`)
@@ -182,6 +200,15 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
     // Fetch restaurant data on mount
     fetchRestaurant()
   }, [fetchRestaurant])
+
+  // Start video loading immediately when we detect it's a video
+  useEffect(() => {
+    if (shouldLoadVideo && restaurant?.welcomeBackgroundMediaId && videoRef.current) {
+      const video = videoRef.current
+      // Force video to start loading
+      video.load()
+    }
+  }, [shouldLoadVideo, restaurant?.welcomeBackgroundMediaId])
 
   // Refetch restaurant data when page becomes visible (after admin changes)
   useEffect(() => {
@@ -257,6 +284,14 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
                   height: '100%',
                   objectFit: 'cover'
                 }}
+                onLoadStart={() => {
+                  // Video started loading - try to play immediately
+                  const v = videoRef.current
+                  if (v) {
+                    v.muted = true
+                    v.play().catch(() => {})
+                  }
+                }}
                 onLoadedData={() => {
                   const v = videoRef.current
                   if (v) {
@@ -265,6 +300,14 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
                   }
                 }}
                 onCanPlay={() => {
+                  const v = videoRef.current
+                  if (v) {
+                    v.muted = true
+                    v.play().catch(() => {})
+                  }
+                }}
+                onCanPlayThrough={() => {
+                  // Video is fully loaded and can play through
                   const v = videoRef.current
                   if (v) {
                     v.muted = true
