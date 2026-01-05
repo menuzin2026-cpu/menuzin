@@ -12,7 +12,7 @@ const DEFAULT_SETTINGS = {
   bottomNavCategorySize: 13,
 }
 
-export async function UiSettingsInjector() {
+export async function getUiSettings() {
   let uiSettings = DEFAULT_SETTINGS
 
   try {
@@ -55,26 +55,6 @@ export async function UiSettingsInjector() {
     console.warn('Could not load UI settings, using defaults:', error)
   }
 
-  // Inject CSS variables in head using a script tag for immediate execution
-  const cssVars = `
-    (function() {
-      const root = document.documentElement;
-      root.style.setProperty('--menu-section-size', '${uiSettings.sectionTitleSize}px');
-      root.style.setProperty('--menu-category-size', '${uiSettings.categoryTitleSize}px');
-      root.style.setProperty('--menu-item-name-size', '${uiSettings.itemNameSize}px');
-      root.style.setProperty('--menu-item-desc-size', '${uiSettings.itemDescriptionSize}px');
-      root.style.setProperty('--menu-item-price-size', '${uiSettings.itemPriceSize}px');
-      root.style.setProperty('--header-logo-size', '${uiSettings.headerLogoSize}px');
-      root.style.setProperty('--bottom-nav-section-size', '${uiSettings.bottomNavSectionSize}px');
-      root.style.setProperty('--bottom-nav-category-size', '${uiSettings.bottomNavCategorySize}px');
-    })();
-  `
-
-  return (
-    <script
-      dangerouslySetInnerHTML={{ __html: cssVars }}
-      suppressHydrationWarning
-    />
-  )
+  return uiSettings
 }
 

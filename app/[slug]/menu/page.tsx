@@ -591,14 +591,8 @@ function MenuPageContent() {
       className="min-h-dvh w-full overflow-x-hidden" 
       style={{ 
         backgroundColor: 'var(--app-bg, #400810)',
-        ['--menu-section-size' as any]: `${uiSettings.sectionTitleSize}px`,
-        ['--menu-category-size' as any]: `${uiSettings.categoryTitleSize}px`,
-        ['--menu-item-name-size' as any]: `${uiSettings.itemNameSize}px`,
-        ['--menu-item-desc-size' as any]: `${uiSettings.itemDescriptionSize}px`,
-        ['--menu-item-price-size' as any]: `${uiSettings.itemPriceSize}px`,
-        ['--header-logo-size' as any]: `${uiSettings.headerLogoSize}px`,
-        ['--bottom-nav-section-size' as any]: `${uiSettings.bottomNavSectionSize ?? 18}px`,
-        ['--bottom-nav-category-size' as any]: `${uiSettings.bottomNavCategorySize ?? 15}px`,
+        // CSS variables are now set server-side via UiSettingsInjector script in head
+        // No need to set them here to prevent flash
       }}
     >
       <MenuHeader
