@@ -21,6 +21,23 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   
+  // Function to extract first frame as poster image
+  const extractPosterFromVideo = useCallback((video: HTMLVideoElement) => {
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth || 1920
+      canvas.height = video.videoHeight || 1080
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const posterDataUrl = canvas.toDataURL('image/jpeg', 0.8)
+        setPosterImage(posterDataUrl)
+      }
+    } catch (error) {
+      console.warn('Could not extract poster from video:', error)
+    }
+  }, [])
+  
 
   useEffect(() => {
     // Check for prefers-reduced-motion
@@ -94,7 +111,8 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
           // If it's a video and user doesn't prefer reduced motion, start loading it
           if (mimeTypeFromData.startsWith('video/') && !prefersReducedMotion) {
             const videoUrl = `/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`
-            setPosterImage(videoUrl)
+            // Don't set posterImage to video URL - will be extracted from first frame
+            setPosterImage(null)
             setShouldLoadVideo(true)
             setBackgroundMimeType(mimeTypeFromData)
             
@@ -131,7 +149,8 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
                 // If it's a video and user doesn't prefer reduced motion, start loading it
                 if (contentType.startsWith('video/') && !prefersReducedMotion) {
                   const videoUrl = `/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`
-                  setPosterImage(videoUrl)
+                  // Don't set posterImage to video URL - will be extracted from first frame
+                  setPosterImage(null)
                   setShouldLoadVideo(true)
                   setBackgroundMimeType(contentType)
                   
@@ -296,6 +315,10 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
                   const v = videoRef.current
                   if (v) {
                     v.muted = true
+                    // Extract first frame as poster if we don't have one yet
+                    if (!posterImage && v.readyState >= 2 && v.videoWidth > 0) {
+                      extractPosterFromVideo(v)
+                    }
                     v.play().catch(() => {})
                   }
                 }}
@@ -303,7 +326,18 @@ export default function WelcomeClient({ slug }: WelcomeClientProps) {
                   const v = videoRef.current
                   if (v) {
                     v.muted = true
+                    // Extract first frame as poster if we don't have one yet
+                    if (!posterImage && v.readyState >= 2 && v.videoWidth > 0) {
+                      extractPosterFromVideo(v)
+                    }
                     v.play().catch(() => {})
+                  }
+                }}
+                onLoadedMetadata={() => {
+                  const v = videoRef.current
+                  if (v && !posterImage && v.videoWidth > 0) {
+                    // Try to extract poster as soon as metadata is loaded
+                    extractPosterFromVideo(v)
                   }
                 }}
                 onCanPlayThrough={() => {

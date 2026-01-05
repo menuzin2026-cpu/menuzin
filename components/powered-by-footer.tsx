@@ -46,11 +46,17 @@ export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
             width={60}
             height={18}
             className="h-4 w-auto object-contain"
-            style={{ maxHeight: '18px' }}
+            style={{ 
+              maxHeight: '18px',
+              width: 'auto',
+              height: '18px',
+              aspectRatio: '60/18'
+            }}
             loading="eager"
             placeholder="blur"
             blurDataURL={blurDataURL}
             unoptimized={footerLogoUrl.startsWith('/assets/')}
+            sizes="60px"
           />
         )}
       </a>

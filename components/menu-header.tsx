@@ -31,12 +31,14 @@ export function MenuHeader({ logoUrl }: MenuHeaderProps) {
             style={{ 
               height: 'var(--header-logo-size, 32px)',
               width: 'auto',
-              maxWidth: '100%'
+              maxWidth: '100%',
+              aspectRatio: 'auto'
             }}
             priority
             placeholder="blur"
             blurDataURL={blurDataURL}
             unoptimized={logoUrl.startsWith('/assets/')}
+            sizes="(max-width: 768px) 120px, 120px"
           />
         ) : (
           <div 
