@@ -1,0 +1,494 @@
+'use client'
+
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { MapPin, Phone } from 'lucide-react'
+import { Language, languages } from '@/lib/i18n'
+
+interface WelcomeClientProps {
+  slug: string
+}
+
+export default function WelcomeClient({ slug }: WelcomeClientProps) {
+  const router = useRouter()
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [selectedLang, setSelectedLang] = useState<Language>('en')
+  const [restaurant, setRestaurant] = useState<any>(null)
+  const [backgroundMimeType, setBackgroundMimeType] = useState<string | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
+  const [posterImage, setPosterImage] = useState<string | null>(null)
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  
+  // Function to extract first frame as poster image
+  const extractPosterFromVideo = useCallback((video: HTMLVideoElement) => {
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth || 1920
+      canvas.height = video.videoHeight || 1080
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const posterDataUrl = canvas.toDataURL('image/jpeg', 0.8)
+        setPosterImage(posterDataUrl)
+      }
+    } catch (error) {
+      console.warn('Could not extract poster from video:', error)
+    }
+  }, [])
+  
+
+  useEffect(() => {
+    // Check for prefers-reduced-motion
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(mediaQuery.matches)
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches)
+    }
+    mediaQuery.addEventListener('change', handleChange)
+    
+    // Detect mobile device
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase())
+      const isSmallScreen = window.innerWidth <= 768
+      setIsMobile(isMobileDevice || isSmallScreen)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange)
+      window.removeEventListener('resize', checkMobile)
+    }
+  }, [])
+
+  // Function to fetch restaurant data - using useCallback so it can be called from multiple places
+  const fetchRestaurant = useCallback(async (retryCount = 0): Promise<void> => {
+    try {
+      // Include slug parameter - no fallback
+      const res = await fetch(`/data/restaurant?slug=${slug}&t=${Date.now()}`, {
+        cache: 'no-store',
+      })
+      if (!res.ok) {
+        if (res.status === 404) {
+          // Restaurant not found - stop trying (middleware ensures only valid slugs reach here)
+          console.error('Restaurant not found for slug:', slug)
+          return
+        }
+        throw new Error('Failed to fetch')
+      }
+      const data = await res.json()
+      
+      // Ensure restaurant data is set even if media fields are null
+      if (!data) {
+        console.error('[ERROR] Welcome page - No restaurant data received')
+        return
+      }
+      
+      // Check if background media ID changed - if so, reset all state
+      const mediaIdChanged = restaurant?.welcomeBackgroundMediaId !== data.welcomeBackgroundMediaId
+      
+      if (mediaIdChanged) {
+        // Reset state first
+        setShouldLoadVideo(false)
+        setPosterImage(null)
+        setBackgroundMimeType(null)
+      }
+      
+      // Update restaurant data
+      setRestaurant(data)
+      
+      // Check if background is video
+      if (data.welcomeBackgroundMediaId) {
+        // First, check if we have mimeType from the restaurant data
+        const mimeTypeFromData = data.welcomeBackground?.mimeType
+        
+        if (mimeTypeFromData) {
+          // If it's a video and user doesn't prefer reduced motion, start loading it
+          if (mimeTypeFromData.startsWith('video/') && !prefersReducedMotion) {
+            const videoUrl = `/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`
+            // Don't set posterImage to video URL - will be extracted from first frame
+            setPosterImage(null)
+            setShouldLoadVideo(true)
+            setBackgroundMimeType(mimeTypeFromData)
+            
+            // Preload the video immediately using link preload
+            const link = document.createElement('link')
+            link.rel = 'preload'
+            link.as = 'video'
+            link.href = videoUrl
+            link.setAttribute('type', 'video/mp4')
+            document.head.appendChild(link)
+          } else if (mimeTypeFromData.startsWith('video/')) {
+            // User prefers reduced motion, use poster only
+            setPosterImage(`/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`)
+            setBackgroundMimeType('image/jpeg')
+            setShouldLoadVideo(false)
+          } else {
+            // It's an image
+            setBackgroundMimeType(mimeTypeFromData)
+            setPosterImage(null)
+            setShouldLoadVideo(false)
+          }
+        } else {
+          // Fallback: Try to detect media type via HEAD request
+          const fetchMediaHead = async (retryCount = 0): Promise<void> => {
+            try {
+              // Add cache-busting to ensure fresh media type detection
+              const res = await fetch(`/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`, { 
+                method: 'HEAD',
+                cache: 'no-store',
+              })
+              const contentType = res.headers.get('content-type')
+              
+              if (contentType) {
+                // If it's a video and user doesn't prefer reduced motion, start loading it
+                if (contentType.startsWith('video/') && !prefersReducedMotion) {
+                  const videoUrl = `/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`
+                  // Don't set posterImage to video URL - will be extracted from first frame
+                  setPosterImage(null)
+                  setShouldLoadVideo(true)
+                  setBackgroundMimeType(contentType)
+                  
+                  // Preload the video immediately using link preload
+                  const link = document.createElement('link')
+                  link.rel = 'preload'
+                  link.as = 'video'
+                  link.href = videoUrl
+                  link.setAttribute('type', 'video/mp4')
+                  document.head.appendChild(link)
+                } else if (contentType.startsWith('video/')) {
+                  // User prefers reduced motion, use poster only
+                  setPosterImage(`/assets/${data.welcomeBackgroundMediaId}?v=${data.updatedAt ? new Date(data.updatedAt).getTime() : Date.now()}`)
+                  setBackgroundMimeType('image/jpeg')
+                  setShouldLoadVideo(false)
+                  } else {
+                    // It's an image
+                    setBackgroundMimeType(contentType)
+                  setPosterImage(null)
+                  setShouldLoadVideo(false)
+                }
+                } else {
+                  // No content type, default to image
+                  setBackgroundMimeType('image/jpeg')
+                setPosterImage(null)
+                setShouldLoadVideo(false)
+              }
+            } catch (error) {
+              console.error('HEAD request failed, defaulting to image:', error)
+              if (retryCount < 1) {
+                setTimeout(() => fetchMediaHead(retryCount + 1), 500)
+                return
+              }
+              // If HEAD fails, default to image (not video)
+              setBackgroundMimeType('image/jpeg')
+              setPosterImage(null)
+              setShouldLoadVideo(false)
+            }
+          }
+          fetchMediaHead()
+        }
+      } else {
+        // No background media
+        setBackgroundMimeType(null)
+        setPosterImage(null)
+        setShouldLoadVideo(false)
+      }
+    } catch (error) {
+      console.error('Error fetching restaurant:', error)
+      if (retryCount < 1) {
+        setTimeout(() => fetchRestaurant(retryCount + 1), 500)
+      }
+    }
+  }, [prefersReducedMotion, slug])
+
+  useEffect(() => {
+    // Load language from localStorage
+    const savedLang = localStorage.getItem('language') as Language
+    if (savedLang && languages.some((l) => l.code === savedLang)) {
+      setSelectedLang(savedLang)
+    }
+
+    // Show UI immediately - don't block render
+    setIsLoaded(true)
+
+    // Fetch restaurant data on mount
+    fetchRestaurant()
+  }, [fetchRestaurant])
+
+  // Start video loading immediately when we detect it's a video
+  useEffect(() => {
+    if (shouldLoadVideo && restaurant?.welcomeBackgroundMediaId && videoRef.current) {
+      const video = videoRef.current
+      // Force video to start loading
+      video.load()
+    }
+  }, [shouldLoadVideo, restaurant?.welcomeBackgroundMediaId])
+
+  // Refetch restaurant data when page becomes visible (after admin changes)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Page became visible, refetch to get latest data
+        fetchRestaurant()
+      }
+    }
+
+    const handleFocus = () => {
+      // Window regained focus, refetch to get latest data
+      fetchRestaurant()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [fetchRestaurant])
+
+
+  const handleLanguageSelect = (lang: Language) => {
+    setSelectedLang(lang)
+    localStorage.setItem('language', lang)
+    router.push(`/${slug}/menu?lang=${lang}`)
+  }
+
+  const overlayStyle = restaurant
+    ? {
+        backgroundColor: restaurant.welcomeOverlayColor || '#000000',
+        opacity: restaurant.welcomeOverlayOpacity || 0.5,
+      }
+    : { backgroundColor: '#000000', opacity: 0.5 }
+
+  return (
+    <div className="relative min-h-dvh w-full overflow-x-hidden">
+      {/* Background Image/Video */}
+      {restaurant?.welcomeBackgroundMediaId ? (
+        <div 
+          className={`absolute inset-0 background-fade-in ${isLoaded ? 'animate-in' : ''}`}
+        >
+          {/* Show video ONLY if we confirmed it's a video */}
+          {backgroundMimeType?.startsWith('video/') && shouldLoadVideo && !prefersReducedMotion ? (
+            <div 
+              className="w-full h-full absolute inset-0"
+              style={{ 
+                zIndex: 2,
+                backgroundColor: 'var(--app-bg, #400810)', // Prevent white flash while loading
+              }}
+            >
+              <video
+                ref={videoRef}
+                key={`video-${restaurant.welcomeBackgroundMediaId}-${restaurant.updatedAt || Date.now()}`}
+                autoPlay
+                muted
+                playsInline
+                loop
+                preload="auto"
+                disablePictureInPicture
+                controls={false}
+                crossOrigin="anonymous"
+                poster={posterImage || undefined}
+                className="w-full h-full object-cover absolute inset-0"
+                style={{ 
+                  opacity: 1, 
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                onLoadStart={() => {
+                  // Video started loading - try to play immediately
+                  const v = videoRef.current
+                  if (v) {
+                    v.muted = true
+                    v.play().catch(() => {})
+                  }
+                }}
+                onLoadedData={() => {
+                  const v = videoRef.current
+                  if (v) {
+                    v.muted = true
+                    // Extract first frame as poster if we don't have one yet
+                    if (!posterImage && v.readyState >= 2 && v.videoWidth > 0) {
+                      extractPosterFromVideo(v)
+                    }
+                    v.play().catch(() => {})
+                  }
+                }}
+                onCanPlay={() => {
+                  const v = videoRef.current
+                  if (v) {
+                    v.muted = true
+                    // Extract first frame as poster if we don't have one yet
+                    if (!posterImage && v.readyState >= 2 && v.videoWidth > 0) {
+                      extractPosterFromVideo(v)
+                    }
+                    v.play().catch(() => {})
+                  }
+                }}
+                onLoadedMetadata={() => {
+                  const v = videoRef.current
+                  if (v && !posterImage && v.videoWidth > 0) {
+                    // Try to extract poster as soon as metadata is loaded
+                    extractPosterFromVideo(v)
+                  }
+                }}
+                onCanPlayThrough={() => {
+                  // Video is fully loaded and can play through
+                  const v = videoRef.current
+                  if (v) {
+                    v.muted = true
+                    v.play().catch(() => {})
+                  }
+                }}
+                onError={() => {
+                  // Silently handle video load errors
+                }}
+              >
+                <source 
+                  src={`/assets/${restaurant.welcomeBackgroundMediaId}?v=${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`} 
+                  type="video/mp4" 
+                />
+              </video>
+            </div>
+          ) : backgroundMimeType && !backgroundMimeType.startsWith('video/') ? (
+            /* Show image ONLY if we confirmed it's an image */
+            <img
+              key={`image-${restaurant.welcomeBackgroundMediaId}-${restaurant.updatedAt || Date.now()}`}
+              src={`/assets/${restaurant.welcomeBackgroundMediaId}?v=${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`}
+              alt="Welcome Background"
+              className="w-full h-full object-cover absolute inset-0"
+              style={{ 
+                zIndex: 2,
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+              loading="eager"
+              decoding="async"
+            />
+          ) : backgroundMimeType === null ? (
+            /* Loading state while detecting media type */
+            <div 
+              className="absolute inset-0"
+              style={{ 
+                zIndex: 1,
+                backgroundColor: 'var(--app-bg, #400810)',
+              }}
+            />
+          ) : (
+            /* Fallback: if prefers reduced motion for video, show poster as image */
+            <img
+              src={`/assets/${restaurant.welcomeBackgroundMediaId}?v=${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`}
+              alt="Welcome Background"
+              className="w-full h-full object-cover absolute inset-0"
+              style={{ 
+                zIndex: 2,
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
+              loading="eager"
+              decoding="async"
+            />
+          )}
+        </div>
+      ) : (
+        <div 
+          className={`absolute inset-0 background-fade-in ${isLoaded ? 'animate-in' : ''}`}
+          style={{ backgroundColor: 'var(--app-bg, #400810)' }}
+        />
+      )}
+
+      {/* Overlay */}
+      <div
+        className="absolute inset-0"
+        style={overlayStyle}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center justify-end min-h-screen p-6 pb-24">
+        {/* Logo */}
+        {restaurant?.logoMediaId && (
+          <div className={`absolute top-16 left-0 right-0 px-4 py-4 welcome-fade-in ${isLoaded ? 'animate-in' : ''}`}>
+            <div className="flex items-center justify-center max-w-7xl mx-auto">
+              <img
+                src={`/assets/${restaurant.logoMediaId}`}
+                alt="Restaurant Logo"
+                className="h-16 w-auto object-contain"
+                loading="eager"
+                decoding="async"
+              />
+            </div>
+          </div>
+        )}
+        
+        {/* Welcome Text */}
+        {restaurant && restaurant.welcomeTextEn && (
+          <div 
+            className={`w-full max-w-[280px] mb-6 text-center welcome-fade-in ${isLoaded ? 'animate-in' : ''}`}
+          >
+            <p className="text-lg sm:text-xl md:text-2xl font-semibold leading-relaxed welcome-text-lighting luxury-font">
+              {restaurant.welcomeTextEn}
+            </p>
+          </div>
+        )}
+        
+        {/* Language Selection Cards */}
+        <div className="w-full max-w-[230px] space-y-2 mb-6">
+          {languages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => handleLanguageSelect(lang.code)}
+              className={`w-full p-3 bg-white/10 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl hover:bg-white/15 transition-all text-center group border border-white/20 welcome-fade-in welcome-box-glow ${isLoaded ? 'animate-in' : ''}`}
+            >
+              <div className="flex items-center justify-center">
+                <h3 className="text-base font-semibold text-white group-hover:scale-105 transition-transform duration-300">
+                  {lang.nativeName}
+                </h3>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Location and Phone Icons - Landscape Layout */}
+        <div className={`flex items-center gap-1 w-full max-w-[230px] welcome-fade-in ${isLoaded ? 'animate-in' : ''}`}>
+          {restaurant?.googleMapsUrl && (
+            <a
+              href={restaurant.googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 p-1 bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/20 transition-all shadow-lg border border-white/20 hover:scale-105 transform duration-300 welcome-box-glow"
+              aria-label="Google Maps"
+            >
+              <MapPin className="w-4 h-4 text-white flex-shrink-0" />
+              <span className="text-white font-medium text-xs">Location</span>
+            </a>
+          )}
+          {restaurant?.phoneNumber && (
+            <a
+              href={`tel:${restaurant.phoneNumber}`}
+              className="flex-1 flex items-center justify-center gap-1.5 p-1 bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/20 transition-all shadow-lg border border-white/20 hover:scale-105 transform duration-300 welcome-box-glow"
+              aria-label="Phone"
+            >
+              <Phone className="w-4 h-4 text-white flex-shrink-0" />
+              <span className="text-white font-medium text-xs">Call</span>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
