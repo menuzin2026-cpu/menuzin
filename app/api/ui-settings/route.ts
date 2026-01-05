@@ -85,6 +85,31 @@ export async function GET() {
     }
 
     if (!settings) {
+      // Try to get from FallbackSettings
+      try {
+        const fallbackSettings = await prisma.fallbackSettings.findUnique({
+          where: { id: 'fallback-1' },
+        })
+        
+        if (fallbackSettings) {
+          const responseData = {
+            sectionTitleSize: fallbackSettings.sectionTitleSize ?? DEFAULT_SETTINGS.sectionTitleSize,
+            categoryTitleSize: fallbackSettings.categoryTitleSize ?? DEFAULT_SETTINGS.categoryTitleSize,
+            itemNameSize: fallbackSettings.itemNameSize ?? DEFAULT_SETTINGS.itemNameSize,
+            itemDescriptionSize: fallbackSettings.itemDescriptionSize ?? DEFAULT_SETTINGS.itemDescriptionSize,
+            itemPriceSize: fallbackSettings.itemPriceSize ?? DEFAULT_SETTINGS.itemPriceSize,
+            headerLogoSize: fallbackSettings.headerLogoSize ?? DEFAULT_SETTINGS.headerLogoSize,
+            bottomNavSectionSize: fallbackSettings.bottomNavSectionSize ?? DEFAULT_SETTINGS.bottomNavSectionSize,
+            bottomNavCategorySize: fallbackSettings.bottomNavCategorySize ?? DEFAULT_SETTINGS.bottomNavCategorySize,
+          }
+          return NextResponse.json(responseData, {
+            headers: noCacheHeaders,
+          })
+        }
+      } catch (fallbackError) {
+        console.warn('Could not read from FallbackSettings:', fallbackError)
+      }
+      
       // Return defaults if no settings exist
       return NextResponse.json(DEFAULT_SETTINGS, {
         headers: noCacheHeaders,
@@ -110,12 +135,44 @@ export async function GET() {
   } catch (error: any) {
     console.error('Error fetching UI settings:', error)
     
-    // Handle connection pool exhaustion - return defaults instead of crashing
+    // Handle connection pool exhaustion - try FallbackSettings first
     if (error?.message?.includes('MaxClientsInSessionMode') || 
         error?.message?.includes('max clients reached') ||
         error?.code === 'P1001' ||
         error?.name === 'PrismaClientInitializationError') {
-      console.warn('Database connection pool exhausted, returning defaults. Consider using connection pooler (Supabase port 6543).')
+      console.warn('Database connection pool exhausted, trying FallbackSettings. Consider using connection pooler (Supabase port 6543).')
+      
+      // Try to get from FallbackSettings
+      try {
+        const fallbackSettings = await prisma.fallbackSettings.findUnique({
+          where: { id: 'fallback-1' },
+        })
+        
+        if (fallbackSettings) {
+          const responseData = {
+            sectionTitleSize: fallbackSettings.sectionTitleSize ?? DEFAULT_SETTINGS.sectionTitleSize,
+            categoryTitleSize: fallbackSettings.categoryTitleSize ?? DEFAULT_SETTINGS.categoryTitleSize,
+            itemNameSize: fallbackSettings.itemNameSize ?? DEFAULT_SETTINGS.itemNameSize,
+            itemDescriptionSize: fallbackSettings.itemDescriptionSize ?? DEFAULT_SETTINGS.itemDescriptionSize,
+            itemPriceSize: fallbackSettings.itemPriceSize ?? DEFAULT_SETTINGS.itemPriceSize,
+            headerLogoSize: fallbackSettings.headerLogoSize ?? DEFAULT_SETTINGS.headerLogoSize,
+            bottomNavSectionSize: fallbackSettings.bottomNavSectionSize ?? DEFAULT_SETTINGS.bottomNavSectionSize,
+            bottomNavCategorySize: fallbackSettings.bottomNavCategorySize ?? DEFAULT_SETTINGS.bottomNavCategorySize,
+          }
+          return NextResponse.json(responseData, {
+            headers: {
+              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+              'Pragma': 'no-cache',
+              'Expires': '0',
+              'X-Content-Type-Options': 'nosniff',
+              'X-Fallback': 'true',
+            },
+          })
+        }
+      } catch (fallbackError) {
+        console.warn('Could not read from FallbackSettings:', fallbackError)
+      }
+      
       return NextResponse.json(DEFAULT_SETTINGS, {
         headers: {
           'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',

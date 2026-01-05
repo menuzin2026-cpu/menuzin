@@ -274,6 +274,41 @@ export async function PUT(request: NextRequest) {
       bottomNavCategorySize: (uiSettings as any).bottomNavCategorySize ?? DEFAULT_SETTINGS.bottomNavCategorySize,
     }
     
+    // Update the fallback settings in database with the new UI settings
+    try {
+      await prisma.fallbackSettings.upsert({
+        where: { id: 'fallback-1' },
+        update: {
+          sectionTitleSize: uiSettings.sectionTitleSize,
+          categoryTitleSize: uiSettings.categoryTitleSize,
+          itemNameSize: uiSettings.itemNameSize,
+          itemDescriptionSize: uiSettings.itemDescriptionSize,
+          itemPriceSize: uiSettings.itemPriceSize,
+          headerLogoSize: uiSettings.headerLogoSize,
+          bottomNavSectionSize: (uiSettings as any).bottomNavSectionSize ?? DEFAULT_SETTINGS.bottomNavSectionSize,
+          bottomNavCategorySize: (uiSettings as any).bottomNavCategorySize ?? DEFAULT_SETTINGS.bottomNavCategorySize,
+        },
+        create: {
+          id: 'fallback-1',
+          nameKu: 'رێستۆرانتی',
+          nameEn: 'Restaurant',
+          nameAr: 'مطعم',
+          sectionTitleSize: uiSettings.sectionTitleSize,
+          categoryTitleSize: uiSettings.categoryTitleSize,
+          itemNameSize: uiSettings.itemNameSize,
+          itemDescriptionSize: uiSettings.itemDescriptionSize,
+          itemPriceSize: uiSettings.itemPriceSize,
+          headerLogoSize: uiSettings.headerLogoSize,
+          bottomNavSectionSize: (uiSettings as any).bottomNavSectionSize ?? DEFAULT_SETTINGS.bottomNavSectionSize,
+          bottomNavCategorySize: (uiSettings as any).bottomNavCategorySize ?? DEFAULT_SETTINGS.bottomNavCategorySize,
+        },
+      })
+      console.log('✅ Updated fallback settings in database with UI settings')
+    } catch (error) {
+      console.error('⚠️ Error updating fallback settings (non-critical):', error)
+      // Don't fail the request if fallback update fails
+    }
+    
     // Debug: Log response
     console.log('[DEBUG] PUT /api/admin/ui-settings - Response data:', JSON.stringify(responseData, null, 2))
     

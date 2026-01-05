@@ -60,13 +60,15 @@
   --feedback-card-text: #FFFFFF;
   --welcome-overlay-color: rgba(0, 0, 0, 0.3);
   --welcome-overlay-opacity: 0.5;
-  /* Typography sizes - defaults, will be overridden by inline styles from API */
+  /* Typography sizes - defaults, will be overridden by server-side injected styles */
   --menu-section-size: 22px;
   --menu-category-size: 18px;
   --menu-item-name-size: 16px;
   --menu-item-desc-size: 14px;
   --menu-item-price-size: 16px;
   --header-logo-size: 32px;
+  --bottom-nav-section-size: 13px;
+  --bottom-nav-category-size: 13px;
 }
 
 /* Apply brand colors dynamically */
