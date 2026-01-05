@@ -1,67 +1,104 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { readFile } from 'fs/promises'
-import { join } from 'path'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// Load fallback data from JSON file (updated by admin panel)
+// Load fallback data from database (updated by admin panel)
 const getFallbackData = async (slug: string) => {
   try {
-    const filePath = join(process.cwd(), 'data', 'fallback-restaurant.json')
-    const fileContent = await readFile(filePath, 'utf-8')
-    const fallbackData = JSON.parse(fileContent)
-    return {
-      ...fallbackData,
-      logo: null,
-      footerLogo: null,
-      welcomeBackground: null,
-      updatedAt: new Date().toISOString(),
+    // Try to read from database first (simple query, no relations)
+    const fallbackSettings = await prisma.fallbackSettings.findUnique({
+      where: { id: 'fallback-1' },
+    })
+    
+    if (fallbackSettings) {
+      return {
+        id: 'fallback',
+        nameKu: fallbackSettings.nameKu,
+        nameEn: fallbackSettings.nameEn,
+        nameAr: fallbackSettings.nameAr,
+        logoMediaId: fallbackSettings.logoMediaId,
+        footerLogoMediaId: fallbackSettings.footerLogoMediaId,
+        logo: null,
+        footerLogo: null,
+        welcomeBackgroundMediaId: fallbackSettings.welcomeBackgroundMediaId,
+        welcomeBackground: null,
+        welcomeOverlayColor: fallbackSettings.welcomeOverlayColor,
+        welcomeOverlayOpacity: fallbackSettings.welcomeOverlayOpacity,
+        welcomeTextEn: fallbackSettings.welcomeTextEn,
+        googleMapsUrl: fallbackSettings.googleMapsUrl,
+        phoneNumber: fallbackSettings.phoneNumber,
+        brandColors: (fallbackSettings.brandColors as any) || {
+          menuGradientStart: '#5C0015',
+          menuGradientEnd: '#800020',
+          headerText: '#FFFFFF',
+          headerIcons: '#FFFFFF',
+          activeTab: '#FFFFFF',
+          inactiveTab: '#CCCCCC',
+          categoryCardBg: '#4A5568',
+          itemCardBg: '#4A5568',
+          itemNameText: '#FFFFFF',
+          itemDescText: '#E2E8F0',
+          priceText: '#FBBF24',
+          dividerLine: '#718096',
+          modalBg: '#2D3748',
+          modalOverlay: 'rgba(0,0,0,0.7)',
+          buttonBg: '#800020',
+          buttonText: '#FFFFFF',
+          feedbackCardBg: '#4A5568',
+          feedbackCardText: '#FFFFFF',
+          welcomeOverlayColor: '#000000',
+          welcomeOverlayOpacity: 0.5,
+        },
+        updatedAt: new Date().toISOString(),
+      }
     }
   } catch (error) {
-    // If JSON file doesn't exist or can't be read, use hardcoded defaults
-    console.warn('Could not read fallback JSON file, using hardcoded defaults:', error)
-    return {
-      id: 'fallback',
-      nameKu: 'رێستۆرانتی',
-      nameEn: 'Restaurant',
-      nameAr: 'مطعم',
-      logoMediaId: null,
-      logo: null,
-      footerLogoMediaId: null,
-      footerLogo: null,
-      welcomeBackgroundMediaId: null,
-      welcomeBackground: null,
+    // If database query fails, continue to hardcoded defaults
+    console.warn('Could not read fallback settings from database, using hardcoded defaults:', error)
+  }
+  
+  // Hardcoded defaults (only used if database is completely unavailable)
+  return {
+    id: 'fallback',
+    nameKu: 'رێستۆرانتی',
+    nameEn: 'Restaurant',
+    nameAr: 'مطعم',
+    logoMediaId: null,
+    logo: null,
+    footerLogoMediaId: null,
+    footerLogo: null,
+    welcomeBackgroundMediaId: null,
+    welcomeBackground: null,
+    welcomeOverlayColor: '#000000',
+    welcomeOverlayOpacity: 0.5,
+    welcomeTextEn: null,
+    googleMapsUrl: null,
+    phoneNumber: null,
+    brandColors: {
+      menuGradientStart: '#5C0015',
+      menuGradientEnd: '#800020',
+      headerText: '#FFFFFF',
+      headerIcons: '#FFFFFF',
+      activeTab: '#FFFFFF',
+      inactiveTab: '#CCCCCC',
+      categoryCardBg: '#4A5568',
+      itemCardBg: '#4A5568',
+      itemNameText: '#FFFFFF',
+      itemDescText: '#E2E8F0',
+      priceText: '#FBBF24',
+      dividerLine: '#718096',
+      modalBg: '#2D3748',
+      modalOverlay: 'rgba(0,0,0,0.7)',
+      buttonBg: '#800020',
+      buttonText: '#FFFFFF',
+      feedbackCardBg: '#4A5568',
+      feedbackCardText: '#FFFFFF',
       welcomeOverlayColor: '#000000',
       welcomeOverlayOpacity: 0.5,
-      welcomeTextEn: null,
-      googleMapsUrl: null,
-      phoneNumber: null,
-      brandColors: {
-        menuGradientStart: '#5C0015',
-        menuGradientEnd: '#800020',
-        headerText: '#FFFFFF',
-        headerIcons: '#FFFFFF',
-        activeTab: '#FFFFFF',
-        inactiveTab: '#CCCCCC',
-        categoryCardBg: '#4A5568',
-        itemCardBg: '#4A5568',
-        itemNameText: '#FFFFFF',
-        itemDescText: '#E2E8F0',
-        priceText: '#FBBF24',
-        dividerLine: '#718096',
-        modalBg: '#2D3748',
-        modalOverlay: 'rgba(0,0,0,0.7)',
-        buttonBg: '#800020',
-        buttonText: '#FFFFFF',
-        feedbackCardBg: '#4A5568',
-        feedbackCardText: '#FFFFFF',
-        welcomeOverlayColor: '#000000',
-        welcomeOverlayOpacity: 0.5,
-      },
-      updatedAt: new Date().toISOString(),
-    }
+    },
+    updatedAt: new Date().toISOString(),
   }
 }
 
