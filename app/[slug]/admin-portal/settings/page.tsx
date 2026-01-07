@@ -116,38 +116,25 @@ export default function SettingsPage() {
 
     setUploadingLogo(true)
     try {
-      // Step 1: Get presigned URL
-      const presignResponse = await fetch('/api/r2/presign', {
+      // Upload via server-side proxy (avoids CORS issues)
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('scope', 'logo')
+      formData.append('restaurantId', settings.id)
+
+      const uploadResponse = await fetch('/api/r2/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type,
-          scope: 'logo',
-          restaurantId: settings.id,
-        }),
-      })
-
-      if (!presignResponse.ok) {
-        throw new Error('Failed to get upload URL')
-      }
-
-      const { uploadUrl, key, publicUrl } = await presignResponse.json()
-
-      // Step 2: Upload directly to R2
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type,
-        },
-        body: file,
+        body: formData,
       })
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload to R2')
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || 'Failed to upload logo')
       }
 
-      // Step 3: Save R2 key/URL to database
+      const { key, publicUrl } = await uploadResponse.json()
+
+      // Save R2 key/URL to database
       const updateResponse = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -184,38 +171,25 @@ export default function SettingsPage() {
 
     setUploadingFooterLogo(true)
     try {
-      // Step 1: Get presigned URL
-      const presignResponse = await fetch('/api/r2/presign', {
+      // Upload via server-side proxy (avoids CORS issues)
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('scope', 'footerLogo')
+      formData.append('restaurantId', settings.id)
+
+      const uploadResponse = await fetch('/api/r2/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type,
-          scope: 'footerLogo',
-          restaurantId: settings.id,
-        }),
-      })
-
-      if (!presignResponse.ok) {
-        throw new Error('Failed to get upload URL')
-      }
-
-      const { uploadUrl, key, publicUrl } = await presignResponse.json()
-
-      // Step 2: Upload directly to R2
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type,
-        },
-        body: file,
+        body: formData,
       })
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload to R2')
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || 'Failed to upload footer logo')
       }
 
-      // Step 3: Save R2 key/URL to database
+      const { key, publicUrl } = await uploadResponse.json()
+
+      // Save R2 key/URL to database
       const updateResponse = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -273,38 +247,25 @@ export default function SettingsPage() {
         return
       }
 
-      // Step 1: Get presigned URL
-      const presignResponse = await fetch('/api/r2/presign', {
+      // Upload via server-side proxy (avoids CORS issues)
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('scope', 'welcomeBg')
+      formData.append('restaurantId', settings.id)
+
+      const uploadResponse = await fetch('/api/r2/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type,
-          scope: 'welcomeBg',
-          restaurantId: settings.id,
-        }),
-      })
-
-      if (!presignResponse.ok) {
-        throw new Error('Failed to get upload URL')
-      }
-
-      const { uploadUrl, key, publicUrl } = await presignResponse.json()
-
-      // Step 2: Upload directly to R2
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type,
-        },
-        body: file,
+        body: formData,
       })
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload to R2')
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || 'Failed to upload background')
       }
 
-      // Step 3: Save R2 key/URL to database
+      const { key, publicUrl } = await uploadResponse.json()
+
+      // Save R2 key/URL to database
       const updateResponse = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

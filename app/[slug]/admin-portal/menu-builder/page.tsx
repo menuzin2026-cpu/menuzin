@@ -252,40 +252,29 @@ export default function MenuBuilderPage() {
 
     setUploadingImage(id)
     try {
-      // Step 1: Get presigned URL
+      // Upload via server-side proxy (avoids CORS issues)
       const scope = type === 'category' ? 'categoryImage' : 'itemImage'
-      const presignResponse = await fetch('/api/r2/presign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type,
-          scope,
-          restaurantId,
-          itemId: type === 'item' ? id : undefined,
-        }),
-      })
-
-      if (!presignResponse.ok) {
-        throw new Error('Failed to get upload URL')
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('scope', scope)
+      formData.append('restaurantId', restaurantId)
+      if (type === 'item') {
+        formData.append('itemId', id)
       }
 
-      const { uploadUrl, key, publicUrl } = await presignResponse.json()
-
-      // Step 2: Upload directly to R2
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type,
-        },
-        body: file,
+      const uploadResponse = await fetch('/api/r2/upload', {
+        method: 'POST',
+        body: formData,
       })
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload to R2')
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || 'Failed to upload image')
       }
 
-      // Step 3: Save R2 key/URL to database
+      const { key, publicUrl } = await uploadResponse.json()
+
+      // Save R2 key/URL to database
       if (type === 'category') {
         await fetch(`/api/admin/categories/${id}`, {
           method: 'PATCH',
@@ -722,51 +711,47 @@ export default function MenuBuilderPage() {
 
       const newItem = await response.json()
 
-      // Upload image to R2 if provided
+      // Upload image to R2 if provided (using server-side proxy to avoid CORS)
       if (itemImage && newItem.id) {
         try {
-          // Step 1: Get presigned URL
-          const presignResponse = await fetch('/api/r2/presign', {
+          // Upload via server-side proxy (avoids CORS issues)
+          const formData = new FormData()
+          formData.append('file', itemImage)
+          formData.append('scope', 'itemImage')
+          formData.append('restaurantId', restaurantId)
+          formData.append('itemId', newItem.id)
+
+          const uploadResponse = await fetch('/api/r2/upload', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fileName: itemImage.name,
-              contentType: itemImage.type,
-              scope: 'itemImage',
-              restaurantId,
-              itemId: newItem.id,
-            }),
-          })
-
-          if (!presignResponse.ok) {
-            throw new Error('Failed to get upload URL')
-          }
-
-          const { uploadUrl, key, publicUrl } = await presignResponse.json()
-
-          // Step 2: Upload directly to R2
-          const uploadResponse = await fetch(uploadUrl, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': itemImage.type,
-            },
-            body: itemImage,
+            body: formData,
           })
 
           if (!uploadResponse.ok) {
-            throw new Error('Failed to upload to R2')
+            const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+            console.error('[R2 UPLOAD] Upload failed:', errorData)
+            throw new Error(errorData.error || 'Failed to upload image')
           }
 
-          // Step 3: Update item with R2 key/URL
-          await fetch(`/api/admin/items/${newItem.id}`, {
+          const { key, publicUrl } = await uploadResponse.json()
+
+          // Update item with R2 key/URL
+          const updateResponse = await fetch(`/api/admin/items/${newItem.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ imageR2Key: key, imageR2Url: publicUrl }),
           })
+
+          if (!updateResponse.ok) {
+            const errorData = await updateResponse.json().catch(() => ({ error: 'Unknown error' }))
+            console.error('[R2 UPLOAD] Database update failed:', errorData)
+            throw new Error(errorData.error || 'Failed to save image URL to database')
+          }
+
+          console.log('[R2 UPLOAD] ✅ Image uploaded successfully:', { key, publicUrl })
         } catch (uploadError: any) {
-          console.error('Error uploading image:', uploadError)
+          console.error('[R2 UPLOAD] ❌ Error uploading image:', uploadError)
           // Don't fail the whole operation if image upload fails
-          toast.error('Item created but image upload failed')
+          toast.error(`Item created but image upload failed: ${uploadError.message || 'Unknown error'}`)
         }
       }
 
@@ -895,47 +880,37 @@ export default function MenuBuilderPage() {
         price: parseFloat(editItemForm.price),
       }
 
-      // Upload new image to R2 if provided
+      // Upload new image to R2 if provided (using server-side proxy to avoid CORS)
       if (itemImage) {
         try {
-          // Step 1: Get presigned URL
-          const presignResponse = await fetch('/api/r2/presign', {
+          // Upload via server-side proxy (avoids CORS issues)
+          const formData = new FormData()
+          formData.append('file', itemImage)
+          formData.append('scope', 'itemImage')
+          formData.append('restaurantId', restaurantId)
+          formData.append('itemId', itemId)
+
+          const uploadResponse = await fetch('/api/r2/upload', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fileName: itemImage.name,
-              contentType: itemImage.type,
-              scope: 'itemImage',
-              restaurantId,
-              itemId,
-            }),
-          })
-
-          if (!presignResponse.ok) {
-            throw new Error('Failed to get upload URL')
-          }
-
-          const { uploadUrl, key, publicUrl } = await presignResponse.json()
-
-          // Step 2: Upload directly to R2
-          const uploadResponse = await fetch(uploadUrl, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': itemImage.type,
-            },
-            body: itemImage,
+            body: formData,
           })
 
           if (!uploadResponse.ok) {
-            throw new Error('Failed to upload to R2')
+            const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+            console.error('[R2 UPLOAD] Upload failed:', errorData)
+            throw new Error(errorData.error || 'Failed to upload image')
           }
 
-          // Step 3: Add R2 fields to update data
+          const { key, publicUrl } = await uploadResponse.json()
+
+          // Add R2 fields to update data
           updateData.imageR2Key = key
           updateData.imageR2Url = publicUrl
+          
+          console.log('[R2 UPLOAD] ✅ Image uploaded successfully:', { key, publicUrl })
         } catch (uploadError: any) {
-          console.error('Error uploading image:', uploadError)
-          toast.error('Failed to upload image')
+          console.error('[R2 UPLOAD] ❌ Error uploading image:', uploadError)
+          toast.error(`Failed to upload image: ${uploadError.message || 'Unknown error'}`)
           return
         }
       }
