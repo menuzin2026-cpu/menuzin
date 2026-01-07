@@ -20,8 +20,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
     }
 
+    // Safely access fields that might not exist
+    const restaurantData = restaurant as any
+    
     // Safely access footerLogoMediaId - may not exist if migration hasn't run
-    const footerLogoMediaId = (restaurant as any).footerLogoMediaId || null
+    const footerLogoMediaId = restaurantData.footerLogoMediaId || null
+
+    // Safely access R2 fields - may not exist if migration hasn't run
+    const getR2Field = (fieldName: string) => {
+      try {
+        return restaurantData[fieldName] || null
+      } catch {
+        return null
+      }
+    }
 
     return NextResponse.json({
       id: restaurant.id,
@@ -37,17 +49,26 @@ export async function GET(request: NextRequest) {
       logoMediaId: restaurant.logoMediaId,
       footerLogoMediaId: footerLogoMediaId,
       welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
-      // R2 fields
-      logoR2Key: (restaurant as any).logoR2Key || null,
-      logoR2Url: (restaurant as any).logoR2Url || null,
-      footerLogoR2Key: (restaurant as any).footerLogoR2Key || null,
-      footerLogoR2Url: (restaurant as any).footerLogoR2Url || null,
-      welcomeBgR2Key: (restaurant as any).welcomeBgR2Key || null,
-      welcomeBgR2Url: (restaurant as any).welcomeBgR2Url || null,
+      // R2 fields - safely accessed
+      logoR2Key: getR2Field('logoR2Key'),
+      logoR2Url: getR2Field('logoR2Url'),
+      footerLogoR2Key: getR2Field('footerLogoR2Key'),
+      footerLogoR2Url: getR2Field('footerLogoR2Url'),
+      welcomeBgR2Key: getR2Field('welcomeBgR2Key'),
+      welcomeBgR2Url: getR2Field('welcomeBgR2Url'),
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching settings:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
+    })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: error?.message || 'Unknown error',
+      details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+    }, { status: 500 })
   }
 }
 

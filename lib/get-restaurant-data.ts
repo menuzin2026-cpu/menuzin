@@ -101,8 +101,18 @@ export async function getRestaurantData(slug: string): Promise<RestaurantData | 
       return null
     }
 
-    const footerLogoMediaId = (restaurant as any).footerLogoMediaId || null
-    const footerLogo = (restaurant as any).footerLogo || null
+    const restaurantData = restaurant as any
+    const footerLogoMediaId = restaurantData.footerLogoMediaId || null
+    const footerLogo = restaurantData.footerLogo || null
+
+    // Safely access R2 fields - may not exist if migration hasn't run
+    const getR2Field = (fieldName: string) => {
+      try {
+        return restaurantData[fieldName] || null
+      } catch {
+        return null
+      }
+    }
 
     return {
       id: restaurant.id,
@@ -115,13 +125,13 @@ export async function getRestaurantData(slug: string): Promise<RestaurantData | 
       footerLogo: footerLogo,
       welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
       welcomeBackground: restaurant.welcomeBackground,
-      // R2 fields
-      logoR2Key: (restaurant as any).logoR2Key || null,
-      logoR2Url: (restaurant as any).logoR2Url || null,
-      footerLogoR2Key: (restaurant as any).footerLogoR2Key || null,
-      footerLogoR2Url: (restaurant as any).footerLogoR2Url || null,
-      welcomeBgR2Key: (restaurant as any).welcomeBgR2Key || null,
-      welcomeBgR2Url: (restaurant as any).welcomeBgR2Url || null,
+      // R2 fields - safely accessed
+      logoR2Key: getR2Field('logoR2Key'),
+      logoR2Url: getR2Field('logoR2Url'),
+      footerLogoR2Key: getR2Field('footerLogoR2Key'),
+      footerLogoR2Url: getR2Field('footerLogoR2Url'),
+      welcomeBgR2Key: getR2Field('welcomeBgR2Key'),
+      welcomeBgR2Url: getR2Field('welcomeBgR2Url'),
       welcomeOverlayColor: restaurant.welcomeOverlayColor,
       welcomeOverlayOpacity: restaurant.welcomeOverlayOpacity,
       welcomeTextEn: restaurant.welcomeTextEn,
@@ -130,8 +140,13 @@ export async function getRestaurantData(slug: string): Promise<RestaurantData | 
       brandColors: restaurant.brandColors,
       updatedAt: restaurant.updatedAt,
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching restaurant data:', error)
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
+    })
     return null
   }
 }
