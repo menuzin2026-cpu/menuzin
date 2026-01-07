@@ -28,7 +28,7 @@ export function WelcomeLanguageButtons({ slug, isLoaded }: WelcomeLanguageButton
   }
 
   return (
-    <div className="w-full max-w-[161px] space-y-2 mb-6">
+    <div className="w-full max-w-[113px] space-y-2 mb-6">
       {languages.map((lang) => (
         <button
           key={lang.code}
