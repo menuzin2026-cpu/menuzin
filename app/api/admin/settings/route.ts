@@ -162,24 +162,24 @@ export async function PUT(request: NextRequest) {
       updateData.welcomeBackgroundMediaId = body.welcomeBackgroundMediaId
     }
 
-    // Handle R2 fields
+    // Handle R2 fields - allow null to clear them
     if (body.logoR2Key !== undefined) {
-      updateData.logoR2Key = body.logoR2Key
+      updateData.logoR2Key = body.logoR2Key || null
     }
     if (body.logoR2Url !== undefined) {
-      updateData.logoR2Url = body.logoR2Url
+      updateData.logoR2Url = body.logoR2Url || null
     }
     if (body.footerLogoR2Key !== undefined) {
-      updateData.footerLogoR2Key = body.footerLogoR2Key
+      updateData.footerLogoR2Key = body.footerLogoR2Key || null
     }
     if (body.footerLogoR2Url !== undefined) {
-      updateData.footerLogoR2Url = body.footerLogoR2Url
+      updateData.footerLogoR2Url = body.footerLogoR2Url || null
     }
     if (body.welcomeBgR2Key !== undefined) {
-      updateData.welcomeBgR2Key = body.welcomeBgR2Key
+      updateData.welcomeBgR2Key = body.welcomeBgR2Key || null
     }
     if (body.welcomeBgR2Url !== undefined) {
-      updateData.welcomeBgR2Url = body.welcomeBgR2Url
+      updateData.welcomeBgR2Url = body.welcomeBgR2Url || null
     }
 
     // Log the update data for debugging

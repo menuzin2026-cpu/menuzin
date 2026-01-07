@@ -338,14 +338,29 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsLoading(true)
     try {
+      // Ensure R2 fields are explicitly set to null if they should be removed
+      const saveData = {
+        ...settings,
+        slug,
+        // Explicitly include R2 fields - if they're null in state, send null to clear them
+        logoR2Key: settings.logoR2Key ?? null,
+        logoR2Url: settings.logoR2Url ?? null,
+        footerLogoR2Key: settings.footerLogoR2Key ?? null,
+        footerLogoR2Url: settings.footerLogoR2Url ?? null,
+        welcomeBgR2Key: settings.welcomeBgR2Key ?? null,
+        welcomeBgR2Url: settings.welcomeBgR2Url ?? null,
+      }
+      
       const response = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...settings, slug }),
+        body: JSON.stringify(saveData),
       })
 
       if (response.ok) {
         toast.success('Settings saved successfully!')
+        // Refresh settings to get updated data
+        fetchSettings()
       } else {
         const errorData = await response.json().catch(() => ({}))
         toast.error(errorData.message || 'Failed to save settings')
@@ -408,7 +423,12 @@ export default function SettingsPage() {
                         type="button"
                         onClick={() => {
                           setLogoPreview(null)
-                          setSettings({ ...settings, logoMediaId: null })
+                          setSettings({ 
+                            ...settings, 
+                            logoMediaId: null,
+                            logoR2Key: null,
+                            logoR2Url: null
+                          })
                         }}
                         className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
                       >
@@ -543,7 +563,12 @@ export default function SettingsPage() {
                         type="button"
                         onClick={() => {
                           setBackgroundPreview(null)
-                          setSettings({ ...settings, welcomeBackgroundMediaId: null })
+                          setSettings({ 
+                            ...settings, 
+                            welcomeBackgroundMediaId: null,
+                            welcomeBgR2Key: null,
+                            welcomeBgR2Url: null
+                          })
                         }}
                         className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
                       >
