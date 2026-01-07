@@ -816,7 +816,10 @@ export default function MenuBuilderPage() {
       descriptionAr: item.descriptionAr || '',
       price: item.price.toString(),
     })
-    if (item.imageMediaId) {
+    // Check R2 URL first, then fall back to old media ID
+    if (item.imageR2Url) {
+      setItemImagePreview(item.imageR2Url)
+    } else if (item.imageMediaId) {
       setItemImagePreview(`/assets/${item.imageMediaId}`)
     }
   }
@@ -1470,20 +1473,36 @@ export default function MenuBuilderPage() {
           </div>
         </div>
         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded bg-gray-700 overflow-hidden flex-shrink-0">
-          {item.imageMediaId ? (
-            <img
-              src={`/assets/${item.imageMediaId}`}
-              alt={item.nameEn}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div 
-              className="w-full h-full flex items-center justify-center text-xs"
-              style={{ color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))' }}
-            >
-              No Img
-            </div>
-          )}
+          {(() => {
+            // Check R2 URL first, then fall back to old media ID
+            const imageUrl = item.imageR2Url || (item.imageMediaId ? `/assets/${item.imageMediaId}` : null)
+            return imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={item.nameEn}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  e.currentTarget.style.display = 'none'
+                  const parent = e.currentTarget.parentElement
+                  if (parent) {
+                    const fallback = document.createElement('div')
+                    fallback.className = 'w-full h-full flex items-center justify-center text-xs'
+                    fallback.style.color = 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))'
+                    fallback.textContent = 'No Img'
+                    parent.appendChild(fallback)
+                  }
+                }}
+              />
+            ) : (
+              <div 
+                className="w-full h-full flex items-center justify-center text-xs"
+                style={{ color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))' }}
+              >
+                No Img
+              </div>
+            )
+          })()}
         </div>
         <div className="flex-1 min-w-0 w-full sm:w-auto">
           <div 
