@@ -30,6 +30,8 @@ interface Category {
   nameEn: string
   nameAr: string
   imageMediaId: string | null
+  imageR2Key?: string | null
+  imageR2Url?: string | null
   sortOrder: number
   isActive: boolean
   items: Item[]
@@ -45,6 +47,8 @@ interface Item {
   descriptionAr?: string | null
   price: number
   imageMediaId: string | null
+  imageR2Key?: string | null
+  imageR2Url?: string | null
   sortOrder: number
   isActive: boolean
 }
@@ -194,7 +198,10 @@ function MenuPageContent() {
         }
         const data = await res.json()
         setRestaurant(data)
-        if (data.footerLogoMediaId) {
+        // Use R2 URL if available, otherwise fall back to old media ID
+        if (data.footerLogoR2Url) {
+          setFooterLogoUrl(data.footerLogoR2Url)
+        } else if (data.footerLogoMediaId) {
           setFooterLogoUrl(`/assets/${data.footerLogoMediaId}`)
         } else {
           setFooterLogoUrl(null)
@@ -596,7 +603,7 @@ function MenuPageContent() {
       }}
     >
       <MenuHeader
-        logoUrl={restaurant?.logoMediaId ? `/assets/${restaurant.logoMediaId}` : undefined}
+        logoUrl={restaurant?.logoR2Url || (restaurant?.logoMediaId ? `/assets/${restaurant.logoMediaId}` : undefined)}
       />
 
       <FloatingActionBar

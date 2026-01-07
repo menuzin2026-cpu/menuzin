@@ -12,6 +12,8 @@ interface Item {
   nameEn: string
   nameAr: string
   imageMediaId: string | null
+  imageR2Key?: string | null
+  imageR2Url?: string | null
 }
 
 interface SearchDrawerProps {
@@ -184,12 +186,14 @@ export function SearchDrawer({
                   }}
                   className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/15 transition-colors text-left border border-white/20 hover:border-white/30 shadow-sm"
                 >
-                  {item.imageMediaId ? (
-                    <img
-                      src={`/assets/${item.imageMediaId}`}
-                      alt={getLocalizedText(item, currentLang)}
-                      className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
-                      loading="lazy"
+                  {(() => {
+                    const imageUrl = item.imageR2Url || (item.imageMediaId ? `/assets/${item.imageMediaId}` : null)
+                    return imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={getLocalizedText(item, currentLang)}
+                        className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+                        loading="lazy"
                       decoding="async"
                     />
                   ) : (

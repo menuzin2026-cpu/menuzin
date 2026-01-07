@@ -8,6 +8,7 @@ import { Upload, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface RestaurantSettings {
+  id?: string
   nameKu: string
   nameEn: string
   nameAr: string
@@ -20,6 +21,12 @@ interface RestaurantSettings {
   logoMediaId: string | null
   footerLogoMediaId: string | null
   welcomeBackgroundMediaId: string | null
+  logoR2Key?: string | null
+  logoR2Url?: string | null
+  footerLogoR2Key?: string | null
+  footerLogoR2Url?: string | null
+  welcomeBgR2Key?: string | null
+  welcomeBgR2Url?: string | null
 }
 
 export default function SettingsPage() {
@@ -79,13 +86,20 @@ export default function SettingsPage() {
       if (response.ok) {
         const data = await response.json()
         setSettings(data)
-        if (data.logoMediaId) {
+        // Use R2 URL if available, otherwise fall back to old media ID
+        if (data.logoR2Url) {
+          setLogoPreview(data.logoR2Url)
+        } else if (data.logoMediaId) {
           setLogoPreview(`/assets/${data.logoMediaId}`)
         }
-        if (data.footerLogoMediaId) {
+        if (data.footerLogoR2Url) {
+          setFooterLogoPreview(data.footerLogoR2Url)
+        } else if (data.footerLogoMediaId) {
           setFooterLogoPreview(`/assets/${data.footerLogoMediaId}`)
         }
-        if (data.welcomeBackgroundMediaId) {
+        if (data.welcomeBgR2Url) {
+          setBackgroundPreview(data.welcomeBgR2Url)
+        } else if (data.welcomeBackgroundMediaId) {
           setBackgroundPreview(`/assets/${data.welcomeBackgroundMediaId}`)
         }
       }
@@ -95,31 +109,60 @@ export default function SettingsPage() {
   }
 
   const handleLogoUpload = async (file: File) => {
+    if (!settings.id) {
+      toast.error('Restaurant ID not found')
+      return
+    }
+
     setUploadingLogo(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/media/upload', {
+      // Step 1: Get presigned URL
+      const presignResponse = await fetch('/api/r2/presign', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name,
+          contentType: file.type,
+          scope: 'logo',
+          restaurantId: settings.id,
+        }),
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to upload logo')
+      if (!presignResponse.ok) {
+        throw new Error('Failed to get upload URL')
       }
 
-      const { id: mediaId } = await response.json()
-      
-      // Update settings with new logo
+      const { uploadUrl, key, publicUrl } = await presignResponse.json()
+
+      // Step 2: Upload directly to R2
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload to R2')
+      }
+
+      // Step 3: Save R2 key/URL to database
       const updateResponse = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...settings, logoMediaId: mediaId, slug }),
+        body: JSON.stringify({
+          ...settings,
+          logoR2Key: key,
+          logoR2Url: publicUrl,
+          slug,
+        }),
       })
 
       if (updateResponse.ok) {
-        setSettings({ ...settings, logoMediaId: mediaId })
+        const updatedData = await updateResponse.json()
+        setSettings({ ...settings, logoR2Key: key, logoR2Url: publicUrl })
+        setLogoPreview(publicUrl)
         toast.success('Logo uploaded successfully!')
       } else {
         throw new Error('Failed to update logo')
@@ -134,31 +177,60 @@ export default function SettingsPage() {
   }
 
   const handleFooterLogoUpload = async (file: File) => {
+    if (!settings.id) {
+      toast.error('Restaurant ID not found')
+      return
+    }
+
     setUploadingFooterLogo(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/media/upload', {
+      // Step 1: Get presigned URL
+      const presignResponse = await fetch('/api/r2/presign', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name,
+          contentType: file.type,
+          scope: 'footerLogo',
+          restaurantId: settings.id,
+        }),
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to upload footer logo')
+      if (!presignResponse.ok) {
+        throw new Error('Failed to get upload URL')
       }
 
-      const { id: mediaId } = await response.json()
-      
-      // Update settings with new footer logo
+      const { uploadUrl, key, publicUrl } = await presignResponse.json()
+
+      // Step 2: Upload directly to R2
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload to R2')
+      }
+
+      // Step 3: Save R2 key/URL to database
       const updateResponse = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...settings, footerLogoMediaId: mediaId, slug }),
+        body: JSON.stringify({
+          ...settings,
+          footerLogoR2Key: key,
+          footerLogoR2Url: publicUrl,
+          slug,
+        }),
       })
 
       if (updateResponse.ok) {
-        setSettings({ ...settings, footerLogoMediaId: mediaId })
+        const updatedData = await updateResponse.json()
+        setSettings({ ...settings, footerLogoR2Key: key, footerLogoR2Url: publicUrl })
+        setFooterLogoPreview(publicUrl)
         toast.success('Footer logo uploaded successfully!')
       } else {
         throw new Error('Failed to update footer logo')
@@ -173,6 +245,11 @@ export default function SettingsPage() {
   }
 
   const handleBackgroundUpload = async (file: File) => {
+    if (!settings.id) {
+      toast.error('Restaurant ID not found')
+      return
+    }
+
     setUploadingBackground(true)
     try {
       // Validate file before upload
@@ -185,59 +262,64 @@ export default function SettingsPage() {
         return
       }
 
-      // Vercel serverless functions have a 4.5MB body size limit
-      // We use 4MB to be safe
-      const maxSize = 4 * 1024 * 1024 // 4MB for both images and videos
+      // R2 supports larger files, but we'll keep reasonable limits
+      const maxImageSize = 10 * 1024 * 1024 // 10MB for images
+      const maxVideoSize = 100 * 1024 * 1024 // 100MB for videos
+      const maxSize = isVideo ? maxVideoSize : maxImageSize
+      
       if (file.size > maxSize) {
-        toast.error('File size must be less than 4MB (Vercel serverless function limit)')
+        toast.error(`File size must be less than ${maxSize / (1024 * 1024)}MB`)
         setUploadingBackground(false)
         return
       }
 
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/media/upload', {
+      // Step 1: Get presigned URL
+      const presignResponse = await fetch('/api/r2/presign', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name,
+          contentType: file.type,
+          scope: 'welcomeBg',
+          restaurantId: settings.id,
+        }),
       })
 
-      // Handle different response types
-      let responseData: any = {}
-      const contentType = response.headers.get('content-type')
-      
-      if (contentType?.includes('application/json')) {
-        responseData = await response.json()
-      } else {
-        // Handle non-JSON responses (like 413 errors)
-        const text = await response.text()
-        if (response.status === 413) {
-          throw new Error('File is too large. Maximum size is 4MB due to Vercel serverless function limits. Please compress your video or use a smaller file.')
-        }
-        throw new Error(text || 'Failed to upload background')
+      if (!presignResponse.ok) {
+        throw new Error('Failed to get upload URL')
       }
 
-      if (!response.ok) {
-        throw new Error(responseData.error || 'Failed to upload background')
+      const { uploadUrl, key, publicUrl } = await presignResponse.json()
+
+      // Step 2: Upload directly to R2
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload to R2')
       }
 
-      const { id: mediaId } = responseData
-      
-      // Update settings with new background
+      // Step 3: Save R2 key/URL to database
       const updateResponse = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...settings, welcomeBackgroundMediaId: mediaId, slug }),
+        body: JSON.stringify({
+          ...settings,
+          welcomeBgR2Key: key,
+          welcomeBgR2Url: publicUrl,
+          slug,
+        }),
       })
 
       if (updateResponse.ok) {
-        setSettings({ ...settings, welcomeBackgroundMediaId: mediaId })
-        // Update preview for video
-        if (isVideo) {
-          setBackgroundPreview(`/assets/${mediaId}`)
-        } else {
-          setBackgroundPreview(`/assets/${mediaId}`)
-        }
+        const updatedData = await updateResponse.json()
+        setSettings({ ...settings, welcomeBgR2Key: key, welcomeBgR2Url: publicUrl })
+        setBackgroundPreview(publicUrl)
         toast.success('Background uploaded successfully!')
       } else {
         const errorData = await updateResponse.json().catch(() => ({}))

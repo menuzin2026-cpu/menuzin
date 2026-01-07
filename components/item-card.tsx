@@ -14,6 +14,8 @@ interface Item {
   nameAr: string
   price: number
   imageMediaId: string | null
+  imageR2Key?: string | null
+  imageR2Url?: string | null
 }
 
 interface ItemCardProps {
@@ -81,18 +83,20 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
           margin: 0,
           padding: 0,
         }}>
-          {item.imageMediaId ? (
-            <Image
-              src={`/assets/${item.imageMediaId}`}
-              alt={getLocalizedText(item, currentLang)}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 50vw, 33vw"
-              unoptimized={true}
-              priority={priority}
-              loading={priority ? 'eager' : 'lazy'}
-            />
-          ) : (
+          {(() => {
+            const imageUrl = item.imageR2Url || (item.imageMediaId ? `/assets/${item.imageMediaId}` : null)
+            return imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt={getLocalizedText(item, currentLang)}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 50vw, 33vw"
+                unoptimized={!imageUrl.startsWith('http')}
+                priority={priority}
+                loading={priority ? 'eager' : 'lazy'}
+              />
+            ) : (
             <div className="w-full h-full flex items-center justify-center text-white/60 bg-gradient-to-br from-[#5C0015]/30 to-[#800020]/30">
               No Image
             </div>

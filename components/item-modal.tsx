@@ -16,6 +16,8 @@ interface Item {
   descriptionAr?: string | null
   price: number
   imageMediaId: string | null
+  imageR2Key?: string | null
+  imageR2Url?: string | null
 }
 
 interface ItemModalProps {
@@ -57,17 +59,19 @@ export function ItemModal({ item, currentLang, isOpen, onClose }: ItemModalProps
 
         {/* Image */}
         <div className="w-full aspect-square relative">
-          {item.imageMediaId ? (
-            <Image
-              src={`/assets/${item.imageMediaId}`}
-              alt={getLocalizedText(item, currentLang)}
-              fill
-              className="object-cover rounded-t-3xl"
-              sizes="(max-width: 768px) 100vw, 400px"
-              priority
-              unoptimized={true}
-            />
-          ) : (
+          {(() => {
+            const imageUrl = item.imageR2Url || (item.imageMediaId ? `/assets/${item.imageMediaId}` : null)
+            return imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt={getLocalizedText(item, currentLang)}
+                fill
+                className="object-cover rounded-t-3xl"
+                sizes="(max-width: 768px) 100vw, 400px"
+                priority
+                unoptimized={!imageUrl.startsWith('http')}
+              />
+            ) : (
             <div 
               className="w-full h-full flex items-center justify-center"
               style={{

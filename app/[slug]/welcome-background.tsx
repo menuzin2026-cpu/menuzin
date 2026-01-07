@@ -47,7 +47,10 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
     }
   }, [restaurant.welcomeBackground?.mimeType, prefersReducedMotion])
 
-  if (!restaurant.welcomeBackgroundMediaId) {
+  // Use R2 URL if available, otherwise fall back to old media ID
+  const backgroundUrl = restaurant.welcomeBgR2Url || (restaurant.welcomeBackgroundMediaId ? `/assets/${restaurant.welcomeBackgroundMediaId}?v=${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}` : null)
+
+  if (!backgroundUrl) {
     return (
       <div 
         className={`absolute inset-0 background-fade-in ${isLoaded ? 'animate-in' : ''}`}
@@ -58,7 +61,6 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
 
   const isVideo = restaurant.welcomeBackground?.mimeType?.startsWith('video/') ?? false
   const shouldShowVideo = isVideo && !prefersReducedMotion
-  const assetUrl = `/assets/${restaurant.welcomeBackgroundMediaId}?v=${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`
 
   return (
     <div 
@@ -74,7 +76,7 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
         >
           <video
             ref={videoRef}
-            key={`video-${restaurant.welcomeBackgroundMediaId}-${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`}
+            key={`video-${restaurant.welcomeBgR2Key || restaurant.welcomeBackgroundMediaId}-${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`}
             autoPlay
             muted
             playsInline
@@ -93,15 +95,15 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
             }}
           >
             <source 
-              src={assetUrl} 
+              src={backgroundUrl} 
               type="video/mp4" 
             />
           </video>
         </div>
       ) : (
         <img
-          key={`image-${restaurant.welcomeBackgroundMediaId}-${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`}
-          src={assetUrl}
+          key={`image-${restaurant.welcomeBgR2Key || restaurant.welcomeBackgroundMediaId}-${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`}
+          src={backgroundUrl}
           alt="Welcome Background"
           className="w-full h-full object-cover absolute inset-0"
           style={{ 

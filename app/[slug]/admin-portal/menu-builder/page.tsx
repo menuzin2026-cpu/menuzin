@@ -44,6 +44,8 @@ interface Category {
   nameEn: string
   nameAr: string
   imageMediaId: string | null
+  imageR2Key?: string | null
+  imageR2Url?: string | null
   sortOrder: number
   isActive: boolean
   items: Item[]
@@ -59,6 +61,8 @@ interface Item {
   descriptionAr?: string | null
   price: number
   imageMediaId: string | null
+  imageR2Key?: string | null
+  imageR2Url?: string | null
   sortOrder: number
   isActive: boolean
 }
@@ -67,6 +71,7 @@ export default function MenuBuilderPage() {
   const router = useRouter()
   const params = useParams()
   const slug = params.slug as string
+  const [restaurantId, setRestaurantId] = useState<string | null>(null)
   const [sections, setSections] = useState<Section[]>([])
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
@@ -128,8 +133,23 @@ export default function MenuBuilderPage() {
   )
 
   useEffect(() => {
+    fetchRestaurantId()
     fetchMenuData()
   }, [])
+
+  const fetchRestaurantId = async () => {
+    try {
+      const response = await fetch(`/api/admin/settings?slug=${slug}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.id) {
+          setRestaurantId(data.id)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching restaurant ID:', error)
+    }
+  }
 
   // Lock body scroll when Add Item modal is open
   useEffect(() => {
@@ -225,42 +245,66 @@ export default function MenuBuilderPage() {
   }
 
   const handleImageUpload = async (file: File, type: 'category' | 'item', id: string) => {
+    if (!restaurantId) {
+      toast.error('Restaurant ID not found')
+      return
+    }
+
     setUploadingImage(id)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await fetch('/api/media/upload', {
+      // Step 1: Get presigned URL
+      const scope = type === 'category' ? 'categoryImage' : 'itemImage'
+      const presignResponse = await fetch('/api/r2/presign', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name,
+          contentType: file.type,
+          scope,
+          restaurantId,
+          itemId: type === 'item' ? id : undefined,
+        }),
       })
 
-      if (!response.ok) {
-        throw new Error('Upload failed')
+      if (!presignResponse.ok) {
+        throw new Error('Failed to get upload URL')
       }
 
-      const { id: mediaId } = await response.json()
+      const { uploadUrl, key, publicUrl } = await presignResponse.json()
 
-      // Update category or item with new image
+      // Step 2: Upload directly to R2
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload to R2')
+      }
+
+      // Step 3: Save R2 key/URL to database
       if (type === 'category') {
         await fetch(`/api/admin/categories/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageMediaId: mediaId }),
+          body: JSON.stringify({ imageR2Key: key, imageR2Url: publicUrl }),
         })
       } else {
         await fetch(`/api/admin/items/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageMediaId: mediaId }),
+          body: JSON.stringify({ imageR2Key: key, imageR2Url: publicUrl }),
         })
       }
 
       toast.success('Image uploaded successfully')
       fetchMenuData()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error)
-      toast.error('Failed to upload image')
+      toast.error(error.message || 'Failed to upload image')
     } finally {
       setUploadingImage(null)
     }
@@ -653,28 +697,13 @@ export default function MenuBuilderPage() {
 
   const handleAddItem = async (e: React.FormEvent, categoryId: string) => {
     e.preventDefault()
+    if (!restaurantId) {
+      toast.error('Restaurant ID not found')
+      return
+    }
+
     try {
-      let imageMediaId: string | null = null
-
-      // Upload image if provided
-      if (itemImage) {
-        const formData = new FormData()
-        formData.append('file', itemImage)
-
-        const uploadResponse = await fetch('/api/media/upload', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload image')
-        }
-
-        const uploadData = await uploadResponse.json()
-        imageMediaId = uploadData.id
-      }
-
-      // Create item with image
+      // Create item first (without image)
       const response = await fetch('/api/admin/items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -682,13 +711,63 @@ export default function MenuBuilderPage() {
           ...itemForm,
           categoryId,
           price: parseFloat(itemForm.price),
-          imageMediaId,
+          imageMediaId: null,
         }),
       })
 
       if (!response.ok) {
         const error = await response.json()
         throw new Error(error.error || 'Failed to create item')
+      }
+
+      const newItem = await response.json()
+
+      // Upload image to R2 if provided
+      if (itemImage && newItem.id) {
+        try {
+          // Step 1: Get presigned URL
+          const presignResponse = await fetch('/api/r2/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fileName: itemImage.name,
+              contentType: itemImage.type,
+              scope: 'itemImage',
+              restaurantId,
+              itemId: newItem.id,
+            }),
+          })
+
+          if (!presignResponse.ok) {
+            throw new Error('Failed to get upload URL')
+          }
+
+          const { uploadUrl, key, publicUrl } = await presignResponse.json()
+
+          // Step 2: Upload directly to R2
+          const uploadResponse = await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': itemImage.type,
+            },
+            body: itemImage,
+          })
+
+          if (!uploadResponse.ok) {
+            throw new Error('Failed to upload to R2')
+          }
+
+          // Step 3: Update item with R2 key/URL
+          await fetch(`/api/admin/items/${newItem.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageR2Key: key, imageR2Url: publicUrl }),
+          })
+        } catch (uploadError: any) {
+          console.error('Error uploading image:', uploadError)
+          // Don't fail the whole operation if image upload fails
+          toast.error('Item created but image upload failed')
+        }
       }
 
       toast.success('Item created successfully')
@@ -805,34 +884,60 @@ export default function MenuBuilderPage() {
 
   const handleUpdateItem = async (e: React.FormEvent, itemId: string) => {
     e.preventDefault()
+    if (!restaurantId) {
+      toast.error('Restaurant ID not found')
+      return
+    }
+
     try {
-      let imageMediaId: string | undefined = undefined
-
-      // Upload new image if provided
-      if (itemImage) {
-        const formData = new FormData()
-        formData.append('file', itemImage)
-
-        const uploadResponse = await fetch('/api/media/upload', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload image')
-        }
-
-        const uploadData = await uploadResponse.json()
-        imageMediaId = uploadData.id
-      }
-
       const updateData: any = {
         ...editItemForm,
         price: parseFloat(editItemForm.price),
       }
 
-      if (imageMediaId) {
-        updateData.imageMediaId = imageMediaId
+      // Upload new image to R2 if provided
+      if (itemImage) {
+        try {
+          // Step 1: Get presigned URL
+          const presignResponse = await fetch('/api/r2/presign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fileName: itemImage.name,
+              contentType: itemImage.type,
+              scope: 'itemImage',
+              restaurantId,
+              itemId,
+            }),
+          })
+
+          if (!presignResponse.ok) {
+            throw new Error('Failed to get upload URL')
+          }
+
+          const { uploadUrl, key, publicUrl } = await presignResponse.json()
+
+          // Step 2: Upload directly to R2
+          const uploadResponse = await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': itemImage.type,
+            },
+            body: itemImage,
+          })
+
+          if (!uploadResponse.ok) {
+            throw new Error('Failed to upload to R2')
+          }
+
+          // Step 3: Add R2 fields to update data
+          updateData.imageR2Key = key
+          updateData.imageR2Url = publicUrl
+        } catch (uploadError: any) {
+          console.error('Error uploading image:', uploadError)
+          toast.error('Failed to upload image')
+          return
+        }
       }
 
       const response = await fetch(`/api/admin/items/${itemId}`, {

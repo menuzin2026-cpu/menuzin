@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     const footerLogoMediaId = (restaurant as any).footerLogoMediaId || null
 
     return NextResponse.json({
+      id: restaurant.id,
       nameKu: restaurant.nameKu,
       nameEn: restaurant.nameEn,
       nameAr: restaurant.nameAr,
@@ -36,6 +37,13 @@ export async function GET(request: NextRequest) {
       logoMediaId: restaurant.logoMediaId,
       footerLogoMediaId: footerLogoMediaId,
       welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
+      // R2 fields
+      logoR2Key: (restaurant as any).logoR2Key || null,
+      logoR2Url: (restaurant as any).logoR2Url || null,
+      footerLogoR2Key: (restaurant as any).footerLogoR2Key || null,
+      footerLogoR2Url: (restaurant as any).footerLogoR2Url || null,
+      welcomeBgR2Key: (restaurant as any).welcomeBgR2Key || null,
+      welcomeBgR2Url: (restaurant as any).welcomeBgR2Url || null,
     })
   } catch (error) {
     console.error('Error fetching settings:', error)
@@ -133,6 +141,26 @@ export async function PUT(request: NextRequest) {
       updateData.welcomeBackgroundMediaId = body.welcomeBackgroundMediaId
     }
 
+    // Handle R2 fields
+    if (body.logoR2Key !== undefined) {
+      updateData.logoR2Key = body.logoR2Key
+    }
+    if (body.logoR2Url !== undefined) {
+      updateData.logoR2Url = body.logoR2Url
+    }
+    if (body.footerLogoR2Key !== undefined) {
+      updateData.footerLogoR2Key = body.footerLogoR2Key
+    }
+    if (body.footerLogoR2Url !== undefined) {
+      updateData.footerLogoR2Url = body.footerLogoR2Url
+    }
+    if (body.welcomeBgR2Key !== undefined) {
+      updateData.welcomeBgR2Key = body.welcomeBgR2Key
+    }
+    if (body.welcomeBgR2Url !== undefined) {
+      updateData.welcomeBgR2Url = body.welcomeBgR2Url
+    }
+
     // Log the update data for debugging
     if (process.env.NODE_ENV === 'development') {
       console.log('Update data:', JSON.stringify(updateData, null, 2))
@@ -210,6 +238,7 @@ export async function PUT(request: NextRequest) {
     }
 
     return NextResponse.json({
+      id: updated.id,
       nameKu: updated.nameKu,
       nameEn: updated.nameEn,
       nameAr: updated.nameAr,
@@ -222,6 +251,13 @@ export async function PUT(request: NextRequest) {
       logoMediaId: updated.logoMediaId,
       footerLogoMediaId: updatedFooterLogoMediaId,
       welcomeBackgroundMediaId: updated.welcomeBackgroundMediaId,
+      // R2 fields
+      logoR2Key: (updated as any).logoR2Key || null,
+      logoR2Url: (updated as any).logoR2Url || null,
+      footerLogoR2Key: (updated as any).footerLogoR2Key || null,
+      footerLogoR2Url: (updated as any).footerLogoR2Url || null,
+      welcomeBgR2Key: (updated as any).welcomeBgR2Key || null,
+      welcomeBgR2Url: (updated as any).welcomeBgR2Url || null,
     })
   } catch (error: any) {
     console.error('Error updating settings:', error)

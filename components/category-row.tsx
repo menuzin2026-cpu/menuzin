@@ -9,6 +9,8 @@ interface Category {
   nameEn: string
   nameAr: string
   imageMediaId: string | null
+  imageR2Key?: string | null
+  imageR2Url?: string | null
   isActive: boolean
 }
 
@@ -44,15 +46,17 @@ export function CategoryRow({ categories, currentLang, onCategoryClick }: Catego
               onClick={() => onCategoryClick?.(category.id)}
               className="w-20 h-20 rounded-lg bg-[var(--category-card-bg)] shadow-lg overflow-hidden border border-white/10 hover:border-white/30 transition-all cursor-pointer"
             >
-              {category.imageMediaId ? (
-                <img
-                  src={`/assets/${category.imageMediaId}`}
-                  alt={getLocalizedText(category, currentLang)}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ) : (
+              {(() => {
+                const imageUrl = category.imageR2Url || (category.imageMediaId ? `/assets/${category.imageMediaId}` : null)
+                return imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={getLocalizedText(category, currentLang)}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
                   No Image
                 </div>

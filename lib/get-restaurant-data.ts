@@ -23,6 +23,13 @@ export interface RestaurantData {
     mimeType: string
     size: number
   } | null
+  // R2 fields
+  logoR2Key?: string | null
+  logoR2Url?: string | null
+  footerLogoR2Key?: string | null
+  footerLogoR2Url?: string | null
+  welcomeBgR2Key?: string | null
+  welcomeBgR2Url?: string | null
   welcomeOverlayColor: string
   welcomeOverlayOpacity: number
   welcomeTextEn: string | null
@@ -108,6 +115,13 @@ export async function getRestaurantData(slug: string): Promise<RestaurantData | 
       footerLogo: footerLogo,
       welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
       welcomeBackground: restaurant.welcomeBackground,
+      // R2 fields
+      logoR2Key: (restaurant as any).logoR2Key || null,
+      logoR2Url: (restaurant as any).logoR2Url || null,
+      footerLogoR2Key: (restaurant as any).footerLogoR2Key || null,
+      footerLogoR2Url: (restaurant as any).footerLogoR2Url || null,
+      welcomeBgR2Key: (restaurant as any).welcomeBgR2Key || null,
+      welcomeBgR2Url: (restaurant as any).welcomeBgR2Url || null,
       welcomeOverlayColor: restaurant.welcomeOverlayColor,
       welcomeOverlayOpacity: restaurant.welcomeOverlayOpacity,
       welcomeTextEn: restaurant.welcomeTextEn,

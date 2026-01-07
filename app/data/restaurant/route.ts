@@ -361,6 +361,13 @@ export async function GET(request: NextRequest) {
         footerLogo: footerLogo,
         welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
         welcomeBackground: restaurant.welcomeBackground,
+        // R2 fields
+        logoR2Key: (restaurant as any).logoR2Key || null,
+        logoR2Url: (restaurant as any).logoR2Url || null,
+        footerLogoR2Key: (restaurant as any).footerLogoR2Key || null,
+        footerLogoR2Url: (restaurant as any).footerLogoR2Url || null,
+        welcomeBgR2Key: (restaurant as any).welcomeBgR2Key || null,
+        welcomeBgR2Url: (restaurant as any).welcomeBgR2Url || null,
         welcomeOverlayColor: restaurant.welcomeOverlayColor,
         welcomeOverlayOpacity: restaurant.welcomeOverlayOpacity,
         welcomeTextEn: restaurant.welcomeTextEn,

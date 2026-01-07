@@ -12,6 +12,8 @@ interface BasketItem {
   nameAr: string
   price: number
   imageMediaId: string | null
+  imageR2Key?: string | null
+  imageR2Url?: string | null
   quantity: number
 }
 
@@ -81,7 +83,7 @@ export function BasketDrawer({
               >
                 {item.imageMediaId ? (
                   <img
-                    src={`/assets/${item.imageMediaId}`}
+                    src={item.imageR2Url || `/assets/${item.imageMediaId}`}
                     alt={getLocalizedText(item, currentLang)}
                     className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
                     loading="lazy"
