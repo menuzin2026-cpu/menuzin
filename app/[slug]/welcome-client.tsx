@@ -22,10 +22,10 @@ export function WelcomeClient({ restaurant, children }: WelcomeClientProps) {
       return
     }
 
-    // Otherwise, wait 5 seconds before showing
+    // Otherwise, wait 2 seconds before showing
     const timer = setTimeout(() => {
       setIsIntroVisible(true)
-    }, 5000)
+    }, 2000)
 
     return () => clearTimeout(timer)
   }, [])
