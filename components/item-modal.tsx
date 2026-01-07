@@ -62,25 +62,25 @@ export function ItemModal({ item, currentLang, isOpen, onClose }: ItemModalProps
           {(() => {
             const imageUrl = item.imageR2Url || (item.imageMediaId ? `/assets/${item.imageMediaId}` : null)
             return imageUrl ? (
-              <Image
+            <Image
                 src={imageUrl}
-                alt={getLocalizedText(item, currentLang)}
-                fill
-                className="object-cover rounded-t-3xl"
-                sizes="(max-width: 768px) 100vw, 400px"
-                priority
+              alt={getLocalizedText(item, currentLang)}
+              fill
+              className="object-cover rounded-t-3xl"
+              sizes="(max-width: 768px) 100vw, 400px"
+              priority
                 unoptimized={!imageUrl.startsWith('http')}
-              />
-            ) : (
-              <div 
-                className="w-full h-full flex items-center justify-center"
-                style={{
-                  backgroundColor: 'var(--auto-surface-bg-2, rgba(255, 255, 255, 0.05))',
-                  color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))',
-                }}
-              >
-                No Image
-              </div>
+            />
+          ) : (
+            <div 
+              className="w-full h-full flex items-center justify-center"
+              style={{
+                backgroundColor: 'var(--auto-surface-bg-2, rgba(255, 255, 255, 0.05))',
+                color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))',
+              }}
+            >
+              No Image
+            </div>
             )
           })()}
         </div>

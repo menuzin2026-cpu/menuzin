@@ -49,17 +49,17 @@ export function CategoryRow({ categories, currentLang, onCategoryClick }: Catego
               {(() => {
                 const imageUrl = category.imageR2Url || (category.imageMediaId ? `/assets/${category.imageMediaId}` : null)
                 return imageUrl ? (
-                  <img
+                <img
                     src={imageUrl}
-                    alt={getLocalizedText(category, currentLang)}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                    No Image
-                  </div>
+                  alt={getLocalizedText(category, currentLang)}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                  No Image
+                </div>
                 )
               })()}
             </button>
