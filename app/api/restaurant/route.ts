@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { ensureRestaurantWelcomeBgMimeTypeColumn } from '@/lib/ensure-columns'
 
 export async function GET() {
   try {
+    // Ensure DB column exists before querying
+    await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
+
     const restaurant = await prisma.restaurant.findFirst({
       include: {
         logo: {

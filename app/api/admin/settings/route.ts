@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAdminSession } from '@/lib/auth'
+import { ensureRestaurantWelcomeBgMimeTypeColumn } from '@/lib/ensure-columns'
 
 export async function GET(request: NextRequest) {
   try {
+    // Ensure DB column exists in production before querying
+    await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
+
     const isAuthenticated = await getAdminSession()
     if (!isAuthenticated) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -75,6 +79,9 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    // Ensure DB column exists in production before updating
+    await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
+
     const isAuthenticated = await getAdminSession()
     if (!isAuthenticated) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
