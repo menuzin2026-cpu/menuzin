@@ -28,10 +28,10 @@ export default async function WelcomePage({ params }: PageProps) {
 
   return (
     <WelcomeClient restaurant={restaurant}>
-      <WelcomeLogo restaurant={restaurant} isLoaded={true} />
-      <WelcomeText restaurant={restaurant} isLoaded={true} />
-      <WelcomeLanguageButtons slug={slug} isLoaded={true} />
-      <WelcomeContact restaurant={restaurant} isLoaded={true} />
+      <WelcomeLogo restaurant={restaurant} isLoaded={false} />
+      <WelcomeText restaurant={restaurant} isLoaded={false} />
+      <WelcomeLanguageButtons slug={slug} isLoaded={false} />
+      <WelcomeContact restaurant={restaurant} isLoaded={false} />
     </WelcomeClient>
   )
 }
