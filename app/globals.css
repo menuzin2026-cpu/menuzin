@@ -282,7 +282,7 @@ nav.sticky {
   visibility: hidden;
   transform: translateY(6px);
   pointer-events: none;
-  transition: opacity 800ms ease, visibility 800ms ease, transform 800ms ease;
+  transition: opacity 3000ms ease, visibility 3000ms ease, transform 3000ms ease;
 }
 
 .welcome-intro-content.welcome-intro-visible {
