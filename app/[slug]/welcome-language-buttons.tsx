@@ -33,7 +33,7 @@ export function WelcomeLanguageButtons({ slug, isLoaded }: WelcomeLanguageButton
         <button
           key={lang.code}
           onClick={() => handleLanguageSelect(lang.code)}
-          className={`w-full p-3 bg-white/10 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl hover:bg-white/15 transition-all text-center group border border-white/20 welcome-fade-in ${isLoaded ? 'animate-in' : ''}`}
+          className="w-full p-3 bg-white/10 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl hover:bg-white/15 transition-all text-center group border border-white/20"
         >
           <div className="flex items-center justify-center">
             <h3 className="text-base font-semibold text-white group-hover:scale-105 transition-transform duration-300">

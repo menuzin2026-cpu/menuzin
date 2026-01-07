@@ -11,9 +11,7 @@ export function WelcomeText({ restaurant, isLoaded }: WelcomeTextProps) {
   }
 
   return (
-    <div 
-      className={`w-full max-w-[280px] mb-6 text-center welcome-fade-in ${isLoaded ? 'animate-in' : ''}`}
-    >
+    <div className="w-full max-w-[280px] mb-6 text-center">
       <p className="text-lg sm:text-xl md:text-2xl font-semibold leading-relaxed welcome-text-lighting luxury-font">
         {restaurant.welcomeTextEn}
       </p>

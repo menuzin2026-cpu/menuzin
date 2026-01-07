@@ -276,6 +276,33 @@ nav.sticky {
   pointer-events: auto; /* Ensure components remain clickable */
 }
 
+/* Welcome intro content - hidden initially, fades in after 3 seconds */
+.welcome-intro-content {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 800ms ease, visibility 800ms ease, transform 800ms ease;
+}
+
+.welcome-intro-content.welcome-intro-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .welcome-intro-content {
+    transition: none;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
 /* Background fade-in animation - 4 seconds with smooth transition */
 .background-fade-in {
   opacity: 0;

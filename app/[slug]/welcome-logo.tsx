@@ -14,7 +14,7 @@ export function WelcomeLogo({ restaurant, isLoaded }: WelcomeLogoProps) {
   }
 
   return (
-    <div className={`absolute top-16 left-0 right-0 px-4 py-4 welcome-fade-in ${isLoaded ? 'animate-in' : ''}`}>
+    <div className="absolute top-16 left-0 right-0 px-4 py-4">
       <div className="flex items-center justify-center max-w-7xl mx-auto">
         <img
           src={logoUrl}
