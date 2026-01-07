@@ -12,20 +12,48 @@ const globalForPrisma = globalThis as unknown as {
  * - Neon: Use the pooled connection string (ends with ?pgbouncer=true)
  * - Supabase Transaction Mode: Use port 6543 with ?pgbouncer=true to disable prepared statements
  *   Example: postgresql://user:pass@host.region.supabase.co:6543/db?pgbouncer=true
- * - Supabase Session Mode: Use port 5432 (supports prepared statements)
+ * - Supabase Session Mode: Use port 5432 (supports prepared statements) - LIMITED POOL SIZE
  * - Other providers: Check their documentation for connection pooling options
+ * 
+ * CRITICAL: Session Mode (port 5432) has limited pool size and can cause "max clients reached" errors.
+ * Use Transaction Mode (port 6543) for better connection pooling in serverless environments.
  */
 const createPrismaClient = () => {
-  // Parse DATABASE_URL to add pgbouncer=true if using port 6543 (Transaction Mode)
-  // This disables prepared statements which Transaction Mode doesn't support
   let databaseUrl = process.env.DATABASE_URL || ''
   
+  // Check if using Supabase Session Mode (port 5432) - this has limited pool size
+  if (databaseUrl.includes('.supabase.co:5432') || databaseUrl.includes('.supabase.com:5432')) {
+    console.warn('[PRISMA] ⚠️  Using Supabase Session Mode (port 5432) - limited pool size!')
+    console.warn('[PRISMA] 💡 Consider switching to Transaction Mode (port 6543) for better pooling')
+    
+    // Convert to Transaction Mode if possible
+    if (databaseUrl.includes(':5432')) {
+      const transactionUrl = databaseUrl.replace(':5432', ':6543')
+      const url = new URL(transactionUrl)
+      
+      // Add pgbouncer=true to disable prepared statements (required for Transaction Mode)
+      url.searchParams.set('pgbouncer', 'true')
+      
+      // Add connection_limit to prevent pool exhaustion
+      if (!url.searchParams.has('connection_limit')) {
+        url.searchParams.set('connection_limit', '1')
+      }
+      
+      databaseUrl = url.toString()
+      console.log('[PRISMA] ✅ Converted to Transaction Mode (port 6543)')
+    }
+  }
+  
+  // For Transaction Mode (port 6543), ensure pgbouncer=true is set
   if (databaseUrl.includes(':6543')) {
-    // Transaction Mode - add pgbouncer=true to disable prepared statements
     const url = new URL(databaseUrl)
     if (!url.searchParams.has('pgbouncer')) {
       url.searchParams.set('pgbouncer', 'true')
       databaseUrl = url.toString()
+    }
+    // Set connection_limit for transaction mode
+    if (!url.searchParams.has('connection_limit')) {
+      url.searchParams.set('connection_limit', '1')
     }
   }
   
