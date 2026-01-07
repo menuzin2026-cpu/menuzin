@@ -29,6 +29,7 @@ model Restaurant {
   footerLogoR2Url          String?
   welcomeBgR2Key           String?
   welcomeBgR2Url           String?
+  welcomeBgMimeType        String? // MIME type for R2 welcome background (video/mp4, image/jpeg, etc.)
   welcomeOverlayColor      String    @default("#000000")
   welcomeOverlayOpacity    Float     @default(0.5)
   welcomeTextEn            String?
@@ -158,11 +159,11 @@ model FallbackSettings {
   footerLogoMediaId        String?
   welcomeBackgroundMediaId String?
   welcomeOverlayColor      String   @default("#000000")
-  welcomeOverlayOpacity     Float    @default(0.5)
+  welcomeOverlayOpacity    Float    @default(0.5)
   welcomeTextEn            String?
-  googleMapsUrl             String?
-  phoneNumber               String?
-  brandColors               Json?
+  googleMapsUrl            String?
+  phoneNumber              String?
+  brandColors              Json?
   // UI Settings defaults
   sectionTitleSize         Int      @default(22)
   categoryTitleSize        Int      @default(16)

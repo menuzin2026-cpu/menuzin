@@ -30,6 +30,7 @@ export interface RestaurantData {
   footerLogoR2Url?: string | null
   welcomeBgR2Key?: string | null
   welcomeBgR2Url?: string | null
+  welcomeBgMimeType?: string | null
   welcomeOverlayColor: string
   welcomeOverlayOpacity: number
   welcomeTextEn: string | null
@@ -132,6 +133,7 @@ export async function getRestaurantData(slug: string): Promise<RestaurantData | 
       footerLogoR2Url: getR2Field('footerLogoR2Url'),
       welcomeBgR2Key: getR2Field('welcomeBgR2Key'),
       welcomeBgR2Url: getR2Field('welcomeBgR2Url'),
+      welcomeBgMimeType: getR2Field('welcomeBgMimeType'),
       welcomeOverlayColor: restaurant.welcomeOverlayColor,
       welcomeOverlayOpacity: restaurant.welcomeOverlayOpacity,
       welcomeTextEn: restaurant.welcomeTextEn,

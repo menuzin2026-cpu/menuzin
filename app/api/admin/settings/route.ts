@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
       footerLogoR2Url: getR2Field('footerLogoR2Url'),
       welcomeBgR2Key: getR2Field('welcomeBgR2Key'),
       welcomeBgR2Url: getR2Field('welcomeBgR2Url'),
+      welcomeBgMimeType: getR2Field('welcomeBgMimeType'),
     })
   } catch (error: any) {
     console.error('Error fetching settings:', error)
@@ -181,6 +182,9 @@ export async function PUT(request: NextRequest) {
     if (body.welcomeBgR2Url !== undefined) {
       updateData.welcomeBgR2Url = body.welcomeBgR2Url || null
     }
+    if (body.welcomeBgMimeType !== undefined) {
+      updateData.welcomeBgMimeType = body.welcomeBgMimeType || null
+    }
 
     // Log the update data for debugging
     if (process.env.NODE_ENV === 'development') {
@@ -279,6 +283,7 @@ export async function PUT(request: NextRequest) {
       footerLogoR2Url: (updated as any).footerLogoR2Url || null,
       welcomeBgR2Key: (updated as any).welcomeBgR2Key || null,
       welcomeBgR2Url: (updated as any).welcomeBgR2Url || null,
+      welcomeBgMimeType: (updated as any).welcomeBgMimeType || null,
     })
   } catch (error: any) {
     console.error('Error updating settings:', error)

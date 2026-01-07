@@ -35,7 +35,9 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
   useEffect(() => {
     if (!videoRef.current) return
     const video = videoRef.current
-    const isVideo = restaurant.welcomeBackground?.mimeType?.startsWith('video/') ?? false
+    // Check mimeType from R2 field first, then fall back to old media relation
+    const mimeType = restaurant.welcomeBgMimeType || restaurant.welcomeBackground?.mimeType
+    const isVideo = mimeType?.startsWith('video/') ?? false
     
     if (isVideo && !prefersReducedMotion) {
       video.muted = true
@@ -45,7 +47,7 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
     } else if (isVideo && prefersReducedMotion) {
       video.pause()
     }
-  }, [restaurant.welcomeBackground?.mimeType, prefersReducedMotion])
+  }, [restaurant.welcomeBgMimeType, restaurant.welcomeBackground?.mimeType, prefersReducedMotion])
 
   // Use R2 URL if available, otherwise fall back to old media ID
   const backgroundUrl = restaurant.welcomeBgR2Url || (restaurant.welcomeBackgroundMediaId ? `/assets/${restaurant.welcomeBackgroundMediaId}?v=${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}` : null)
@@ -59,7 +61,9 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
     )
   }
 
-  const isVideo = restaurant.welcomeBackground?.mimeType?.startsWith('video/') ?? false
+  // Check mimeType from R2 field first, then fall back to old media relation
+  const mimeType = restaurant.welcomeBgMimeType || restaurant.welcomeBackground?.mimeType
+  const isVideo = mimeType?.startsWith('video/') ?? false
   const shouldShowVideo = isVideo && !prefersReducedMotion
 
   return (

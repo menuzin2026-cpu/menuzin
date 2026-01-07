@@ -27,6 +27,7 @@ interface RestaurantSettings {
   footerLogoR2Url?: string | null
   welcomeBgR2Key?: string | null
   welcomeBgR2Url?: string | null
+  welcomeBgMimeType?: string | null
 }
 
 export default function SettingsPage() {
@@ -265,7 +266,7 @@ export default function SettingsPage() {
 
       const { key, publicUrl } = await uploadResponse.json()
 
-      // Save R2 key/URL to database
+      // Save R2 key/URL and mimeType to database
       const updateResponse = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -273,13 +274,14 @@ export default function SettingsPage() {
           ...settings,
           welcomeBgR2Key: key,
           welcomeBgR2Url: publicUrl,
+          welcomeBgMimeType: file.type, // Store the mimeType
           slug,
         }),
       })
 
       if (updateResponse.ok) {
         const updatedData = await updateResponse.json()
-        setSettings({ ...settings, welcomeBgR2Key: key, welcomeBgR2Url: publicUrl })
+        setSettings({ ...settings, welcomeBgR2Key: key, welcomeBgR2Url: publicUrl, welcomeBgMimeType: file.type })
         setBackgroundPreview(publicUrl)
         toast.success('Background uploaded successfully!')
       } else {
@@ -349,6 +351,7 @@ export default function SettingsPage() {
         footerLogoR2Url: settings.footerLogoR2Url ?? null,
         welcomeBgR2Key: settings.welcomeBgR2Key ?? null,
         welcomeBgR2Url: settings.welcomeBgR2Url ?? null,
+        welcomeBgMimeType: settings.welcomeBgMimeType ?? null,
       }
       
       const response = await fetch('/api/admin/settings', {
@@ -567,7 +570,8 @@ export default function SettingsPage() {
                             ...settings, 
                             welcomeBackgroundMediaId: null,
                             welcomeBgR2Key: null,
-                            welcomeBgR2Url: null
+                            welcomeBgR2Url: null,
+                            welcomeBgMimeType: null
                           })
                         }}
                         className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
