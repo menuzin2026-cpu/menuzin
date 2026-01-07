@@ -72,16 +72,17 @@ export function ItemModal({ item, currentLang, isOpen, onClose }: ItemModalProps
                 unoptimized={!imageUrl.startsWith('http')}
               />
             ) : (
-            <div 
-              className="w-full h-full flex items-center justify-center"
-              style={{
-                backgroundColor: 'var(--auto-surface-bg-2, rgba(255, 255, 255, 0.05))',
-                color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))',
-              }}
-            >
-              No Image
-            </div>
-          )}
+              <div 
+                className="w-full h-full flex items-center justify-center"
+                style={{
+                  backgroundColor: 'var(--auto-surface-bg-2, rgba(255, 255, 255, 0.05))',
+                  color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))',
+                }}
+              >
+                No Image
+              </div>
+            )
+          })()}
         </div>
 
         {/* Content */}

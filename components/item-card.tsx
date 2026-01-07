@@ -97,10 +97,11 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
                 loading={priority ? 'eager' : 'lazy'}
               />
             ) : (
-            <div className="w-full h-full flex items-center justify-center text-white/60 bg-gradient-to-br from-[#5C0015]/30 to-[#800020]/30">
-              No Image
-            </div>
-          )}
+              <div className="w-full h-full flex items-center justify-center text-white/60 bg-gradient-to-br from-[#5C0015]/30 to-[#800020]/30">
+                No Image
+              </div>
+            )
+          })()}
           {/* Quantity badge on image */}
           {quantity > 0 && (
             <div 

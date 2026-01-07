@@ -57,10 +57,11 @@ export function CategoryRow({ categories, currentLang, onCategoryClick }: Catego
                     decoding="async"
                   />
                 ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                  No Image
-                </div>
-              )}
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                    No Image
+                  </div>
+                )
+              })()}
             </button>
             <span 
               className="text-[var(--item-name-text)] text-center max-w-[80px] truncate"

@@ -194,13 +194,14 @@ export function SearchDrawer({
                         alt={getLocalizedText(item, currentLang)}
                         className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
                         loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-xl bg-white/10 flex-shrink-0 flex items-center justify-center text-white/60 text-xs">
-                      No Image
-                    </div>
-                  )}
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl bg-white/10 flex-shrink-0 flex items-center justify-center text-white/60 text-xs">
+                        No Image
+                      </div>
+                    )
+                  })()}
                   <span 
                     className="text-white font-medium"
                     style={{ fontSize: 'var(--menu-item-name-size)' }}
