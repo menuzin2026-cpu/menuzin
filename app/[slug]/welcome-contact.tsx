@@ -12,7 +12,7 @@ export function WelcomeContact({ restaurant, isLoaded }: WelcomeContactProps) {
   }
 
   return (
-    <div className={`flex items-center gap-1 w-full max-w-[230px] welcome-fade-in ${isLoaded ? 'animate-in' : ''}`}>
+    <div className={`flex items-center gap-1 w-full max-w-[161px] welcome-fade-in ${isLoaded ? 'animate-in' : ''}`}>
       {restaurant.googleMapsUrl && (
         <a
           href={restaurant.googleMapsUrl}
