@@ -276,7 +276,7 @@ nav.sticky {
   pointer-events: auto; /* Ensure components remain clickable */
 }
 
-/* Welcome intro content - hidden initially, fades in after 3 seconds */
+/* Welcome intro content - hidden initially, fades in after 5 seconds */
 .welcome-intro-content {
   opacity: 0;
   visibility: hidden;
@@ -290,6 +290,17 @@ nav.sticky {
   visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
+}
+
+/* Hide scrollbar on welcome page */
+.welcome-page-container {
+  overflow-y: hidden !important;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.welcome-page-container::-webkit-scrollbar {
+  display: none;
 }
 
 /* Respect reduced motion preference */

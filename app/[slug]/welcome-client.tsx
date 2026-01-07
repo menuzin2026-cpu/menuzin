@@ -22,10 +22,10 @@ export function WelcomeClient({ restaurant, children }: WelcomeClientProps) {
       return
     }
 
-    // Otherwise, wait 3 seconds before showing
+    // Otherwise, wait 5 seconds before showing
     const timer = setTimeout(() => {
       setIsIntroVisible(true)
-    }, 3000)
+    }, 5000)
 
     return () => clearTimeout(timer)
   }, [])
@@ -36,7 +36,7 @@ export function WelcomeClient({ restaurant, children }: WelcomeClientProps) {
   }
 
   return (
-    <div className="relative min-h-dvh w-full overflow-x-hidden">
+    <div className="welcome-page-container relative min-h-dvh w-full overflow-x-hidden overflow-y-hidden">
       {/* Background */}
       <WelcomeBackground restaurant={restaurant} isLoaded={true} />
       
