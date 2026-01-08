@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import toast from 'react-hot-toast'
@@ -41,41 +42,70 @@ export default function SuperAdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          <h1 className="text-2xl font-bold text-center mb-6 text-gray-900">
-            Super Admin Portal
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--app-bg, #400810)' }}>
+      <div 
+        className="backdrop-blur-xl rounded-3xl border p-8 w-full max-w-md"
+        style={{
+          backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+          borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+          boxShadow: `0 20px 50px -12px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 8px 16px -4px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+        }}
+      >
+        <div className="text-center mb-8">
+          <div 
+            className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 shadow-lg border border-white/20"
+            style={{
+              backgroundColor: 'var(--app-bg, #400810)',
+            }}
+          >
+            <Lock className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            Super Admin Login
           </h1>
-          <p className="text-sm text-gray-600 text-center mb-6">
-            Restricted access for admin management
-          </p>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-2">
-                4-Digit PIN
-              </label>
-              <Input
-                id="pin"
-                type="password"
-                inputMode="numeric"
-                maxLength={4}
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                placeholder="Enter 4-digit PIN"
-                className="text-center text-2xl tracking-widest"
-                required
-                autoFocus
-              />
-            </div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || pin.length !== 4}
-            >
-              {isLoading ? 'Logging in...' : 'Login'}
-            </Button>
-          </form>
+          <p className="text-white/70">Enter your 4-digit PIN</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            type="password"
+            inputMode="numeric"
+            maxLength={4}
+            value={pin}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, '')
+              if (value.length <= 4) {
+                setPin(value)
+              }
+            }}
+            placeholder="0000"
+            className="text-center text-2xl tracking-widest"
+            autoFocus
+            required
+          />
+
+          <Button
+            type="submit"
+            variant="ghost"
+            disabled={isLoading || pin.length !== 4}
+            className="w-full"
+            size="lg"
+            style={{
+              backgroundColor: 'var(--app-bg, #400810)',
+              color: 'var(--auto-text-primary, #FFFFFF)',
+            }}
+          >
+            {isLoading ? 'Logging in...' : 'Login'}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => router.push(`/${slug}/menu`)}
+            className="text-white/70 hover:text-white transition-colors text-sm"
+          >
+            ← Back to Menu
+          </button>
         </div>
       </div>
     </div>
