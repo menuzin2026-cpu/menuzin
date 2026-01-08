@@ -118,3 +118,43 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const isAuthenticated = await getSuperAdminSession()
+    if (!isAuthenticated) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { adminId } = body
+
+    if (!adminId || typeof adminId !== 'string') {
+      return NextResponse.json({ error: 'Admin ID is required' }, { status: 400 })
+    }
+
+    // Check if there's at least one admin remaining after deletion
+    const adminCount = await prisma.adminUser.count()
+    if (adminCount <= 1) {
+      return NextResponse.json(
+        { error: 'Cannot delete the last admin account' },
+        { status: 400 }
+      )
+    }
+
+    await prisma.adminUser.delete({
+      where: { id: adminId },
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Admin account deleted successfully',
+    })
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
+    }
+    console.error('Error deleting admin:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+

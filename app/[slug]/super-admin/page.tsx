@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Upload, LogOut, UserPlus, Key, Image as ImageIcon } from 'lucide-react'
+import { Upload, LogOut, UserPlus, Key, Image as ImageIcon, Trash2, Users } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface Admin {
@@ -28,9 +28,10 @@ export default function SuperAdminPage() {
   const [loadingAdmins, setLoadingAdmins] = useState(true)
   const [newPin, setNewPin] = useState('')
   const [creatingAdmin, setCreatingAdmin] = useState(false)
-  const [selectedAdminId, setSelectedAdminId] = useState<string | null>(null)
+  const [editingAdminId, setEditingAdminId] = useState<string | null>(null)
   const [updatePin, setUpdatePin] = useState('')
   const [updatingPin, setUpdatingPin] = useState(false)
+  const [deletingAdminId, setDeletingAdminId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchAdmins()
@@ -185,9 +186,8 @@ export default function SuperAdminPage() {
     }
   }
 
-  const handleUpdatePin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedAdminId || updatePin.length !== 4) {
+  const handleUpdatePin = async (adminId: string) => {
+    if (!adminId || updatePin.length !== 4) {
       toast.error('PIN must be 4 digits')
       return
     }
@@ -198,7 +198,7 @@ export default function SuperAdminPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminId: selectedAdminId,
+          adminId,
           newPin: updatePin,
         }),
       })
@@ -207,7 +207,7 @@ export default function SuperAdminPage() {
 
       if (response.ok) {
         toast.success('Admin PIN updated successfully!')
-        setSelectedAdminId(null)
+        setEditingAdminId(null)
         setUpdatePin('')
         fetchAdmins()
       } else {
@@ -217,6 +217,34 @@ export default function SuperAdminPage() {
       toast.error('An error occurred. Please try again.')
     } finally {
       setUpdatingPin(false)
+    }
+  }
+
+  const handleDeleteAdmin = async (adminId: string) => {
+    if (!confirm('Are you sure you want to delete this admin account? This action cannot be undone.')) {
+      return
+    }
+
+    setDeletingAdminId(adminId)
+    try {
+      const response = await fetch('/api/super-admin/admins', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminId }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success('Admin account deleted successfully!')
+        fetchAdmins()
+      } else {
+        toast.error(data.error || 'Failed to delete admin account')
+      }
+    } catch (error) {
+      toast.error('An error occurred. Please try again.')
+    } finally {
+      setDeletingAdminId(null)
     }
   }
 
@@ -268,12 +296,14 @@ export default function SuperAdminPage() {
           </div>
           <div className="flex flex-col items-center space-y-4">
             {footerLogoPreview && (
-              <div className="relative">
-                <img
-                  src={footerLogoPreview}
-                  alt="Footer Logo Preview"
-                  className="max-w-xs max-h-32 object-contain rounded-lg border border-white/20"
-                />
+              <div className="relative w-full flex justify-center">
+                <div className="max-w-[200px] max-h-[100px] w-full h-full flex items-center justify-center bg-white/5 rounded-lg border border-white/20 p-2">
+                  <img
+                    src={footerLogoPreview}
+                    alt="Footer Logo Preview"
+                    className="max-w-full max-h-full w-auto h-auto object-contain"
+                  />
+                </div>
               </div>
             )}
             <input
@@ -341,7 +371,7 @@ export default function SuperAdminPage() {
           </form>
         </div>
 
-        {/* Update Admin PIN Section */}
+        {/* Admin Accounts Section */}
         <div 
           className="mb-6 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl transition-all"
           style={{
@@ -350,92 +380,108 @@ export default function SuperAdminPage() {
           }}
         >
           <div className="flex items-center mb-4">
-            <Key className="w-8 h-8 text-[#FBBF24] mr-3" />
-            <h2 className="text-xl font-bold text-white">Update Admin PIN</h2>
+            <Users className="w-8 h-8 text-[#FBBF24] mr-3" />
+            <h2 className="text-xl font-bold text-white">Admin Accounts</h2>
           </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-white/90 mb-2">
-                Select Admin
-              </label>
-              <select
-                value={selectedAdminId || ''}
-                onChange={(e) => {
-                  setSelectedAdminId(e.target.value || null)
-                  setUpdatePin('')
-                }}
-                className="w-full px-3 py-2 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-white/50 bg-white/10 text-white"
-              >
-                <option value="" className="bg-gray-800 text-white">-- Select an admin --</option>
-                {admins.map((admin) => (
-                  <option key={admin.id} value={admin.id} className="bg-gray-800 text-white">
-                    Admin {admin.id.slice(-8)} (Created:{' '}
-                    {new Date(admin.createdAt).toLocaleDateString()})
-                  </option>
-                ))}
-              </select>
-            </div>
-            {selectedAdminId && (
-              <form onSubmit={handleUpdatePin} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-2">
-                    New 4-Digit PIN
-                  </label>
-                  <Input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={4}
-                    value={updatePin}
-                    onChange={(e) => setUpdatePin(e.target.value.replace(/\D/g, ''))}
-                    placeholder="0000"
-                    className="text-center text-xl tracking-widest bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                    required
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={updatingPin || updatePin.length !== 4}
-                  className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white"
-                >
-                  {updatingPin ? 'Updating...' : 'Update PIN'}
-                </Button>
-              </form>
-            )}
-          </div>
-        </div>
-
-        {/* Admin List */}
-        <div 
-          className="backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/30"
-          style={{
-            backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.08))',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
-          }}
-        >
-          <h2 className="text-xl font-bold text-white mb-4">Existing Admins</h2>
           {loadingAdmins ? (
             <p className="text-white/70">Loading...</p>
           ) : admins.length === 0 ? (
             <p className="text-white/70">No admin accounts found</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-4">
               {admins.map((admin) => (
                 <div
                   key={admin.id}
-                  className="p-4 bg-white/5 rounded-lg border border-white/20 flex justify-between items-center"
+                  className="p-4 bg-white/5 rounded-lg border border-white/20 space-y-3"
                 >
-                  <div>
-                    <p className="font-medium text-white">ID: {admin.id.slice(-12)}</p>
-                    <p className="text-sm text-white/70">
-                      Created: {new Date(admin.createdAt).toLocaleString()}
-                    </p>
-                    {admin.lastLoginAt && (
-                      <p className="text-sm text-white/70">
-                        Last Login:{' '}
-                        {new Date(admin.lastLoginAt).toLocaleString()}
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <p className="font-medium text-white mb-1">
+                        Admin ID: {admin.id.slice(-12)}
                       </p>
-                    )}
+                      <p className="text-sm text-white/70 mb-1">
+                        Created: {new Date(admin.createdAt).toLocaleString()}
+                      </p>
+                      {admin.lastLoginAt && (
+                        <p className="text-sm text-white/70">
+                          Last Login: {new Date(admin.lastLoginAt).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      {editingAdminId === admin.id ? (
+                        <>
+                          <Button
+                            onClick={() => {
+                              setEditingAdminId(null)
+                              setUpdatePin('')
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="bg-white/10 hover:bg-white/15 border-white/20 text-white"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={() => handleUpdatePin(admin.id)}
+                            disabled={updatingPin || updatePin.length !== 4}
+                            size="sm"
+                            className="bg-white/10 hover:bg-white/15 border border-white/20 text-white"
+                          >
+                            {updatingPin ? 'Saving...' : 'Save'}
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            onClick={() => {
+                              setEditingAdminId(admin.id)
+                              setUpdatePin('')
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="bg-white/10 hover:bg-white/15 border-white/20 text-white"
+                          >
+                            <Key className="w-4 h-4 mr-1" />
+                            Update PIN
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteAdmin(admin.id)}
+                            disabled={deletingAdminId === admin.id || admins.length === 1}
+                            variant="outline"
+                            size="sm"
+                            className="bg-red-500/20 hover:bg-red-500/30 border-red-500/30 text-red-200"
+                          >
+                            {deletingAdminId === admin.id ? (
+                              'Deleting...'
+                            ) : (
+                              <>
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </>
+                            )}
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
+                  {editingAdminId === admin.id && (
+                    <div className="pt-3 border-t border-white/20">
+                      <label className="block text-sm font-medium text-white/90 mb-2">
+                        New 4-Digit PIN
+                      </label>
+                      <Input
+                        type="password"
+                        inputMode="numeric"
+                        maxLength={4}
+                        value={updatePin}
+                        onChange={(e) => setUpdatePin(e.target.value.replace(/\D/g, ''))}
+                        placeholder="0000"
+                        className="text-center text-xl tracking-widest bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                        autoFocus
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
