@@ -33,6 +33,35 @@ export async function deleteAdminSession() {
   cookieStore.delete(ADMIN_SESSION_COOKIE)
 }
 
+// Super Admin Session functions
+const SUPER_ADMIN_SESSION_COOKIE = 'super_admin_session'
+const SUPER_ADMIN_PIN = '1244'
+
+export async function createSuperAdminSession() {
+  const cookieStore = await cookies()
+  cookieStore.set(SUPER_ADMIN_SESSION_COOKIE, 'authenticated', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: SESSION_DURATION / 1000,
+  })
+}
+
+export async function getSuperAdminSession(): Promise<boolean> {
+  const cookieStore = await cookies()
+  const session = cookieStore.get(SUPER_ADMIN_SESSION_COOKIE)
+  return session?.value === 'authenticated'
+}
+
+export async function deleteSuperAdminSession() {
+  const cookieStore = await cookies()
+  cookieStore.delete(SUPER_ADMIN_SESSION_COOKIE)
+}
+
+export function getSuperAdminPin(): string {
+  return SUPER_ADMIN_PIN
+}
+
 // Simple rate limiting (in-memory)
 const loginAttempts = new Map<string, { count: number; resetAt: number }>()
 const MAX_ATTEMPTS = 5
