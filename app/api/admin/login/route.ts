@@ -33,28 +33,36 @@ export async function POST(request: NextRequest) {
 
     const { pin } = validation.data
 
-    // Get admin user
-    const admin = await prisma.adminUser.findFirst()
-    if (!admin) {
+    // Get all admin users and find one with matching PIN
+    const admins = await prisma.adminUser.findMany()
+    if (admins.length === 0) {
       return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
     }
 
-    // Verify PIN
-    const isValid = await verifyPin(pin, admin.pinHash)
-    if (!isValid) {
+    // Try to find an admin with matching PIN
+    let matchedAdmin = null
+    for (const admin of admins) {
+      const isValid = await verifyPin(pin, admin.pinHash)
+      if (isValid) {
+        matchedAdmin = admin
+        break
+      }
+    }
+
+    if (!matchedAdmin) {
       return NextResponse.json({ error: 'Invalid PIN' }, { status: 401 })
     }
 
     // Update last login
     await prisma.adminUser.update({
-      where: { id: admin.id },
+      where: { id: matchedAdmin.id },
       data: { lastLoginAt: new Date() },
     })
 
     // Create session
     await createAdminSession()
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, adminId: matchedAdmin.id })
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

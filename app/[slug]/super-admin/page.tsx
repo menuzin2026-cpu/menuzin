@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +22,7 @@ export default function SuperAdminPage() {
   const [footerLogoPreview, setFooterLogoPreview] = useState<string | null>(null)
   const [uploadingFooterLogo, setUploadingFooterLogo] = useState(false)
   const [restaurantId, setRestaurantId] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [admins, setAdmins] = useState<Admin[]>([])
   const [loadingAdmins, setLoadingAdmins] = useState(true)
@@ -275,27 +276,27 @@ export default function SuperAdminPage() {
                 />
               </div>
             )}
-            <label className="cursor-pointer w-full">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFooterLogoChange}
-                disabled={uploadingFooterLogo}
-                className="hidden"
-              />
-              <Button
-                type="button"
-                disabled={uploadingFooterLogo}
-                className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {uploadingFooterLogo
-                  ? 'Uploading...'
-                  : footerLogoPreview
-                  ? 'Change Footer Logo'
-                  : 'Upload Footer Logo'}
-              </Button>
-            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFooterLogoChange}
+              disabled={uploadingFooterLogo}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingFooterLogo}
+              className="w-full bg-white/10 hover:bg-white/15 border border-white/20 text-white"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {uploadingFooterLogo
+                ? 'Uploading...'
+                : footerLogoPreview
+                ? 'Change Footer Logo'
+                : 'Upload Footer Logo'}
+            </Button>
             <p className="text-sm text-white/70 text-center">
               Supported formats: JPEG, PNG, WebP (max 10MB)
             </p>
