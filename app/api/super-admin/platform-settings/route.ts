@@ -23,11 +23,21 @@ export async function GET(request: NextRequest) {
 
     // Create default if doesn't exist
     if (!settings) {
-      settings = await prisma.platformSettings.create({
-        data: {
+      try {
+        settings = await prisma.platformSettings.create({
+          data: {
+            id: 'platform-1',
+          },
+        })
+      } catch (createError: any) {
+        // If create fails (e.g., table doesn't exist), return empty settings
+        console.error('Error creating platform settings:', createError)
+        return NextResponse.json({
           id: 'platform-1',
-        },
-      })
+          footerLogoR2Key: null,
+          footerLogoR2Url: null,
+        })
+      }
     }
 
     return NextResponse.json({
@@ -35,9 +45,14 @@ export async function GET(request: NextRequest) {
       footerLogoR2Key: settings.footerLogoR2Key,
       footerLogoR2Url: settings.footerLogoR2Url,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching platform settings:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    // Return empty settings instead of error to prevent UI breakage
+    return NextResponse.json({
+      id: 'platform-1',
+      footerLogoR2Key: null,
+      footerLogoR2Url: null,
+    })
   }
 }
 

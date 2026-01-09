@@ -56,9 +56,10 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ admins })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching admins:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const errorMessage = error?.message || 'Internal server error'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
 
@@ -106,9 +107,14 @@ export async function POST(request: NextRequest) {
         createdAt: admin.createdAt,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating admin:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    // Handle Prisma unique constraint errors
+    if (error?.code === 'P2002') {
+      return NextResponse.json({ error: 'Admin with this PIN already exists' }, { status: 400 })
+    }
+    const errorMessage = error?.message || 'Internal server error'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
 
