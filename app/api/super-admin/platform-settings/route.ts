@@ -44,6 +44,10 @@ export async function GET(request: NextRequest) {
       id: settings.id,
       footerLogoR2Key: settings.footerLogoR2Key,
       footerLogoR2Url: settings.footerLogoR2Url,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      },
     })
   } catch (error: any) {
     console.error('Error fetching platform settings:', error)
@@ -73,34 +77,42 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Ensure platform settings exist
-    let settings = await prisma.platformSettings.findUnique({
-      where: { id: 'platform-1' },
-    })
-
-    if (!settings) {
-      settings = await prisma.platformSettings.create({
-        data: {
-          id: 'platform-1',
-        },
-      })
+    // Prepare update data - include all fields from validation (they may be null to clear values)
+    const updateData: {
+      footerLogoR2Key: string | null
+      footerLogoR2Url: string | null
+    } = {
+      footerLogoR2Key: validation.data.footerLogoR2Key ?? null,
+      footerLogoR2Url: validation.data.footerLogoR2Url ?? null,
     }
 
-    // Update settings
-    const updated = await prisma.platformSettings.update({
+    // Use upsert to ensure settings exist (singleton pattern: id='platform-1')
+    const updated = await prisma.platformSettings.upsert({
       where: { id: 'platform-1' },
-      data: {
-        footerLogoR2Key: validation.data.footerLogoR2Key ?? settings.footerLogoR2Key,
-        footerLogoR2Url: validation.data.footerLogoR2Url ?? settings.footerLogoR2Url,
+      update: updateData,
+      create: {
+        id: 'platform-1',
+        footerLogoR2Key: validation.data.footerLogoR2Key ?? null,
+        footerLogoR2Url: validation.data.footerLogoR2Url ?? null,
       },
     })
 
+    console.log('[PLATFORM SETTINGS] Updated successfully:', {
+      id: updated.id,
+      footerLogoR2Key: updated.footerLogoR2Key,
+      footerLogoR2Url: updated.footerLogoR2Url,
+    })
+
     return NextResponse.json({
-      success: true,
-      settings: {
+      ok: true,
+      platformSettings: {
         id: updated.id,
         footerLogoR2Key: updated.footerLogoR2Key,
         footerLogoR2Url: updated.footerLogoR2Url,
+      },
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       },
     })
   } catch (error: any) {

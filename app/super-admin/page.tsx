@@ -141,9 +141,14 @@ export default function SuperAdminPage() {
         throw new Error(errorData.error || 'Failed to upload footer logo')
       }
 
-      const { key, publicUrl } = await uploadResponse.json()
+      const uploadData = await uploadResponse.json()
+      const { key, publicUrl } = uploadData
 
-      // Update platform settings
+      if (!key || !publicUrl) {
+        throw new Error('Upload succeeded but did not return key and publicUrl')
+      }
+
+      // Update platform settings with key and URL
       const updateResponse = await fetch('/api/super-admin/platform-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -153,13 +158,20 @@ export default function SuperAdminPage() {
         }),
       })
 
-      if (updateResponse.ok) {
-        setFooterLogoPreview(publicUrl)
-        toast.success('Footer logo uploaded successfully!')
-      } else {
+      if (!updateResponse.ok) {
         const errorData = await updateResponse.json().catch(() => ({}))
-        throw new Error(errorData.message || 'Failed to update footer logo')
+        console.error('Failed to update platform settings:', errorData)
+        throw new Error(errorData.error || errorData.message || 'Failed to update footer logo in database')
       }
+
+      const updateData = await updateResponse.json()
+      console.log('[SUPER ADMIN] Platform settings updated:', updateData)
+      
+      // Update preview with the URL from response (or use publicUrl as fallback)
+      const finalUrl = updateData.platformSettings?.footerLogoR2Url || publicUrl
+      setFooterLogoPreview(finalUrl)
+      
+      toast.success('Footer logo uploaded successfully! This logo will appear on all restaurant menus.')
     } catch (error: any) {
       console.error('Error uploading footer logo:', error)
       toast.error(error.message || 'Failed to upload footer logo')

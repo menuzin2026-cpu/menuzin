@@ -219,10 +219,12 @@ function MenuPageContent() {
     }
     fetchRestaurant()
 
-    // Fetch global footer logo from platform settings
+    // Fetch global footer logo from platform settings (applies to ALL restaurants)
     const fetchPlatformFooterLogo = async () => {
       try {
-        const res = await fetch('/api/platform-settings')
+        const res = await fetch(`/api/platform-settings?t=${Date.now()}`, {
+          cache: 'no-store',
+        })
         if (res.ok) {
           const data = await res.json()
           if (data.footerLogoR2Url) {
@@ -230,6 +232,9 @@ function MenuPageContent() {
           } else {
             setFooterLogoUrl(null)
           }
+        } else {
+          // If API fails, set to null (no footer logo)
+          setFooterLogoUrl(null)
         }
       } catch (error) {
         console.error('Error fetching platform footer logo:', error)
