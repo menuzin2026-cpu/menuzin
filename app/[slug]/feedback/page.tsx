@@ -42,6 +42,7 @@ export default function FeedbackPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          restaurantSlug: slug,
           staffRating,
           serviceRating,
           hygieneRating,
