@@ -34,17 +34,6 @@ export async function GET(request: NextRequest) {
         restaurantId,
         isActive: true,
       },
-      include: {
-        restaurant: {
-          select: {
-            id: true,
-            slug: true,
-            nameEn: true,
-            nameKu: true,
-            nameAr: true,
-          },
-        },
-      },
       select: {
         id: true,
         restaurantId: true,
