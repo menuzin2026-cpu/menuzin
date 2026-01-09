@@ -19,8 +19,17 @@ export async function POST(request: NextRequest) {
   try {
     console.log('[R2 UPLOAD PROXY] Upload endpoint called')
 
-    // Check authentication (admin for restaurant media, super admin for platform media)
+    const formData = await request.formData()
+    const file = formData.get('file') as File
     const scope = formData.get('scope') as string
+    const restaurantId = formData.get('restaurantId') as string | null
+    const itemId = formData.get('itemId') as string | null
+
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+    }
+
+    // Check authentication (admin for restaurant media, super admin for platform media)
     const isPlatformScope = scope === 'platformFooterLogo'
     
     if (isPlatformScope) {
@@ -36,19 +45,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-    const scope = formData.get('scope') as string
-    const restaurantId = formData.get('restaurantId') as string | null
-    const itemId = formData.get('itemId') as string | null
-
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
-    }
-
     // For platformFooterLogo, restaurantId is not required
     // For other scopes, restaurantId is required
-    const isPlatformScope = scope === 'platformFooterLogo'
     if (!isPlatformScope && !restaurantId) {
       return NextResponse.json({ error: 'restaurantId is required for this scope' }, { status: 400 })
     }
