@@ -46,6 +46,20 @@ export async function requireAdminSession(): Promise<AdminSessionData> {
   if (!session) {
     throw new Error('Unauthorized: No admin session')
   }
+  
+  // Verify restaurant still exists (not deleted)
+  const { prisma } = await import('@/lib/prisma')
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: session.restaurantId },
+    select: { id: true },
+  })
+  
+  if (!restaurant) {
+    // Restaurant was deleted - clear session and throw error
+    await deleteAdminSession()
+    throw new Error('Restaurant not found: This restaurant has been deleted')
+  }
+  
   return session
 }
 

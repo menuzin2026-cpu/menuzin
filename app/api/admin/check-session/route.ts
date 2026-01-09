@@ -5,14 +5,32 @@ import { getAdminSession } from '@/lib/auth'
 
 export async function GET() {
   const session = await getAdminSession()
-  if (session) {
-    return NextResponse.json({ 
-      authenticated: true,
-      restaurantId: session.restaurantId,
-      adminUserId: session.adminUserId,
-    })
+  if (!session) {
+    return NextResponse.json({ authenticated: false }, { status: 401 })
   }
-  return NextResponse.json({ authenticated: false }, { status: 401 })
+  
+  // Verify restaurant still exists (not deleted)
+  const { prisma } = await import('@/lib/prisma')
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: session.restaurantId },
+    select: { id: true },
+  })
+  
+  if (!restaurant) {
+    // Restaurant was deleted - clear session and return 404
+    const { deleteAdminSession } = await import('@/lib/auth')
+    await deleteAdminSession()
+    return NextResponse.json(
+      { authenticated: false, error: 'Restaurant not found: This restaurant has been deleted' },
+      { status: 404 }
+    )
+  }
+  
+  return NextResponse.json({ 
+    authenticated: true,
+    restaurantId: session.restaurantId,
+    adminUserId: session.adminUserId,
+  })
 }
 
 

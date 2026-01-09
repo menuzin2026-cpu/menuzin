@@ -44,14 +44,12 @@ export async function GET(request: NextRequest) {
       select: { id: true },
     })
 
+    // Return 404 if restaurant doesn't exist (deleted)
     if (!restaurant) {
       return NextResponse.json(
+        { error: 'Restaurant not found' },
         {
-          theme: {
-            appBg: '#FFFFFF', // Neutral white default
-          },
-        },
-        {
+          status: 404,
           headers: {
             'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
           },

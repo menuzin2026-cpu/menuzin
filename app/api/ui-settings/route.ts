@@ -33,15 +33,19 @@ export async function GET(request: NextRequest) {
       select: { id: true },
     })
 
+    // Return 404 if restaurant doesn't exist (deleted)
     if (!restaurant) {
-      // Restaurant not found - return defaults
-      return NextResponse.json(DEFAULT_SETTINGS, {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        },
-      })
+      return NextResponse.json(
+        { error: 'Restaurant not found' },
+        {
+          status: 404,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        }
+      )
     }
 
     // Get UI settings for this restaurant only

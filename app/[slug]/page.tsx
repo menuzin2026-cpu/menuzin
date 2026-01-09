@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation'
 import { getRestaurantData } from '@/lib/get-restaurant-data'
 import { WelcomeClient } from './welcome-client'
 import { WelcomeBackground } from './welcome-background'
@@ -18,12 +19,9 @@ export default async function WelcomePage({ params }: PageProps) {
   // Fetch restaurant data server-side
   const restaurant = await getRestaurantData(slug)
 
+  // Return 404 if restaurant doesn't exist (deleted)
   if (!restaurant) {
-    return (
-      <div className="relative min-h-dvh w-full overflow-x-hidden flex items-center justify-center">
-        <p className="text-white">Restaurant not found</p>
-      </div>
-    )
+    notFound()
   }
 
   return (

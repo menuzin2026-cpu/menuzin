@@ -207,142 +207,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Auto-create "legends-restaurant" if it doesn't exist (only for this specific slug)
-    if (!restaurant && slug === 'legends-restaurant') {
-      console.log('[DEBUG] Auto-creating legends-restaurant...')
-      try {
-        // Get fallback data to use as defaults
-        const fallbackData = await getFallbackData(slug)
-        
-        restaurant = await prisma.restaurant.upsert({
-          where: { slug: 'legends-restaurant' },
-          update: {},
-          create: {
-            slug: 'legends-restaurant',
-            nameKu: fallbackData.nameKu || 'رێستۆرانتی لێجەندز',
-            nameEn: fallbackData.nameEn || 'Legends Restaurant',
-            nameAr: fallbackData.nameAr || 'مطعم الأساطير',
-            googleMapsUrl: fallbackData.googleMapsUrl || 'https://maps.google.com',
-            phoneNumber: fallbackData.phoneNumber || '+9647501234567',
-            welcomeOverlayColor: fallbackData.welcomeOverlayColor || '#000000',
-            welcomeOverlayOpacity: fallbackData.welcomeOverlayOpacity || 0.5,
-            brandColors: fallbackData.brandColors || {
-              menuGradientStart: '#5C0015',
-              menuGradientEnd: '#800020',
-              headerText: '#FFFFFF',
-              headerIcons: '#FFFFFF',
-              activeTab: '#FFFFFF',
-              inactiveTab: '#CCCCCC',
-              categoryCardBg: '#4A5568',
-              itemCardBg: '#4A5568',
-              itemNameText: '#FFFFFF',
-              itemDescText: '#E2E8F0',
-              priceText: '#FBBF24',
-              dividerLine: '#718096',
-              modalBg: '#2D3748',
-              modalOverlay: 'rgba(0,0,0,0.7)',
-              buttonBg: '#800020',
-              buttonText: '#FFFFFF',
-              feedbackCardBg: '#4A5568',
-              feedbackCardText: '#FFFFFF',
-              welcomeOverlayColor: '#000000',
-              welcomeOverlayOpacity: 0.5,
-            },
-          },
-          include: {
-            logo: {
-              select: {
-                id: true,
-                mimeType: true,
-                size: true,
-              },
-            },
-            footerLogo: {
-              select: {
-                id: true,
-                mimeType: true,
-                size: true,
-              },
-            },
-            welcomeBackground: {
-              select: {
-                id: true,
-                mimeType: true,
-                size: true,
-              },
-            },
-          },
-        })
-      } catch (error: any) {
-        // If footerLogo relation fails, retry without it
-        if (error?.message?.includes('footerLogo') || error?.code === 'P2021') {
-          console.warn('footerLogo column not found in upsert, retrying without it')
-          // Get fallback data to use as defaults
-          const fallbackDataRetry = await getFallbackData(slug)
-          
-          restaurant = await prisma.restaurant.upsert({
-            where: { slug: 'legends-restaurant' },
-            update: {},
-            create: {
-              slug: 'legends-restaurant',
-              nameKu: fallbackDataRetry.nameKu || 'رێستۆرانتی لێجەندز',
-              nameEn: fallbackDataRetry.nameEn || 'Legends Restaurant',
-              nameAr: fallbackDataRetry.nameAr || 'مطعم الأساطير',
-              googleMapsUrl: fallbackDataRetry.googleMapsUrl || 'https://maps.google.com',
-              phoneNumber: fallbackDataRetry.phoneNumber || '+9647501234567',
-              welcomeOverlayColor: fallbackDataRetry.welcomeOverlayColor || '#000000',
-              welcomeOverlayOpacity: fallbackDataRetry.welcomeOverlayOpacity || 0.5,
-              brandColors: fallbackDataRetry.brandColors || {
-                menuGradientStart: '#5C0015',
-                menuGradientEnd: '#800020',
-                headerText: '#FFFFFF',
-                headerIcons: '#FFFFFF',
-                activeTab: '#FFFFFF',
-                inactiveTab: '#CCCCCC',
-                categoryCardBg: '#4A5568',
-                itemCardBg: '#4A5568',
-                itemNameText: '#FFFFFF',
-                itemDescText: '#E2E8F0',
-                priceText: '#FBBF24',
-                dividerLine: '#718096',
-                modalBg: '#2D3748',
-                modalOverlay: 'rgba(0,0,0,0.7)',
-                buttonBg: '#800020',
-                buttonText: '#FFFFFF',
-                feedbackCardBg: '#4A5568',
-                feedbackCardText: '#FFFFFF',
-                welcomeOverlayColor: '#000000',
-                welcomeOverlayOpacity: 0.5,
-              },
-            },
-            include: {
-              logo: {
-                select: {
-                  id: true,
-                  mimeType: true,
-                  size: true,
-                },
-              },
-              welcomeBackground: {
-                select: {
-                  id: true,
-                  mimeType: true,
-                  size: true,
-                },
-              },
-            },
-          })
-        } else {
-          throw error
-        }
-      }
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[DEBUG] Auto-created legends-restaurant:', restaurant.id)
-      }
-    }
-
+    // Return 404 if restaurant doesn't exist (deleted restaurants should not work)
+    // Do NOT auto-create restaurants - they must be created explicitly via super admin
     if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant not found for slug: ' + slug }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Restaurant not found', slug },
+        {
+          status: 404,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+        }
+      )
     }
 
     // Safely access footerLogoMediaId and footerLogo - may not exist if migration hasn't run
@@ -391,18 +267,19 @@ export async function GET(request: NextRequest) {
     } : { message: 'Unknown error', error }
     console.error('[ERROR] Error fetching restaurant:', errorDetails)
 
-    // Return fallback data instead of error to prevent frontend crash
+    // Return 404 if restaurant doesn't exist (deleted)
+    // Do NOT return fallback data - deleted restaurants should return 404
     const searchParams = request.nextUrl.searchParams
-    const slug = searchParams.get('slug') || 'legends-restaurant'
-    const fallbackData = await getFallbackData(slug)
-    return NextResponse.json(fallbackData, {
-      status: 200, // Return 200 with fallback data instead of 500
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'X-Fallback': 'true',
-        'X-Error': 'true', // Signal that fallback was used
-      },
-    })
+    const slug = searchParams.get('slug')
+    return NextResponse.json(
+      { error: 'Restaurant not found', slug: slug || null },
+      {
+        status: 404,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      }
+    )
   }
 }
 

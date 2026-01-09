@@ -340,13 +340,19 @@ export default function SuperAdminPage() {
       return
     }
 
-    // Double confirmation with slug
-    const doubleConfirmed = confirm(
-      `Please type the restaurant slug "${slug}" to confirm deletion.`
+    // Double confirmation - require user to type the slug
+    const typedSlug = prompt(
+      `⚠️ FINAL CONFIRMATION\n\n` +
+      `Type the restaurant slug "${slug}" exactly to confirm deletion:\n\n` +
+      `This action is PERMANENT and cannot be undone.`
     )
 
-    if (!doubleConfirmed) {
-      toast.error('Deletion cancelled')
+    if (typedSlug !== slug) {
+      if (typedSlug !== null) {
+        toast.error('Slug mismatch. Deletion cancelled.')
+      } else {
+        toast.error('Deletion cancelled')
+      }
       return
     }
 

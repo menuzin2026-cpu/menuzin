@@ -119,6 +119,15 @@ function MenuPageContent() {
           cache: 'no-store',
         })
         if (!res.ok) {
+          if (res.status === 404) {
+            // Restaurant not found (deleted) - show 404 state
+            console.error('Restaurant not found for slug:', slug)
+            setSections([])
+            setAllItems([])
+            setIsLoadingMenu(false)
+            // Empty sections will trigger empty state UI
+            return
+          }
           throw new Error(`Failed to fetch menu: ${res.status} ${res.statusText}`)
         }
         const data = await res.json()

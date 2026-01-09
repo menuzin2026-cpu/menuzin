@@ -33,7 +33,16 @@ export default function AdminLoginPage() {
         toast.success('Login successful!')
         router.push(`/${slug}/admin`)
       } else {
-        toast.error(data.error || 'Invalid PIN')
+        // Handle 404 - restaurant not found (deleted)
+        if (response.status === 404) {
+          toast.error('Restaurant not found. This restaurant may have been deleted.')
+          // Redirect to home or super admin after a delay
+          setTimeout(() => {
+            router.push('/')
+          }, 2000)
+        } else {
+          toast.error(data.error || 'Invalid PIN')
+        }
       }
     } catch (error) {
       console.error('Login error:', error)

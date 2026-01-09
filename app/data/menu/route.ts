@@ -20,12 +20,12 @@ export async function GET(request: NextRequest) {
       select: { id: true },
     })
 
+    // Return 404 if restaurant doesn't exist (deleted)
     if (!restaurant) {
-      // Restaurant not found - return empty menu
       return NextResponse.json(
-        { sections: [] },
+        { error: 'Restaurant not found', sections: [] },
         {
-          status: 200,
+          status: 404,
           headers: {
             'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
           },
