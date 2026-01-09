@@ -29,6 +29,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'restaurantId is required' }, { status: 400 })
     }
 
+    // First verify restaurant exists
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+      select: { id: true, slug: true, nameEn: true, nameKu: true, nameAr: true },
+    })
+
+    if (!restaurant) {
+      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
+    }
+
     const admins = await prisma.adminUser.findMany({
       where: {
         restaurantId,
@@ -37,15 +47,6 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         restaurantId: true,
-        restaurant: {
-          select: {
-            id: true,
-            slug: true,
-            nameEn: true,
-            nameKu: true,
-            nameAr: true,
-          },
-        },
         displayName: true,
         lastLoginAt: true,
         createdAt: true,
@@ -55,11 +56,23 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ admins })
+    // Manually add restaurant info to each admin
+    const adminsWithRestaurant = admins.map(admin => ({
+      ...admin,
+      restaurant,
+    }))
+
+    return NextResponse.json({ admins: adminsWithRestaurant })
   } catch (error: any) {
     console.error('Error fetching admins:', error)
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+      stack: error?.stack,
+    })
     const errorMessage = error?.message || 'Internal server error'
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
+    return NextResponse.json({ error: errorMessage, details: error?.code }, { status: 500 })
   }
 }
 
@@ -109,12 +122,22 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Error creating admin:', error)
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+      stack: error?.stack,
+    })
     // Handle Prisma unique constraint errors
     if (error?.code === 'P2002') {
       return NextResponse.json({ error: 'Admin with this PIN already exists' }, { status: 400 })
     }
+    // Handle Prisma foreign key constraint errors
+    if (error?.code === 'P2003') {
+      return NextResponse.json({ error: 'Invalid restaurant ID' }, { status: 400 })
+    }
     const errorMessage = error?.message || 'Internal server error'
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
+    return NextResponse.json({ error: errorMessage, details: error?.code }, { status: 500 })
   }
 }
 
