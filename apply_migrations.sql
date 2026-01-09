@@ -190,10 +190,9 @@ BEGIN
 
 END $$;
 
--- Mark migrations as applied in Prisma's migration table
-INSERT INTO "_prisma_migrations" ("id", "checksum", "finished_at", "migration_name", "logs", "rolled_back_at", "started_at", "applied_steps_count")
-VALUES 
-    ('20260108000000_add_platform_settings', '', NOW(), '20260108000000_add_platform_settings', NULL, NULL, NOW(), 1),
-    ('20260109000000_fix_admin_users_snake_case', '', NOW(), '20260109000000_fix_admin_users_snake_case', NULL, NULL, NOW(), 1)
-ON CONFLICT ("id") DO NOTHING;
+-- Note: Prisma migration tracking is handled automatically by Prisma.
+-- You don't need to manually insert into _prisma_migrations table.
+-- If needed, you can mark these as applied later using:
+-- npx prisma migrate resolve --applied 20260108000000_add_platform_settings
+-- npx prisma migrate resolve --applied 20260109000000_fix_admin_users_snake_case
 
