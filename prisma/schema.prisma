@@ -31,7 +31,6 @@ model Restaurant {
   brandColors                          Json?
   createdAt                            DateTime          @default(now())
   updatedAt                            DateTime          @updatedAt
-  adminUsers                           AdminUser[]
   Category                             Category[]
   feedback                             Feedback[]
   Item                                 Item[]
@@ -43,6 +42,7 @@ model Restaurant {
   sections                             Section[]
   themes                               Theme?
   uiSettings                           UiSettings?
+  adminUsers                           AdminUser[]
 }
 
 model Section {
@@ -195,26 +195,19 @@ model FallbackSettings {
 }
 
 model AdminUser {
-  id           String     @id @default(cuid())
-  restaurantId String     @map("restaurant_id")
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  pinHash      String     @map("pin_hash") // bcrypt hashed PIN
-  displayName  String?    @map("display_name") // Optional display name
-  isActive     Boolean    @default(true) @map("is_active")
+  id           String     @id(map: "AdminUser_pkey") @default(cuid())
+  pinHash      String     @map("pin_hash")
   lastLoginAt  DateTime?  @map("last_login_at")
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
+  restaurantId String     @map("restaurant_id")
+  displayName  String?    @map("display_name")
+  isActive     Boolean?   @default(true) @map("is_active")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
+  @@index([restaurantId])
+  @@index([restaurantId, isActive])
   @@map("admin_users")
-}
-
-model PlatformSettings {
-  id            String    @id @default("platform-1")
-  footerLogoKey String?   @map("footer_logo_key")
-  footerLogoUrl String?   @map("footer_logo_url")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-
-  @@map("platform_settings")
 }
 
 model RestaurantAdmin {
@@ -229,4 +222,13 @@ model RestaurantAdmin {
   Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId])
+}
+
+model PlatformSettings {
+  id            String   @id @default("platform-1")
+  footerLogoKey String?  @map("footer_logo_key")
+  footerLogoUrl String?  @map("footer_logo_url")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
 }

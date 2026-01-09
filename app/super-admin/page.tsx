@@ -101,8 +101,8 @@ export default function SuperAdminPage() {
       const response = await fetch('/api/super-admin/platform-settings')
       if (response.ok) {
         const data = await response.json()
-        if (data.footerLogoUrl) {
-          setFooterLogoPreview(data.footerLogoUrl)
+        if (data.footerLogoR2Url) {
+          setFooterLogoPreview(data.footerLogoR2Url)
         }
       }
     } catch (error) {
@@ -153,8 +153,8 @@ export default function SuperAdminPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          footerLogoKey: key,
-          footerLogoUrl: publicUrl,
+          footerLogoR2Key: key,
+          footerLogoR2Url: publicUrl,
         }),
       })
 
@@ -168,7 +168,7 @@ export default function SuperAdminPage() {
       console.log('[SUPER ADMIN] Platform settings updated:', updateData)
       
       // Update preview with the URL from response (or use publicUrl as fallback)
-      const finalUrl = updateData.platformSettings?.footerLogoUrl || publicUrl
+      const finalUrl = updateData.platformSettings?.footerLogoR2Url || publicUrl
       setFooterLogoPreview(finalUrl)
       
       toast.success('Footer logo uploaded successfully! This logo will appear on all restaurant menus.')

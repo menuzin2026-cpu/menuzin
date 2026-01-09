@@ -227,8 +227,8 @@ function MenuPageContent() {
         })
         if (res.ok) {
           const data = await res.json()
-          if (data.footerLogoUrl) {
-            setFooterLogoUrl(data.footerLogoUrl)
+          if (data.footerLogoR2Url) {
+            setFooterLogoUrl(data.footerLogoR2Url)
           } else {
             setFooterLogoUrl(null)
           }
