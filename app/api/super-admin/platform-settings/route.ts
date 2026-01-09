@@ -6,8 +6,8 @@ import { getSuperAdminSession } from '@/lib/auth'
 import { z } from 'zod'
 
 const updatePlatformSettingsSchema = z.object({
-  footerLogoKey: z.string().optional().nullable(),
-  footerLogoUrl: z.string().optional().nullable(),
+  footerLogoR2Key: z.string().optional().nullable(),
+  footerLogoR2Url: z.string().optional().nullable(),
 })
 
 export async function GET(request: NextRequest) {
@@ -34,16 +34,16 @@ export async function GET(request: NextRequest) {
         console.error('Error creating platform settings:', createError)
         return NextResponse.json({
           id: 'platform-1',
-          footerLogoKey: null,
-          footerLogoUrl: null,
+          footerLogoR2Key: null,
+          footerLogoR2Url: null,
         })
       }
     }
 
     return NextResponse.json({
       id: settings.id,
-      footerLogoKey: settings.footerLogoKey,
-      footerLogoUrl: settings.footerLogoUrl,
+      footerLogoR2Key: settings.footerLogoR2Key,
+      footerLogoR2Url: settings.footerLogoR2Url,
     }, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
     // Return empty settings instead of error to prevent UI breakage
     return NextResponse.json({
       id: 'platform-1',
-      footerLogoKey: null,
-      footerLogoUrl: null,
+      footerLogoR2Key: null,
+      footerLogoR2Url: null,
     })
   }
 }
@@ -79,11 +79,11 @@ export async function PUT(request: NextRequest) {
 
     // Prepare update data - include all fields from validation (they may be null to clear values)
     const updateData: {
-      footerLogoKey: string | null
-      footerLogoUrl: string | null
+      footerLogoR2Key: string | null
+      footerLogoR2Url: string | null
     } = {
-      footerLogoKey: validation.data.footerLogoKey ?? null,
-      footerLogoUrl: validation.data.footerLogoUrl ?? null,
+      footerLogoR2Key: validation.data.footerLogoR2Key ?? null,
+      footerLogoR2Url: validation.data.footerLogoR2Url ?? null,
     }
 
     // Use upsert to ensure settings exist (singleton pattern: id='platform-1')
@@ -92,23 +92,23 @@ export async function PUT(request: NextRequest) {
       update: updateData,
       create: {
         id: 'platform-1',
-        footerLogoKey: validation.data.footerLogoKey ?? null,
-        footerLogoUrl: validation.data.footerLogoUrl ?? null,
+        footerLogoR2Key: validation.data.footerLogoR2Key ?? null,
+        footerLogoR2Url: validation.data.footerLogoR2Url ?? null,
       },
     })
 
     console.log('[PLATFORM SETTINGS] Updated successfully:', {
       id: updated.id,
-      footerLogoKey: updated.footerLogoKey,
-      footerLogoUrl: updated.footerLogoUrl,
+      footerLogoR2Key: updated.footerLogoR2Key,
+      footerLogoR2Url: updated.footerLogoR2Url,
     })
 
     return NextResponse.json({
       ok: true,
       platformSettings: {
         id: updated.id,
-        footerLogoKey: updated.footerLogoKey,
-        footerLogoUrl: updated.footerLogoUrl,
+        footerLogoR2Key: updated.footerLogoR2Key,
+        footerLogoR2Url: updated.footerLogoR2Url,
       },
     }, {
       headers: {
