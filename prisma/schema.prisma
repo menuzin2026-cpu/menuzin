@@ -194,9 +194,11 @@ model FallbackSettings {
 }
 
 model PlatformSettings {
-  id              String   @id @default("platform-1")
-  footerLogoR2Key String?
-  footerLogoR2Url String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id              String   @id @default("platform-1") @map("id")
+  footerLogoR2Key String?  @map("footer_logo_r2_key")
+  footerLogoR2Url String?  @map("footer_logo_r2_url")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
 }

@@ -43,7 +43,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 6) Check for reserved slugs in first path segment
+  // 6) REDIRECT: admin-portal to admin (backward compatibility)
+  if (pathname.includes('/admin-portal')) {
+    const newPath = pathname.replace('/admin-portal', '/admin')
+    return NextResponse.redirect(new URL(newPath, request.url))
+  }
+
+  // 7) Check for reserved slugs in first path segment
   const pathSegments = pathname.split('/').filter(Boolean)
   if (pathSegments.length > 0) {
     const firstSegment = pathSegments[0]
@@ -54,7 +60,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 7) ALLOW: All other routes (dynamic slug routes will be validated in page/API handlers)
+  // 8) ALLOW: All other routes (dynamic slug routes will be validated in page/API handlers)
   return NextResponse.next()
 }
 
