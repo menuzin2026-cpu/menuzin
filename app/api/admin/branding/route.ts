@@ -2,16 +2,17 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminSession } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth'
 
 export async function GET() {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await requireAdminSession()
 
-    const restaurant = await prisma.restaurant.findFirst()
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: session.restaurantId },
+      select: { brandColors: true },
+    })
+
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
     }
@@ -25,20 +26,12 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await requireAdminSession()
 
     const body = await request.json()
 
-    const restaurant = await prisma.restaurant.findFirst()
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
-    }
-
     const updated = await prisma.restaurant.update({
-      where: { id: restaurant.id },
+      where: { id: session.restaurantId },
       data: { brandColors: body.brandColors },
     })
 
@@ -79,17 +72,17 @@ export async function PUT(request: NextRequest) {
         },
         create: {
           id: 'fallback-1',
-          nameKu: restaurant.nameKu || 'رێستۆرانتی',
-          nameEn: restaurant.nameEn || 'Restaurant',
-          nameAr: restaurant.nameAr || 'مطعم',
-          logoMediaId: restaurant.logoMediaId,
-          footerLogoMediaId: (restaurant as any).footerLogoMediaId || null,
-          welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
-          welcomeOverlayColor: restaurant.welcomeOverlayColor || '#000000',
-          welcomeOverlayOpacity: restaurant.welcomeOverlayOpacity || 0.5,
-          welcomeTextEn: restaurant.welcomeTextEn,
-          googleMapsUrl: restaurant.googleMapsUrl,
-          phoneNumber: restaurant.phoneNumber,
+          nameKu: updated.nameKu || 'رێستۆرانتی',
+          nameEn: updated.nameEn || 'Restaurant',
+          nameAr: updated.nameAr || 'مطعم',
+          logoMediaId: updated.logoMediaId,
+          footerLogoMediaId: (updated as any).footerLogoMediaId || null,
+          welcomeBackgroundMediaId: updated.welcomeBackgroundMediaId,
+          welcomeOverlayColor: updated.welcomeOverlayColor || '#000000',
+          welcomeOverlayOpacity: updated.welcomeOverlayOpacity || 0.5,
+          welcomeTextEn: updated.welcomeTextEn,
+          googleMapsUrl: updated.googleMapsUrl,
+          phoneNumber: updated.phoneNumber,
           brandColors: updated.brandColors || defaultBrandColors,
         },
       })

@@ -2,20 +2,26 @@ export const dynamic = "force-dynamic"
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminSession } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth'
 
 export async function GET() {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await requireAdminSession()
 
     const sections = await prisma.section.findMany({
+      where: {
+        restaurantId: session.restaurantId,
+      },
       include: {
         categories: {
+          where: {
+            restaurantId: session.restaurantId,
+          },
           include: {
             items: {
+              where: {
+                restaurantId: session.restaurantId,
+              },
               orderBy: {
                 sortOrder: 'asc',
               },

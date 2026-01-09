@@ -133,6 +133,7 @@ async function main() {
     // Create categories for Menu section
     const appetizersCategory = await prisma.category.create({
       data: {
+        restaurantId: restaurant.id,
         sectionId: menuSection.id,
         nameKu: 'پێشخوارد',
         nameEn: 'Appetizers',
@@ -144,6 +145,7 @@ async function main() {
 
     const mainDishesCategory = await prisma.category.create({
       data: {
+        restaurantId: restaurant.id,
         sectionId: menuSection.id,
         nameKu: 'خواردنی سەرەکی',
         nameEn: 'Main Dishes',
@@ -156,6 +158,7 @@ async function main() {
     // Create categories for Shisha section
     const classicShishaCategory = await prisma.category.create({
       data: {
+        restaurantId: restaurant.id,
         sectionId: shishaSection.id,
         nameKu: 'کلاسیک',
         nameEn: 'Classic',
@@ -168,6 +171,7 @@ async function main() {
     // Create categories for Drinks section
     const hotDrinksCategory = await prisma.category.create({
       data: {
+        restaurantId: restaurant.id,
         sectionId: drinksSection.id,
         nameKu: 'خواردنەوەی گەرم',
         nameEn: 'Hot Drinks',
@@ -179,6 +183,7 @@ async function main() {
 
     const coldDrinksCategory = await prisma.category.create({
       data: {
+        restaurantId: restaurant.id,
         sectionId: drinksSection.id,
         nameKu: 'خواردنەوەی سارد',
         nameEn: 'Cold Drinks',
@@ -194,6 +199,7 @@ async function main() {
     await prisma.item.createMany({
       data: [
       {
+        restaurantId: restaurant.id,
         categoryId: appetizersCategory.id,
         nameKu: 'هوموس',
         nameEn: 'Hummus',
@@ -206,6 +212,7 @@ async function main() {
         isActive: true,
       },
       {
+        restaurantId: restaurant.id,
         categoryId: appetizersCategory.id,
         nameKu: 'تابولی',
         nameEn: 'Tabbouleh',
@@ -218,6 +225,7 @@ async function main() {
         isActive: true,
       },
       {
+        restaurantId: restaurant.id,
         categoryId: mainDishesCategory.id,
         nameKu: 'کەباب',
         nameEn: 'Kebab',
@@ -230,6 +238,7 @@ async function main() {
         isActive: true,
       },
       {
+        restaurantId: restaurant.id,
         categoryId: mainDishesCategory.id,
         nameKu: 'شاوەرما',
         nameEn: 'Shawarma',
@@ -242,6 +251,7 @@ async function main() {
         isActive: true,
       },
       {
+        restaurantId: restaurant.id,
         categoryId: classicShishaCategory.id,
         nameKu: 'شیشەی کلاسیک',
         nameEn: 'Classic Shisha',
@@ -254,6 +264,7 @@ async function main() {
         isActive: true,
       },
       {
+        restaurantId: restaurant.id,
         categoryId: hotDrinksCategory.id,
         nameKu: 'چای',
         nameEn: 'Tea',
@@ -266,6 +277,7 @@ async function main() {
         isActive: true,
       },
       {
+        restaurantId: restaurant.id,
         categoryId: hotDrinksCategory.id,
         nameKu: 'قاوە',
         nameEn: 'Coffee',
@@ -278,6 +290,7 @@ async function main() {
         isActive: true,
       },
       {
+        restaurantId: restaurant.id,
         categoryId: coldDrinksCategory.id,
         nameKu: 'لیمۆناد',
         nameEn: 'Lemonade',
@@ -290,6 +303,7 @@ async function main() {
         isActive: true,
       },
       {
+        restaurantId: restaurant.id,
         categoryId: coldDrinksCategory.id,
         nameKu: 'جوس',
         nameEn: 'Juice',

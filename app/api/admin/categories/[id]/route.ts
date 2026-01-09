@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminSession } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth'
 import { revalidateTag } from 'next/cache'
 
 export async function PATCH(
@@ -10,9 +10,20 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await requireAdminSession()
+
+    // Verify category belongs to admin's restaurant
+    const existingCategory = await prisma.category.findUnique({
+      where: { id: params.id },
+      select: { restaurantId: true },
+    })
+
+    if (!existingCategory) {
+      return NextResponse.json({ error: 'Category not found' }, { status: 404 })
+    }
+
+    if (existingCategory.restaurantId !== session.restaurantId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -37,14 +48,28 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await requireAdminSession()
+
+    // Verify category belongs to admin's restaurant
+    const existingCategory = await prisma.category.findUnique({
+      where: { id: params.id },
+      select: { restaurantId: true },
+    })
+
+    if (!existingCategory) {
+      return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     }
 
-    // Delete all items in this category first
+    if (existingCategory.restaurantId !== session.restaurantId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    // Delete all items in this category first (only items belonging to this restaurant)
     await prisma.item.deleteMany({
-      where: { categoryId: params.id },
+      where: { 
+        categoryId: params.id,
+        restaurantId: session.restaurantId,
+      },
     })
 
     // Delete the category

@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
 
     const item = await prisma.item.create({
       data: {
+        restaurantId: session.restaurantId,
         categoryId: validation.data.categoryId,
         nameKu: validation.data.nameKu,
         nameEn: validation.data.nameEn,

@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminSession } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth'
 import { revalidateTag } from 'next/cache'
 
 export async function PATCH(
@@ -10,9 +10,20 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await requireAdminSession()
+
+    // Verify section belongs to admin's restaurant
+    const existingSection = await prisma.section.findUnique({
+      where: { id: params.id },
+      select: { restaurantId: true },
+    })
+
+    if (!existingSection) {
+      return NextResponse.json({ error: 'Section not found' }, { status: 404 })
+    }
+
+    if (existingSection.restaurantId !== session.restaurantId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -37,18 +48,16 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await requireAdminSession()
 
-    // Delete all categories and items in this section first
+    // Verify section belongs to admin's restaurant and get related data
     const section = await prisma.section.findUnique({
       where: { id: params.id },
-      include: {
+      select: { 
+        restaurantId: true,
         categories: {
-          include: {
-            items: true,
+          select: {
+            id: true,
           },
         },
       },
@@ -58,16 +67,28 @@ export async function DELETE(
       return NextResponse.json({ error: 'Section not found' }, { status: 404 })
     }
 
-    // Delete all items in all categories
-    for (const category of section.categories) {
+    if (section.restaurantId !== session.restaurantId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    const categoryIds = section.categories.map(cat => cat.id)
+
+    // Delete all items in all categories (only for this restaurant)
+    if (categoryIds.length > 0) {
       await prisma.item.deleteMany({
-        where: { categoryId: category.id },
+        where: { 
+          categoryId: { in: categoryIds },
+          restaurantId: session.restaurantId,
+        },
       })
     }
 
     // Delete all categories
     await prisma.category.deleteMany({
-      where: { sectionId: params.id },
+      where: { 
+        sectionId: params.id,
+        restaurantId: session.restaurantId,
+      },
     })
 
     // Delete the section

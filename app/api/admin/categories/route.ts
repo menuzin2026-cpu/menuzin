@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
 
     const category = await prisma.category.create({
       data: {
+        restaurantId: session.restaurantId,
         sectionId: validation.data.sectionId,
         nameKu: validation.data.nameKu,
         nameEn: validation.data.nameEn,

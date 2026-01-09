@@ -42,3 +42,4 @@ FROM pg_indexes
 WHERE tablename IN ('admin_users', 'platform_settings')
 ORDER BY tablename, indexname;
 
+

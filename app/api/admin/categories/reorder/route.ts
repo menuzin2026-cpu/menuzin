@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminSession } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth'
 import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
 
@@ -15,10 +15,7 @@ const reorderSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await requireAdminSession()
 
     const body = await request.json()
     console.log('Received reorder request:', JSON.stringify(body, null, 2))
@@ -33,21 +30,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify all category IDs exist
+    // Verify all category IDs exist and belong to admin's restaurant
     const categoryIds = validation.data.items.map(item => item.id)
     const existingCategories = await prisma.category.findMany({
-      where: { id: { in: categoryIds } },
-      select: { id: true },
+      where: { 
+        id: { in: categoryIds },
+        restaurantId: session.restaurantId,
+      },
+      select: { id: true, restaurantId: true },
     })
     
     const existingIds = new Set(existingCategories.map(c => c.id))
     const missingIds = categoryIds.filter(id => !existingIds.has(id))
     
     if (missingIds.length > 0) {
-      console.error('Some category IDs do not exist:', missingIds)
+      console.error('Some category IDs do not exist or belong to another restaurant:', missingIds)
       return NextResponse.json(
         { 
-          error: 'Some category IDs do not exist',
+          error: 'Some category IDs do not exist or belong to another restaurant',
           missingIds,
         },
         { status: 400 }

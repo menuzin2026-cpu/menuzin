@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminSession } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth'
 import { ensureRestaurantWelcomeBgMimeTypeColumn } from '@/lib/ensure-columns'
 
 export async function GET(request: NextRequest) {
@@ -10,17 +10,10 @@ export async function GET(request: NextRequest) {
     // Ensure DB column exists in production before querying
     await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
 
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get slug from query parameter
-    const searchParams = request.nextUrl.searchParams
-    const slug = searchParams.get('slug') || 'legends-restaurant' // Default to legends-restaurant
+    const session = await requireAdminSession()
 
     const restaurant = await prisma.restaurant.findUnique({
-      where: { slug },
+      where: { id: session.restaurantId },
     })
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
@@ -84,10 +77,7 @@ export async function PUT(request: NextRequest) {
     // Ensure DB column exists in production before updating
     await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
 
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await requireAdminSession()
 
     const body = await request.json()
     
@@ -96,11 +86,9 @@ export async function PUT(request: NextRequest) {
       console.log('Settings update request body:', JSON.stringify(body, null, 2))
     }
 
-    // Get slug from body or query parameter, default to legends-restaurant
-    const slug = body.slug || request.nextUrl.searchParams.get('slug') || 'legends-restaurant'
-
+    // Get restaurant by restaurantId from session
     const restaurant = await prisma.restaurant.findUnique({
-      where: { slug },
+      where: { id: session.restaurantId },
     })
     if (!restaurant) {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
@@ -201,7 +189,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const updated = await prisma.restaurant.update({
-      where: { id: restaurant.id },
+      where: { id: session.restaurantId },
       data: updateData,
     })
 
