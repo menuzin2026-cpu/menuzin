@@ -103,9 +103,24 @@ export async function PUT(request: NextRequest) {
         footerLogoR2Url: updated.footerLogoR2Url,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating platform settings:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Full error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+      stack: error?.stack,
+    })
+    if (error?.code === 'P2021') {
+      return NextResponse.json({ 
+        error: 'Database table or column does not exist. Please run database migrations.',
+        details: error?.meta 
+      }, { status: 500 })
+    }
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: error?.message || 'Unknown error occurred'
+    }, { status: 500 })
   }
 }
 

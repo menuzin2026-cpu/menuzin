@@ -6,8 +6,8 @@ import { getSuperAdminSession, hashPin } from '@/lib/auth'
 import { z } from 'zod'
 
 const createAdminSchema = z.object({
-  restaurantId: z.string().min(1),
-  pin: z.string().length(4).regex(/^\d+$/, 'PIN must be 4 digits'),
+  restaurantId: z.string().min(1, 'restaurantId is required'),
+  pin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
 })
 
 const updateAdminSchema = z.object({
@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
     const validation = createAdminSchema.safeParse(body)
 
     if (!validation.success) {
+      console.error('Validation error:', validation.error.errors)
       return NextResponse.json(
         { error: validation.error.errors[0].message },
         { status: 400 }
@@ -95,26 +96,45 @@ export async function POST(request: NextRequest) {
 
     const { restaurantId, pin } = validation.data
 
+    // Validate restaurantId is provided
+    if (!restaurantId || typeof restaurantId !== 'string' || restaurantId.trim().length === 0) {
+      console.error('Missing or invalid restaurantId:', restaurantId)
+      return NextResponse.json({ error: 'restaurantId is required' }, { status: 400 })
+    }
+
+    // Validate pin is exactly 4 digits
+    if (!pin || !/^\d{4}$/.test(pin)) {
+      console.error('Invalid PIN format:', pin)
+      return NextResponse.json({ error: 'PIN must be exactly 4 digits' }, { status: 400 })
+    }
+
     // Verify restaurant exists
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: restaurantId },
+      select: { id: true },
     })
 
     if (!restaurant) {
+      console.error('Restaurant not found:', restaurantId)
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
     }
 
+    // Hash the PIN
     const pinHash = await hashPin(pin)
 
+    // Create admin user with proper field mapping
     const admin = await prisma.adminUser.create({
       data: {
-        restaurantId,
-        pinHash,
+        restaurantId: restaurantId,
+        pinHash: pinHash,
       },
     })
 
+    console.log('Admin created successfully:', { id: admin.id, restaurantId })
+
     return NextResponse.json({
       success: true,
+      ok: true,
       admin: {
         id: admin.id,
         createdAt: admin.createdAt,
@@ -122,22 +142,32 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Error creating admin:', error)
-    console.error('Error details:', {
+    console.error('Full error details:', {
       message: error?.message,
       code: error?.code,
       meta: error?.meta,
       stack: error?.stack,
+      cause: error?.cause,
     })
-    // Handle Prisma unique constraint errors
+
+    // Handle Prisma errors
     if (error?.code === 'P2002') {
-      return NextResponse.json({ error: 'Admin with this PIN already exists' }, { status: 400 })
+      return NextResponse.json({ error: 'Admin account already exists' }, { status: 400 })
     }
-    // Handle Prisma foreign key constraint errors
     if (error?.code === 'P2003') {
       return NextResponse.json({ error: 'Invalid restaurant ID' }, { status: 400 })
     }
-    const errorMessage = error?.message || 'Internal server error'
-    return NextResponse.json({ error: errorMessage, details: error?.code }, { status: 500 })
+    if (error?.code === 'P2021') {
+      return NextResponse.json({ 
+        error: 'Database table or column does not exist. Please run database migrations.',
+        details: error?.meta 
+      }, { status: 500 })
+    }
+
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: error?.message || 'Unknown error occurred'
+    }, { status: 500 })
   }
 }
 
@@ -152,6 +182,7 @@ export async function PUT(request: NextRequest) {
     const validation = updateAdminSchema.safeParse(body)
 
     if (!validation.success) {
+      console.error('Validation error:', validation.error.errors)
       return NextResponse.json(
         { error: validation.error.errors[0].message },
         { status: 400 }
@@ -159,6 +190,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const { adminId, newPin } = validation.data
+
+    // Validate PIN format
+    if (!newPin || !/^\d{4}$/.test(newPin)) {
+      return NextResponse.json({ error: 'PIN must be exactly 4 digits' }, { status: 400 })
+    }
+
     const pinHash = await hashPin(newPin)
 
     const admin = await prisma.adminUser.update({
@@ -168,6 +205,8 @@ export async function PUT(request: NextRequest) {
       },
     })
 
+    console.log('Admin PIN updated successfully:', { id: admin.id })
+
     return NextResponse.json({
       success: true,
       admin: {
@@ -175,11 +214,26 @@ export async function PUT(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    if (error.code === 'P2025') {
+    console.error('Error updating admin PIN:', error)
+    console.error('Full error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+      stack: error?.stack,
+    })
+    if (error?.code === 'P2025') {
       return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
     }
-    console.error('Error updating admin PIN:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    if (error?.code === 'P2021') {
+      return NextResponse.json({ 
+        error: 'Database table or column does not exist. Please run database migrations.',
+        details: error?.meta 
+      }, { status: 500 })
+    }
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: error?.message || 'Unknown error occurred'
+    }, { status: 500 })
   }
 }
 
@@ -200,6 +254,7 @@ export async function DELETE(request: NextRequest) {
     // Get the admin to check restaurant
     const admin = await prisma.adminUser.findUnique({
       where: { id: adminId },
+      select: { id: true, restaurantId: true },
     })
 
     if (!admin) {
@@ -225,16 +280,33 @@ export async function DELETE(request: NextRequest) {
       where: { id: adminId },
     })
 
+    console.log('Admin deleted successfully:', { id: adminId })
+
     return NextResponse.json({
       success: true,
       message: 'Admin account deleted successfully',
     })
   } catch (error: any) {
-    if (error.code === 'P2025') {
+    console.error('Error deleting admin:', error)
+    console.error('Full error details:', {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+      stack: error?.stack,
+    })
+    if (error?.code === 'P2025') {
       return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
     }
-    console.error('Error deleting admin:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    if (error?.code === 'P2021') {
+      return NextResponse.json({ 
+        error: 'Database table or column does not exist. Please run database migrations.',
+        details: error?.meta 
+      }, { status: 500 })
+    }
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: error?.message || 'Unknown error occurred'
+    }, { status: 500 })
   }
 }
 
