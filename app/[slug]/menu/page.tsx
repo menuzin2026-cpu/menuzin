@@ -198,14 +198,6 @@ function MenuPageContent() {
         }
         const data = await res.json()
         setRestaurant(data)
-        // Use R2 URL if available, otherwise fall back to old media ID
-        if (data.footerLogoR2Url) {
-          setFooterLogoUrl(data.footerLogoR2Url)
-        } else if (data.footerLogoMediaId) {
-          setFooterLogoUrl(`/assets/${data.footerLogoMediaId}`)
-        } else {
-          setFooterLogoUrl(null)
-        }
       } catch (error) {
         console.error('Error fetching restaurant:', error)
         if (retryCount < 1) {
@@ -214,6 +206,25 @@ function MenuPageContent() {
       }
     }
     fetchRestaurant()
+
+    // Fetch global footer logo from platform settings
+    const fetchPlatformFooterLogo = async () => {
+      try {
+        const res = await fetch('/api/platform-settings')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.footerLogoR2Url) {
+            setFooterLogoUrl(data.footerLogoR2Url)
+          } else {
+            setFooterLogoUrl(null)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching platform footer logo:', error)
+        setFooterLogoUrl(null)
+      }
+    }
+    fetchPlatformFooterLogo()
 
     // Load basket from localStorage
     const savedBasket = localStorage.getItem('basket')

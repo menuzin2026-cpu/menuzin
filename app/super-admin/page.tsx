@@ -517,156 +517,163 @@ export default function SuperAdminPage() {
           )}
         </div>
 
-        {/* Create Admin Section */}
-        {selectedRestaurantId && (
-          <>
-            <div className="mb-6 bg-[#0b0b0b] rounded-2xl p-6 border border-[#222]">
-              <div className="flex items-center mb-4">
-                <UserPlus className="w-8 h-8 text-white mr-3" />
-                <h2 className="text-xl font-bold text-white">
-                  Create Admin PIN for {selectedRestaurant?.nameEn || 'Restaurant'}
-                </h2>
-              </div>
-              <form onSubmit={handleCreateAdmin} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    4-Digit PIN
-                  </label>
-                  <Input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={4}
-                    value={newPin}
-                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
-                    placeholder="0000"
-                    className="text-center text-xl tracking-widest bg-[#111] border-[#222] text-white placeholder:text-gray-500"
-                    required
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={creatingAdmin || newPin.length !== 4}
-                  className="w-full bg-[#222] hover:bg-[#333] border border-[#333] text-white"
-                >
-                  {creatingAdmin ? 'Creating...' : 'Create Admin PIN'}
-                </Button>
-                <p className="text-xs text-gray-400 text-center">
-                  Admin can login at: menuzin.com/{selectedRestaurant?.slug}/admin
-                </p>
-              </form>
+        {/* Create Admin Section - Always Visible */}
+        <div className="mb-6 bg-[#0b0b0b] rounded-2xl p-6 border border-[#222]">
+          <div className="flex items-center mb-4">
+            <UserPlus className="w-8 h-8 text-white mr-3" />
+            <h2 className="text-xl font-bold text-white">Create Admin PIN for Restaurant</h2>
+          </div>
+          {!selectedRestaurantId ? (
+            <div className="p-4 bg-[#111] rounded-lg border border-[#222]">
+              <p className="text-gray-400 text-center">
+                Please select a restaurant from the list above to create an admin PIN
+              </p>
             </div>
+          ) : (
+            <form onSubmit={handleCreateAdmin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Restaurant: <span className="text-white font-semibold">{selectedRestaurant?.nameEn}</span>
+                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  4-Digit PIN
+                </label>
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={newPin}
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                  placeholder="0000"
+                  className="text-center text-xl tracking-widest bg-[#111] border-[#222] text-white placeholder:text-gray-500"
+                  required
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={creatingAdmin || newPin.length !== 4}
+                className="w-full bg-[#222] hover:bg-[#333] border border-[#333] text-white"
+              >
+                {creatingAdmin ? 'Creating...' : 'Create Admin PIN'}
+              </Button>
+              <p className="text-xs text-gray-400 text-center">
+                Admin can login at: menuzin.com/{selectedRestaurant?.slug}/admin
+              </p>
+            </form>
+          )}
+        </div>
 
-            {/* Admin Accounts Section */}
-            <div className="mb-6 bg-[#0b0b0b] rounded-2xl p-6 border border-[#222]">
-              <div className="flex items-center mb-4">
-                <Users className="w-8 h-8 text-white mr-3" />
-                <h2 className="text-xl font-bold text-white">Admin Accounts ({selectedRestaurant?.nameEn})</h2>
-              </div>
-              {loadingAdmins ? (
-                <p className="text-gray-400">Loading...</p>
-              ) : admins.length === 0 ? (
-                <p className="text-gray-400">No admin accounts found for this restaurant</p>
-              ) : (
-                <div className="space-y-4">
-                  {admins.map((admin) => (
-                    <div
-                      key={admin.id}
-                      className="p-4 bg-[#111] rounded-lg border border-[#222] space-y-3"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="font-medium text-white mb-1">
-                            Admin ID: {admin.id.slice(-12)}
-                          </p>
-                          <p className="text-sm text-gray-400 mb-1">
-                            Created: {new Date(admin.createdAt).toLocaleString()}
-                          </p>
-                          {admin.lastLoginAt && (
-                            <p className="text-sm text-gray-400">
-                              Last Login: {new Date(admin.lastLoginAt).toLocaleString()}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          {editingAdminId === admin.id ? (
-                            <>
-                              <Button
-                                onClick={() => {
-                                  setEditingAdminId(null)
-                                  setUpdatePin('')
-                                }}
-                                variant="outline"
-                                size="sm"
-                                className="bg-[#111] hover:bg-[#222] border-[#333] text-white"
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                onClick={() => handleUpdatePin(admin.id)}
-                                disabled={updatingPin || updatePin.length !== 4}
-                                size="sm"
-                                className="bg-[#222] hover:bg-[#333] border border-[#333] text-white"
-                              >
-                                {updatingPin ? 'Saving...' : 'Save'}
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                onClick={() => {
-                                  setEditingAdminId(admin.id)
-                                  setUpdatePin('')
-                                }}
-                                variant="outline"
-                                size="sm"
-                                className="bg-[#111] hover:bg-[#222] border-[#333] text-white"
-                              >
-                                <Key className="w-4 h-4 mr-1" />
-                                Update PIN
-                              </Button>
-                              <Button
-                                onClick={() => handleDeleteAdmin(admin.id)}
-                                disabled={deletingAdminId === admin.id || admins.length === 1}
-                                variant="outline"
-                                size="sm"
-                                className="bg-red-900/20 hover:bg-red-900/30 border-red-800/30 text-red-200"
-                              >
-                                {deletingAdminId === admin.id ? (
-                                  'Deleting...'
-                                ) : (
-                                  <>
-                                    <Trash2 className="w-4 h-4 mr-1" />
-                                    Delete
-                                  </>
-                                )}
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      {editingAdminId === admin.id && (
-                        <div className="pt-3 border-t border-[#222]">
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            New 4-Digit PIN
-                          </label>
-                          <Input
-                            type="password"
-                            inputMode="numeric"
-                            maxLength={4}
-                            value={updatePin}
-                            onChange={(e) => setUpdatePin(e.target.value.replace(/\D/g, ''))}
-                            placeholder="0000"
-                            className="text-center text-xl tracking-widest bg-[#111] border-[#222] text-white placeholder:text-gray-500"
-                            autoFocus
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+        {/* Admin Accounts Section - Only show when restaurant is selected */}
+        {selectedRestaurantId && (
+          <div className="mb-6 bg-[#0b0b0b] rounded-2xl p-6 border border-[#222]">
+            <div className="flex items-center mb-4">
+              <Users className="w-8 h-8 text-white mr-3" />
+              <h2 className="text-xl font-bold text-white">Admin Accounts ({selectedRestaurant?.nameEn})</h2>
             </div>
-          </>
+            {loadingAdmins ? (
+              <p className="text-gray-400">Loading...</p>
+            ) : admins.length === 0 ? (
+              <p className="text-gray-400">No admin accounts found for this restaurant</p>
+            ) : (
+              <div className="space-y-4">
+                {admins.map((admin) => (
+                  <div
+                    key={admin.id}
+                    className="p-4 bg-[#111] rounded-lg border border-[#222] space-y-3"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <p className="font-medium text-white mb-1">
+                          Admin ID: {admin.id.slice(-12)}
+                        </p>
+                        <p className="text-sm text-gray-400 mb-1">
+                          Created: {new Date(admin.createdAt).toLocaleString()}
+                        </p>
+                        {admin.lastLoginAt && (
+                          <p className="text-sm text-gray-400">
+                            Last Login: {new Date(admin.lastLoginAt).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        {editingAdminId === admin.id ? (
+                          <>
+                            <Button
+                              onClick={() => {
+                                setEditingAdminId(null)
+                                setUpdatePin('')
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="bg-[#111] hover:bg-[#222] border-[#333] text-white"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={() => handleUpdatePin(admin.id)}
+                              disabled={updatingPin || updatePin.length !== 4}
+                              size="sm"
+                              className="bg-[#222] hover:bg-[#333] border border-[#333] text-white"
+                            >
+                              {updatingPin ? 'Saving...' : 'Save'}
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => {
+                                setEditingAdminId(admin.id)
+                                setUpdatePin('')
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="bg-[#111] hover:bg-[#222] border-[#333] text-white"
+                            >
+                              <Key className="w-4 h-4 mr-1" />
+                              Update PIN
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteAdmin(admin.id)}
+                              disabled={deletingAdminId === admin.id || admins.length === 1}
+                              variant="outline"
+                              size="sm"
+                              className="bg-red-900/20 hover:bg-red-900/30 border-red-800/30 text-red-200"
+                            >
+                              {deletingAdminId === admin.id ? (
+                                'Deleting...'
+                              ) : (
+                                <>
+                                  <Trash2 className="w-4 h-4 mr-1" />
+                                  Delete
+                                </>
+                              )}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {editingAdminId === admin.id && (
+                      <div className="pt-3 border-t border-[#222]">
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          New 4-Digit PIN
+                        </label>
+                        <Input
+                          type="password"
+                          inputMode="numeric"
+                          maxLength={4}
+                          value={updatePin}
+                          onChange={(e) => setUpdatePin(e.target.value.replace(/\D/g, ''))}
+                          placeholder="0000"
+                          className="text-center text-xl tracking-widest bg-[#111] border-[#222] text-white placeholder:text-gray-500"
+                          autoFocus
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
