@@ -6,8 +6,8 @@ import { getSuperAdminSession } from '@/lib/auth'
 import { z } from 'zod'
 
 const updatePlatformSettingsSchema = z.object({
-  footerLogoR2Key: z.string().optional().nullable(),
-  footerLogoR2Url: z.string().optional().nullable(),
+  footerLogoKey: z.string().optional().nullable(),
+  footerLogoUrl: z.string().optional().nullable(),
 })
 
 export async function GET(request: NextRequest) {
@@ -34,16 +34,16 @@ export async function GET(request: NextRequest) {
         console.error('Error creating platform settings:', createError)
         return NextResponse.json({
           id: 'platform-1',
-          footerLogoR2Key: null,
-          footerLogoR2Url: null,
+          footerLogoKey: null,
+          footerLogoUrl: null,
         })
       }
     }
 
     return NextResponse.json({
       id: settings.id,
-      footerLogoR2Key: settings.footerLogoR2Key,
-      footerLogoR2Url: settings.footerLogoR2Url,
+      footerLogoKey: settings.footerLogoKey,
+      footerLogoUrl: settings.footerLogoUrl,
     }, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
     // Return empty settings instead of error to prevent UI breakage
     return NextResponse.json({
       id: 'platform-1',
-      footerLogoR2Key: null,
-      footerLogoR2Url: null,
+      footerLogoKey: null,
+      footerLogoUrl: null,
     })
   }
 }
