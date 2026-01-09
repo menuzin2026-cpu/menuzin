@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAdminSession } from '@/lib/auth'
+import { revalidateTag } from 'next/cache'
 
 export async function PATCH(
   request: NextRequest,
@@ -20,6 +21,9 @@ export async function PATCH(
       where: { id: params.id },
       data: body,
     })
+
+    // Invalidate cache so menu page reflects changes immediately
+    revalidateTag('menu')
 
     return NextResponse.json(category)
   } catch (error) {
@@ -47,6 +51,9 @@ export async function DELETE(
     await prisma.category.delete({
       where: { id: params.id },
     })
+
+    // Invalidate cache so menu page reflects changes immediately
+    revalidateTag('menu')
 
     return NextResponse.json({ success: true })
   } catch (error) {

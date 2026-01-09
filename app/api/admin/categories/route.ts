@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAdminSession } from '@/lib/auth'
+import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
 
 const createCategorySchema = z.object({
@@ -49,6 +50,9 @@ export async function POST(request: NextRequest) {
         isActive: validation.data.isActive ?? true,
       },
     })
+
+    // Invalidate cache so menu page reflects changes immediately
+    revalidateTag('menu')
 
     return NextResponse.json(category)
   } catch (error) {
