@@ -116,14 +116,16 @@ model Feedback {
 
 model AdminUser {
   id           String     @id @default(cuid())
-  restaurantId String
+  restaurantId String     @map("restaurant_id")
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  pinHash      String // bcrypt hashed PIN
-  displayName  String? // Optional display name
-  isActive     Boolean    @default(true)
-  lastLoginAt  DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  pinHash      String     @map("pin_hash") // bcrypt hashed PIN
+  displayName  String?    @map("display_name") // Optional display name
+  isActive     Boolean    @default(true) @map("is_active")
+  lastLoginAt  DateTime?  @map("last_login_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("AdminUser")
 }
 
 model Media {
