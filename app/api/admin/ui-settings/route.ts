@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminSession } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth'
 
 // Force dynamic rendering to prevent caching
 export const dynamic = 'force-dynamic'
@@ -20,10 +20,7 @@ const DEFAULT_SETTINGS = {
 
 export async function GET() {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await requireAdminSession()
 
     // Check if uiSettings model exists in Prisma client
     if (!prisma.uiSettings) {
@@ -31,16 +28,16 @@ export async function GET() {
       return NextResponse.json(DEFAULT_SETTINGS)
     }
 
-    // Get or create UI settings (singleton with fixed ID)
+    // Get or create UI settings for this restaurant
     let settings = await prisma.uiSettings.findUnique({
-      where: { id: 'ui-settings-1' },
+      where: { restaurantId: session.restaurantId },
     })
     
     if (!settings) {
       // Create default settings if none exist
       settings = await prisma.uiSettings.create({
         data: {
-          id: 'ui-settings-1',
+          restaurantId: session.restaurantId,
           ...DEFAULT_SETTINGS,
         },
       })
@@ -65,10 +62,7 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await requireAdminSession()
 
     const body = await request.json()
     
@@ -165,18 +159,18 @@ export async function PUT(request: NextRequest) {
       console.warn('Column check/creation failed, continuing with update:', columnError?.message)
     }
 
-    // Get or create settings (singleton with fixed ID)
+    // Get or create settings for this restaurant
     let uiSettings
     try {
       uiSettings = await prisma.uiSettings.findUnique({
-        where: { id: 'ui-settings-1' },
+        where: { restaurantId: session.restaurantId },
       })
-    } catch (findError: any) {
+      } catch (findError: any) {
       // If findUnique fails due to missing columns, try raw SQL
       if (findError?.code === 'P2022' || findError?.message?.includes('does not exist')) {
         console.warn('Prisma query failed, using raw SQL fallback')
         const rawResult = await prisma.$queryRaw<Array<any>>`
-          SELECT * FROM "UiSettings" WHERE id = 'ui-settings-1'
+          SELECT * FROM "UiSettings" WHERE "restaurantId" = ${session.restaurantId}
         `
         uiSettings = rawResult[0] || null
       } else {
@@ -189,7 +183,7 @@ export async function PUT(request: NextRequest) {
       try {
         uiSettings = await prisma.uiSettings.create({
           data: {
-            id: 'ui-settings-1',
+            restaurantId: session.restaurantId,
             ...DEFAULT_SETTINGS,
             ...settings,
           },
@@ -204,12 +198,12 @@ export async function PUT(request: NextRequest) {
           const valueArray = Object.values(allData)
           
           await prisma.$executeRawUnsafe(
-            `INSERT INTO "UiSettings" (id, ${columns}) VALUES ('ui-settings-1', ${values}) ON CONFLICT (id) DO UPDATE SET ${Object.keys(allData).map((k, i) => `"${k}" = $${i + 1}`).join(', ')}`,
-            ...valueArray, ...valueArray
+            `INSERT INTO "UiSettings" ("restaurantId", ${columns}) VALUES ($1, ${values}) ON CONFLICT ("restaurantId") DO UPDATE SET ${Object.keys(allData).map((k, i) => `"${k}" = $${i + 2}`).join(', ')}`,
+            session.restaurantId, ...valueArray, ...valueArray
           )
           
           const rawResult = await prisma.$queryRaw<Array<any>>`
-            SELECT * FROM "UiSettings" WHERE id = 'ui-settings-1'
+            SELECT * FROM "UiSettings" WHERE "restaurantId" = ${session.restaurantId}
           `
           uiSettings = rawResult[0]
         } else {
@@ -225,7 +219,7 @@ export async function PUT(request: NextRequest) {
       
       try {
         uiSettings = await prisma.uiSettings.update({
-          where: { id: 'ui-settings-1' },
+          where: { restaurantId: session.restaurantId },
           data: updateData,
         })
         
@@ -247,13 +241,13 @@ export async function PUT(request: NextRequest) {
           
           if (setClauses.length > 0) {
             await prisma.$executeRawUnsafe(
-              `UPDATE "UiSettings" SET ${setClauses.join(', ')} WHERE id = 'ui-settings-1'`,
-              ...values
+              `UPDATE "UiSettings" SET ${setClauses.join(', ')} WHERE "restaurantId" = $${paramIndex}`,
+              ...values, session.restaurantId
             )
             
             // Fetch updated record
             const rawResult = await prisma.$queryRaw<Array<any>>`
-              SELECT * FROM "UiSettings" WHERE id = 'ui-settings-1'
+              SELECT * FROM "UiSettings" WHERE "restaurantId" = ${session.restaurantId}
             `
             uiSettings = rawResult[0] || uiSettings
           }
