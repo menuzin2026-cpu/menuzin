@@ -50,6 +50,8 @@ export default function SuperAdminPage() {
   const [updatePin, setUpdatePin] = useState('')
   const [updatingPin, setUpdatingPin] = useState(false)
   const [deletingAdminId, setDeletingAdminId] = useState<string | null>(null)
+  const [deletingRestaurantId, setDeletingRestaurantId] = useState<string | null>(null)
+  const [deletingRestaurantSlug, setDeletingRestaurantSlug] = useState<string | null>(null)
 
   useEffect(() => {
     fetchRestaurants()
@@ -323,6 +325,62 @@ export default function SuperAdminPage() {
     }
   }
 
+  const handleDeleteRestaurant = async (restaurantId: string, slug: string, nameEn: string) => {
+    const confirmed = confirm(
+      `⚠️ WARNING: This will permanently delete the restaurant "${nameEn}" (${slug}) and ALL associated data:\n\n` +
+      `- All menu items, categories, and sections\n` +
+      `- All admin accounts for this restaurant\n` +
+      `- All feedback and reviews\n` +
+      `- All uploaded images and media files\n` +
+      `- Theme and settings\n\n` +
+      `This action CANNOT be undone. Are you absolutely sure?`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    // Double confirmation with slug
+    const doubleConfirmed = confirm(
+      `Please type the restaurant slug "${slug}" to confirm deletion.`
+    )
+
+    if (!doubleConfirmed) {
+      toast.error('Deletion cancelled')
+      return
+    }
+
+    setDeletingRestaurantId(restaurantId)
+    setDeletingRestaurantSlug(slug)
+    try {
+      const response = await fetch(`/api/super-admin/restaurants/${slug}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success(`Restaurant "${nameEn}" and all data deleted successfully!`)
+        // Refresh restaurants list
+        fetchRestaurants()
+        // Clear selection if deleted restaurant was selected
+        if (selectedRestaurantId === restaurantId) {
+          setSelectedRestaurantId('')
+          setAdmins([])
+        }
+      } else {
+        toast.error(data.error || 'Failed to delete restaurant')
+      }
+    } catch (error) {
+      console.error('Error deleting restaurant:', error)
+      toast.error('An error occurred while deleting the restaurant. Please try again.')
+    } finally {
+      setDeletingRestaurantId(null)
+      setDeletingRestaurantSlug(null)
+    }
+  }
+
   const handleLogout = async () => {
     try {
       await fetch('/api/super-admin/logout', { method: 'POST' })
@@ -508,6 +566,25 @@ export default function SuperAdminPage() {
                       >
                         <ExternalLink className="w-3 h-3 mr-1" />
                         View Menu
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-[#1a0000] hover:bg-[#2a0000] border-[#4a0000] text-red-400 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteRestaurant(restaurant.id, restaurant.slug, restaurant.nameEn)
+                        }}
+                        disabled={deletingRestaurantId === restaurant.id}
+                      >
+                        {deletingRestaurantId === restaurant.id ? (
+                          <>Deleting...</>
+                        ) : (
+                          <>
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Delete
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>

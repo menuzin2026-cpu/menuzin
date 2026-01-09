@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 // Import startup check (runs on module load)
@@ -90,6 +90,90 @@ export function generateR2Key(
   const itemPrefix = itemId ? `${itemId}-` : ''
   
   return `restaurants/${restaurantId}/${scope}/${itemPrefix}${timestamp}-${safeFileName}`
+}
+
+/**
+ * Delete a single object from R2
+ */
+export async function deleteR2Object(key: string): Promise<void> {
+  if (typeof window !== 'undefined') {
+    throw new Error('deleteR2Object cannot be used in client-side code')
+  }
+
+  if (!process.env.R2_BUCKET_NAME) {
+    throw new Error('[R2 ERROR] R2_BUCKET_NAME is not set')
+  }
+
+  if (!key) {
+    return // Nothing to delete
+  }
+
+  try {
+    const client = getR2Client()
+    const command = new DeleteObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: key,
+    })
+    await client.send(command)
+    console.log('[R2 DELETE] Deleted object:', key)
+  } catch (error) {
+    console.error('[R2 DELETE] Error deleting object:', key, error)
+    // Don't throw - continue with other deletions even if one fails
+  }
+}
+
+/**
+ * Delete all objects with a given prefix from R2 (e.g., all files for a restaurant)
+ */
+export async function deleteR2ObjectsByPrefix(prefix: string): Promise<void> {
+  if (typeof window !== 'undefined') {
+    throw new Error('deleteR2ObjectsByPrefix cannot be used in client-side code')
+  }
+
+  if (!process.env.R2_BUCKET_NAME) {
+    throw new Error('[R2 ERROR] R2_BUCKET_NAME is not set')
+  }
+
+  if (!prefix) {
+    return
+  }
+
+  try {
+    const client = getR2Client()
+    
+    // List all objects with the prefix
+    const listCommand = new ListObjectsV2Command({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Prefix: prefix,
+    })
+
+    let continuationToken: string | undefined
+    let deletedCount = 0
+
+    do {
+      if (continuationToken) {
+        listCommand.input.ContinuationToken = continuationToken
+      }
+
+      const listResponse = await client.send(listCommand)
+      const objects = listResponse.Contents || []
+
+      // Delete each object
+      for (const obj of objects) {
+        if (obj.Key) {
+          await deleteR2Object(obj.Key)
+          deletedCount++
+        }
+      }
+
+      continuationToken = listResponse.NextContinuationToken
+    } while (continuationToken)
+
+    console.log(`[R2 DELETE] Deleted ${deletedCount} objects with prefix: ${prefix}`)
+  } catch (error) {
+    console.error('[R2 DELETE] Error deleting objects by prefix:', prefix, error)
+    // Don't throw - continue with DB deletion even if R2 deletion fails
+  }
 }
 
 // Export getR2Client for verification endpoint
