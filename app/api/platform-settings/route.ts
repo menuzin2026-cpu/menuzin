@@ -9,8 +9,8 @@ export async function GET(request: NextRequest) {
     let settings = await prisma.platformSettings.findUnique({
       where: { id: 'platform-1' },
       select: {
-        footerLogoR2Key: true,
-        footerLogoR2Url: true,
+        footerLogoKey: true,
+        footerLogoUrl: true,
       },
     })
 
@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
     if (!settings) {
       return NextResponse.json(
         {
-          footerLogoR2Key: null,
-          footerLogoR2Url: null,
+          footerLogoKey: null,
+          footerLogoUrl: null,
         },
         {
           headers: {
@@ -31,8 +31,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        footerLogoR2Key: settings.footerLogoR2Key,
-        footerLogoR2Url: settings.footerLogoR2Url,
+        footerLogoKey: settings.footerLogoKey,
+        footerLogoUrl: settings.footerLogoUrl,
       },
       {
         headers: {
@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
     // Return empty settings instead of error to prevent UI breakage
     return NextResponse.json(
       {
-        footerLogoR2Key: null,
-        footerLogoR2Url: null,
+        footerLogoKey: null,
+        footerLogoUrl: null,
       },
       {
         headers: {
