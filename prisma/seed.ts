@@ -16,52 +16,23 @@ function generateSlug(name: string): string {
 async function main() {
   console.log('🌱 Seeding database...')
 
-  // Create admin user with PIN 1234
-  const pin = '1234'
-  const pinHash = await bcrypt.hash(pin, 10)
-  
-  const admin = await prisma.adminUser.upsert({
-    where: { id: 'admin-1' },
-    update: {},
-    create: {
-      id: 'admin-1',
-      pinHash,
-    },
-  })
-
-  console.log('✅ Admin user created')
-  console.log('🔐 Default PIN: 1234')
-  console.log('⚠️  Please change the PIN after first login!')
-
-  // Ensure "Legends Restaurant" exists with slug "legends-restaurant"
+  // Ensure "Legends Restaurant" exists with slug "legends-restaurant" FIRST
   const legendsSlug = 'legends-restaurant'
   const legendsNameEn = 'Legends Restaurant'
   
-  // Check if restaurant with slug "legends-restaurant" already exists
-  const existingLegendsRestaurant = await prisma.restaurant.findUnique({
+  const restaurant = await prisma.restaurant.upsert({
     where: { slug: legendsSlug },
-  })
-  
-  let restaurant
-  if (existingLegendsRestaurant) {
-    // Restaurant already exists, use it
-    console.log(`✅ Restaurant "${legendsNameEn}" already exists with slug "${legendsSlug}"`)
-    restaurant = existingLegendsRestaurant
-  } else {
-    // Create "Legends Restaurant" if it doesn't exist
-    restaurant = await prisma.restaurant.upsert({
-      where: { slug: legendsSlug },
-      update: {
-        // Ensure name and slug are correct
-        nameEn: legendsNameEn,
-        slug: legendsSlug,
-      },
-      create: {
-        slug: legendsSlug,
-        nameKu: 'رێستۆرانتی لێجەندز',
-        nameEn: legendsNameEn,
-        nameAr: 'مطعم الأساطير',
-        googleMapsUrl: 'https://maps.google.com',
+    update: {
+      // Ensure name and slug are correct
+      nameEn: legendsNameEn,
+      slug: legendsSlug,
+    },
+    create: {
+      slug: legendsSlug,
+      nameKu: 'رێستۆرانتی لێجەندز',
+      nameEn: legendsNameEn,
+      nameAr: 'مطعم الأساطير',
+      googleMapsUrl: 'https://maps.google.com',
       phoneNumber: '+9647501234567',
       brandColors: {
         menuGradientStart: '#5C0015',
@@ -86,10 +57,32 @@ async function main() {
         welcomeOverlayOpacity: 0.5,
       },
     },
-    })
-  }
+  })
 
   console.log(`✅ Restaurant "${restaurant.nameEn}" ensured (slug: ${restaurant.slug})`)
+
+  // Create admin user with PIN 1234, linked to Legends restaurant
+  const pin = '1234'
+  const pinHash = await bcrypt.hash(pin, 10)
+  
+  const admin = await prisma.adminUser.upsert({
+    where: { 
+      id: 'admin-1',
+    },
+    update: {
+      // Ensure admin is linked to legends restaurant
+      restaurantId: restaurant.id,
+    },
+    create: {
+      id: 'admin-1',
+      restaurantId: restaurant.id,
+      pinHash,
+    },
+  })
+
+  console.log('✅ Admin user created')
+  console.log('🔐 Default PIN: 1234')
+  console.log('⚠️  Please change the PIN after first login!')
 
   // Only create sections if restaurant was just created (has no sections yet)
   const existingSections = await prisma.section.findMany({
@@ -317,12 +310,12 @@ async function main() {
     console.log(`✅ Restaurant already has ${existingSections.length} section(s), skipping section/category/item creation`)
   }
 
-  // Create UI settings with defaults
+  // Create UI settings with defaults for Legends restaurant
   await prisma.uiSettings.upsert({
-    where: { id: 'ui-settings-1' },
+    where: { restaurantId: restaurant.id },
     update: {},
     create: {
-      id: 'ui-settings-1',
+      restaurantId: restaurant.id,
       sectionTitleSize: 22,
       categoryTitleSize: 16,
       itemNameSize: 14,
@@ -336,12 +329,12 @@ async function main() {
 
   console.log('✅ UI settings created')
 
-  // Create theme with defaults
+  // Create theme with defaults for Legends restaurant
   await prisma.theme.upsert({
-    where: { id: 'theme-1' },
+    where: { restaurantId: restaurant.id },
     update: {},
     create: {
-      id: 'theme-1',
+      restaurantId: restaurant.id,
       appBg: '#400810',
     },
   })
