@@ -114,7 +114,10 @@ function MenuPageContent() {
     const fetchMenu = async (retryCount = 0) => {
       try {
         setIsLoadingMenu(true)
-        const res = await fetch('/data/menu')
+        // Pass slug to filter by restaurant
+        const res = await fetch(`/data/menu?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
+          cache: 'no-store',
+        })
         if (!res.ok) {
           throw new Error(`Failed to fetch menu: ${res.status} ${res.statusText}`)
         }
@@ -236,8 +239,8 @@ function MenuPageContent() {
       }
     }
 
-    // Fetch UI settings with cache-busting
-    fetch(`/api/ui-settings?t=${Date.now()}`, {
+    // Fetch UI settings for this restaurant (pass slug to filter by restaurantId)
+    fetch(`/api/ui-settings?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
       cache: 'no-store',
     })
       .then((res) => res.json())

@@ -146,12 +146,19 @@ export default async function RootLayout({
                   }
                 }
                 
-                // First, try to apply theme from localStorage immediately (no flash)
+                // Extract slug from current pathname (for scoped cache key)
+                const pathParts = window.location.pathname.split('/').filter(Boolean);
+                const slug = pathParts.length > 0 && pathParts[0] !== 'super-admin' && pathParts[0] !== 'admin' ? pathParts[0] : 'legends-restaurant';
+                
+                // First, try to apply theme from localStorage scoped by restaurant slug (no flash)
                 try {
-                  const cachedTheme = localStorage.getItem('theme-appBg');
+                  const cachedThemeKey = 'theme-appBg-' + slug;
+                  const cachedTheme = localStorage.getItem(cachedThemeKey);
                   if (cachedTheme) {
                     applyThemeColors(cachedTheme);
                   }
+                  // Clear old non-scoped cache if exists
+                  localStorage.removeItem('theme-appBg');
                 } catch (e) {
                   // localStorage might not be available, continue
                 }
@@ -159,17 +166,16 @@ export default async function RootLayout({
                 // Then fetch from API and update if different (with retry)
                 const fetchTheme = async (retryCount = 0) => {
                   try {
-                    // Extract slug from current pathname
-                    const pathParts = window.location.pathname.split('/').filter(Boolean);
-                    const slug = pathParts.length > 0 && pathParts[0] !== 'super-admin' && pathParts[0] !== 'admin' ? pathParts[0] : 'legends-restaurant';
-                    const response = await fetch('/data/theme?slug=' + encodeURIComponent(slug));
+                    const response = await fetch('/data/theme?slug=' + encodeURIComponent(slug) + '&t=' + Date.now(), {
+                      cache: 'no-store',
+                    });
                     const data = await response.json();
                     if (data.theme && data.theme.appBg) {
                       const bgColor = data.theme.appBg;
                       applyThemeColors(bgColor);
-                      // Cache in localStorage for next page load
+                      // Cache in localStorage scoped by restaurant slug for next page load
                       try {
-                        localStorage.setItem('theme-appBg', bgColor);
+                        localStorage.setItem('theme-appBg-' + slug, bgColor);
                       } catch (e) {
                         // localStorage might not be available
                       }

@@ -1,70 +1,88 @@
-import { NextResponse } from 'next/server'
-import { unstable_cache } from 'next/cache'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-async function getMenuSections() {
-  return await prisma.section.findMany({
-    where: {
-      isActive: true,
-    },
-    include: {
-      categories: {
-        where: {
-          isActive: true,
-        },
-        include: {
-          items: {
-            where: {
-              isActive: true,
-            },
-            orderBy: {
-              sortOrder: 'asc',
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+export async function GET(request: NextRequest) {
+  try {
+    // Require slug parameter - no fallback
+    const { searchParams } = new URL(request.url)
+    const slug = searchParams.get('slug')
+
+    if (!slug) {
+      return NextResponse.json({ error: 'Slug parameter is required' }, { status: 400 })
+    }
+
+    // Resolve restaurant by slug
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { slug },
+      select: { id: true },
+    })
+
+    if (!restaurant) {
+      // Restaurant not found - return empty menu
+      return NextResponse.json(
+        { sections: [] },
+        {
+          status: 200,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+        }
+      )
+    }
+
+    // Fetch sections for this restaurant only
+    const sections = await prisma.section.findMany({
+      where: {
+        restaurantId: restaurant.id,
+        isActive: true,
+      },
+      include: {
+        categories: {
+          where: {
+            restaurantId: restaurant.id,
+            isActive: true,
+          },
+          include: {
+            items: {
+              where: {
+                restaurantId: restaurant.id,
+                isActive: true,
+              },
+              orderBy: {
+                sortOrder: 'asc',
+              },
             },
           },
-        },
-        orderBy: {
-          sortOrder: 'asc',
+          orderBy: {
+            sortOrder: 'asc',
+          },
         },
       },
-    },
-    orderBy: {
-      sortOrder: 'asc',
-    },
-  })
-}
-
-// Cache the menu data with tag for invalidation
-const getCachedMenuSections = unstable_cache(
-  getMenuSections,
-  ['menu-sections'],
-  {
-    tags: ['menu'],
-    revalidate: 5, // Revalidate every 5 seconds as fallback
-  }
-)
-
-export async function GET() {
-  try {
-    const sections = await getCachedMenuSections()
+      orderBy: {
+        sortOrder: 'asc',
+      },
+    })
 
     return NextResponse.json(
       { sections: sections || [] },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=5, stale-while-revalidate=10',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         },
       }
     )
   } catch (error) {
     console.error('Error fetching menu:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     // Return empty sections array instead of error to prevent page crashes
     return NextResponse.json(
-      { sections: [], error: 'Failed to load menu data' },
+      { sections: [] },
       {
-        status: 200, // Return 200 with empty data instead of 500
+        status: 200,
         headers: {
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         },
       }
     )

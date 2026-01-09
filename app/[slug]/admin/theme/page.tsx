@@ -198,9 +198,11 @@ export default function ThemePage() {
         const data = await response.json()
         setTheme(previewTheme)
         applyThemeToDocument(previewTheme)
-        // Cache in localStorage for immediate application on next page load
+        // Cache in localStorage scoped by restaurant slug for immediate application on next page load
         try {
-          localStorage.setItem('theme-appBg', previewTheme.appBg)
+          localStorage.setItem(`theme-appBg-${slug}`, previewTheme.appBg)
+          // Also clear any old non-scoped cache
+          localStorage.removeItem('theme-appBg')
         } catch (e) {
           // localStorage might not be available
         }

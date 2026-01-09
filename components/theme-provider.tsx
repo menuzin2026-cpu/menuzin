@@ -1,17 +1,29 @@
 'use client'
 
 import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { generateColorScheme, normalizeToHex } from '@/lib/color-utils'
 
 export function ThemeProvider() {
+  const pathname = usePathname()
+
   useEffect(() => {
     // Fetch theme and apply CSS variables with retry
     const applyTheme = async (retryCount = 0) => {
       try {
-        // Extract slug from current pathname
-        const pathParts = window.location.pathname.split('/').filter(Boolean)
+        // Extract slug from current pathname (re-run when pathname changes)
+        const pathParts = (pathname || window.location.pathname).split('/').filter(Boolean)
         const slug = pathParts.length > 0 && pathParts[0] !== 'super-admin' && pathParts[0] !== 'admin' ? pathParts[0] : 'legends-restaurant'
-        const response = await fetch('/data/theme?slug=' + encodeURIComponent(slug))
+        
+        // Skip theme loading for super-admin (it uses hardcoded black theme)
+        if (pathParts[0] === 'super-admin' || pathname?.startsWith('/super-admin')) {
+          return
+        }
+        
+        // Fetch with cache-busting and slug parameter
+        const response = await fetch(`/data/theme?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
+          cache: 'no-store',
+        })
         if (response.ok) {
           const data = await response.json()
           if (data.theme) {
@@ -19,6 +31,8 @@ export function ThemeProvider() {
             
             // Apply background color via CSS variable
             document.documentElement.style.setProperty('--app-bg', theme.appBg)
+            document.body.style.backgroundColor = theme.appBg
+            document.documentElement.style.backgroundColor = theme.appBg
             
             // Generate and apply complementary color scheme (always based on selected color)
             const hexColor = normalizeToHex(theme.appBg)
@@ -58,7 +72,7 @@ export function ThemeProvider() {
     return () => {
       window.removeEventListener('theme-updated', handleThemeUpdate)
     }
-  }, [])
+  }, [pathname]) // Re-run when pathname changes (different restaurant)
 
   return null
 }

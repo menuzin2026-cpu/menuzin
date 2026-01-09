@@ -17,23 +17,35 @@ export async function GET() {
       where: { restaurantId: session.restaurantId },
     })
 
-    // If theme doesn't exist, create it with defaults
+    // If theme doesn't exist, create it with neutral defaults
     if (!theme) {
       theme = await prisma.theme.create({
         data: {
           restaurantId: session.restaurantId,
-          appBg: '#400810',
+          appBg: '#FFFFFF', // Neutral white background for new restaurants
         },
       })
     }
 
-    return NextResponse.json({ theme })
+    return NextResponse.json(
+      { theme },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      }
+    )
   } catch (error) {
     console.error('Error fetching theme:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
       { error: 'Internal server error', details: errorMessage },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      }
     )
   }
 }
@@ -54,17 +66,26 @@ export async function PUT(request: NextRequest) {
 
     const themeData = validation.data
 
-    // Upsert theme (create if doesn't exist, update if exists)
+    // Upsert theme for THIS restaurant only (restaurantId from session)
     const theme = await prisma.theme.upsert({
-      where: { restaurantId: session.restaurantId },
-      update: themeData,
+      where: { restaurantId: session.restaurantId }, // Ensures we only update the admin's restaurant theme
+      update: themeData, // Update existing theme for this restaurant
       create: {
-        restaurantId: session.restaurantId,
+        restaurantId: session.restaurantId, // Create new theme for this restaurant
         ...themeData,
       },
     })
 
-    return NextResponse.json({ theme, success: true })
+    console.log('Theme updated successfully for restaurant:', session.restaurantId)
+
+    return NextResponse.json(
+      { theme, success: true },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      }
+    )
   } catch (error) {
     console.error('Error saving theme:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'

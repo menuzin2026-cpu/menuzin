@@ -104,11 +104,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Create default theme for the restaurant
+    // Create default theme for the restaurant (neutral default)
     await prisma.theme.create({
       data: {
         restaurantId: restaurant.id,
-        appBg: '#400810',
+        appBg: '#FFFFFF', // Neutral white background for new restaurants
       },
     })
 

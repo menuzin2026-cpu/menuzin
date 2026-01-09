@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           theme: {
-            appBg: '#400810',
+            appBg: '#FFFFFF', // Neutral white default
           },
         },
         {
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           theme: {
-            appBg: '#400810',
+            appBg: '#FFFFFF', // Neutral white default
           },
         },
         {
@@ -64,12 +64,12 @@ export async function GET(request: NextRequest) {
       where: { restaurantId: restaurant.id },
     })
 
-    // If theme doesn't exist, create it with defaults
+    // If theme doesn't exist, create it with neutral defaults
     if (!theme) {
       theme = await prisma.theme.create({
         data: {
           restaurantId: restaurant.id,
-          appBg: '#400810',
+          appBg: '#FFFFFF', // Neutral white background for new restaurants
         },
       })
     }
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         theme: {
-          appBg: '#400810',
+          appBg: '#FFFFFF', // Neutral white default
         },
       },
       {
