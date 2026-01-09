@@ -3,10 +3,12 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyPin, createAdminSession, checkRateLimit } from '@/lib/auth'
+import { requireRestaurantBySlug } from '@/lib/restaurant-utils'
 import { z } from 'zod'
 
 const loginSchema = z.object({
   pin: z.string().length(4).regex(/^\d+$/, 'PIN must be 4 digits'),
+  slug: z.string().min(1),
 })
 
 export async function POST(request: NextRequest) {
@@ -33,12 +35,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { pin } = validation.data
+    const { pin, slug } = validation.data
 
-    // Get all admin users and find one with matching PIN
-    const admins = await prisma.adminUser.findMany()
+    // Verify restaurant exists
+    const restaurant = await requireRestaurantBySlug(slug)
+
+    // Get admin users for this restaurant only
+    const admins = await prisma.adminUser.findMany({
+      where: {
+        restaurantId: restaurant.id,
+        isActive: true,
+      },
+    })
+
     if (admins.length === 0) {
-      return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
+      return NextResponse.json({ error: 'No admin accounts found for this restaurant' }, { status: 404 })
     }
 
     // Try to find an admin with matching PIN
@@ -61,12 +72,15 @@ export async function POST(request: NextRequest) {
       data: { lastLoginAt: new Date() },
     })
 
-    // Create session
-    await createAdminSession()
+    // Create session with restaurant_id and admin_user_id
+    await createAdminSession(restaurant.id, matchedAdmin.id)
 
-    return NextResponse.json({ success: true, adminId: matchedAdmin.id })
+    return NextResponse.json({ success: true, adminId: matchedAdmin.id, restaurantId: restaurant.id })
   } catch (error) {
     console.error('Login error:', error)
+    if (error instanceof Error && error.message === 'Restaurant not found') {
+      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

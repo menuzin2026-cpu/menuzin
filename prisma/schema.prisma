@@ -11,17 +11,17 @@ datasource db {
 }
 
 model Restaurant {
-  id                       String    @id @default(cuid())
-  slug                     String    @unique
+  id                       String       @id @default(cuid())
+  slug                     String       @unique
   nameKu                   String
   nameEn                   String
   nameAr                   String
   logoMediaId              String?
-  logo                     Media?    @relation("RestaurantLogo", fields: [logoMediaId], references: [id])
+  logo                     Media?       @relation("RestaurantLogo", fields: [logoMediaId], references: [id])
   footerLogoMediaId        String?
-  footerLogo               Media?    @relation("RestaurantFooterLogo", fields: [footerLogoMediaId], references: [id])
+  footerLogo               Media?       @relation("RestaurantFooterLogo", fields: [footerLogoMediaId], references: [id])
   welcomeBackgroundMediaId String?
-  welcomeBackground        Media?    @relation("WelcomeBackground", fields: [welcomeBackgroundMediaId], references: [id])
+  welcomeBackground        Media?       @relation("WelcomeBackground", fields: [welcomeBackgroundMediaId], references: [id])
   // R2 Storage fields
   logoR2Key                String?
   logoR2Url                String?
@@ -30,15 +30,19 @@ model Restaurant {
   welcomeBgR2Key           String?
   welcomeBgR2Url           String?
   welcomeBgMimeType        String? // MIME type for R2 welcome background (video/mp4, image/jpeg, etc.)
-  welcomeOverlayColor      String    @default("#000000")
-  welcomeOverlayOpacity    Float     @default(0.5)
+  welcomeOverlayColor      String       @default("#000000")
+  welcomeOverlayOpacity    Float        @default(0.5)
   welcomeTextEn            String?
   googleMapsUrl            String?
   phoneNumber              String?
   brandColors              Json? // Store custom colors as JSON
-  createdAt                DateTime  @default(now())
-  updatedAt                DateTime  @updatedAt
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
   sections                 Section[]
+  adminUsers               AdminUser[]
+  feedback                 Feedback[]
+  uiSettings               UiSettings[]
+  themes                   Theme[]
 }
 
 model Section {
@@ -97,7 +101,9 @@ model Item {
 }
 
 model Feedback {
-  id                String   @id @default(cuid())
+  id                String     @id @default(cuid())
+  restaurantId      String
+  restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   staffRating       Int // 1-5 stars
   serviceRating     Int // 1-5 stars
   hygieneRating     Int // 1-5 stars
@@ -105,15 +111,19 @@ model Feedback {
   phoneNumber       String?
   tableNumber       String?
   comment           String?
-  createdAt         DateTime @default(now())
+  createdAt         DateTime   @default(now())
 }
 
 model AdminUser {
-  id          String    @id @default(cuid())
-  pinHash     String // bcrypt hashed PIN
-  lastLoginAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  pinHash      String // bcrypt hashed PIN
+  displayName  String? // Optional display name
+  isActive     Boolean    @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model Media {
@@ -130,24 +140,28 @@ model Media {
 }
 
 model UiSettings {
-  id                    String   @id @default("ui-settings-1")
-  sectionTitleSize      Int      @default(22)
-  categoryTitleSize     Int      @default(16)
-  itemNameSize          Int      @default(14)
-  itemDescriptionSize   Int      @default(14)
-  itemPriceSize         Int      @default(16)
-  headerLogoSize        Int      @default(32)
-  bottomNavSectionSize  Int      @default(13)
-  bottomNavCategorySize Int      @default(13)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                    String     @id @default(cuid())
+  restaurantId          String     @unique
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  sectionTitleSize      Int        @default(22)
+  categoryTitleSize     Int        @default(16)
+  itemNameSize          Int        @default(14)
+  itemDescriptionSize   Int        @default(14)
+  itemPriceSize         Int        @default(16)
+  headerLogoSize        Int        @default(32)
+  bottomNavSectionSize  Int        @default(13)
+  bottomNavCategorySize Int        @default(13)
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
 }
 
 model Theme {
-  id        String   @id @default("theme-1")
-  appBg     String   @default("#400810")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String     @id @default(cuid())
+  restaurantId String     @unique
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  appBg        String     @default("#400810")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model FallbackSettings {
@@ -175,4 +189,12 @@ model FallbackSettings {
   bottomNavCategorySize    Int      @default(13)
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
+}
+
+model PlatformSettings {
+  id              String   @id @default("platform-1")
+  footerLogoR2Key String?
+  footerLogoR2Url String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

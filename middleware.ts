@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { isReservedSlug } from '@/lib/restaurant-utils'
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -37,17 +38,24 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 5) ALLOW: ONLY Legends restaurant pages
-  if (pathname === '/legends-restaurant') {
+  // 5) ALLOW: Super admin route (no slug)
+  if (pathname === '/super-admin' || pathname.startsWith('/super-admin/')) {
     return NextResponse.next()
   }
 
-  if (pathname.startsWith('/legends-restaurant/')) {
-    return NextResponse.next()
+  // 6) Check for reserved slugs in first path segment
+  const pathSegments = pathname.split('/').filter(Boolean)
+  if (pathSegments.length > 0) {
+    const firstSegment = pathSegments[0]
+    
+    // Block reserved slugs at root level
+    if (isReservedSlug(firstSegment)) {
+      return new NextResponse(null, { status: 404 })
+    }
   }
 
-  // 6) BLOCK: Everything else - return 404
-  return new NextResponse(null, { status: 404 })
+  // 7) ALLOW: All other routes (dynamic slug routes will be validated in page/API handlers)
+  return NextResponse.next()
 }
 
 export const config = {

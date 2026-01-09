@@ -24,14 +24,14 @@ export default function AdminLoginPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ pin }),
+        body: JSON.stringify({ pin, slug }),
       })
 
       const data = await response.json()
 
       if (response.ok) {
         toast.success('Login successful!')
-        router.push(`/${slug}/admin-portal`)
+        router.push(`/${slug}/admin`)
       } else {
         toast.error(data.error || 'Invalid PIN')
       }

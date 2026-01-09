@@ -12,9 +12,15 @@ export async function verifyPin(pin: string, hash: string): Promise<boolean> {
   return bcrypt.compare(pin, hash)
 }
 
-export async function createAdminSession() {
+export interface AdminSessionData {
+  restaurantId: string
+  adminUserId: string
+}
+
+export async function createAdminSession(restaurantId: string, adminUserId: string) {
   const cookieStore = await cookies()
-  cookieStore.set(ADMIN_SESSION_COOKIE, 'authenticated', {
+  const sessionData: AdminSessionData = { restaurantId, adminUserId }
+  cookieStore.set(ADMIN_SESSION_COOKIE, JSON.stringify(sessionData), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -22,10 +28,25 @@ export async function createAdminSession() {
   })
 }
 
-export async function getAdminSession(): Promise<boolean> {
+export async function getAdminSession(): Promise<AdminSessionData | null> {
   const cookieStore = await cookies()
   const session = cookieStore.get(ADMIN_SESSION_COOKIE)
-  return session?.value === 'authenticated'
+  if (!session?.value) {
+    return null
+  }
+  try {
+    return JSON.parse(session.value) as AdminSessionData
+  } catch {
+    return null
+  }
+}
+
+export async function requireAdminSession(): Promise<AdminSessionData> {
+  const session = await getAdminSession()
+  if (!session) {
+    throw new Error('Unauthorized: No admin session')
+  }
+  return session
 }
 
 export async function deleteAdminSession() {
@@ -59,7 +80,8 @@ export async function deleteSuperAdminSession() {
 }
 
 export function getSuperAdminPin(): string {
-  return SUPER_ADMIN_PIN
+  // Use environment variable if set, otherwise fallback to hardcoded PIN
+  return process.env.SUPER_ADMIN_PASSWORD || SUPER_ADMIN_PIN
 }
 
 // Simple rate limiting (in-memory)

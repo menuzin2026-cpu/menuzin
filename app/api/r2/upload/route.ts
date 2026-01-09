@@ -5,8 +5,8 @@ import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { z } from 'zod'
 
 const uploadSchema = z.object({
-  scope: z.enum(['logo', 'footerLogo', 'welcomeBg', 'itemImage', 'categoryImage']),
-  restaurantId: z.string().min(1),
+  scope: z.enum(['logo', 'footerLogo', 'welcomeBg', 'itemImage', 'categoryImage', 'platformFooterLogo']),
+  restaurantId: z.string().optional(),
   itemId: z.string().optional(),
 })
 
@@ -19,26 +19,44 @@ export async function POST(request: NextRequest) {
   try {
     console.log('[R2 UPLOAD PROXY] Upload endpoint called')
 
-    // Check admin authentication
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Check authentication (admin for restaurant media, super admin for platform media)
+    const scope = formData.get('scope') as string
+    const isPlatformScope = scope === 'platformFooterLogo'
+    
+    if (isPlatformScope) {
+      const { getSuperAdminSession } = await import('@/lib/auth')
+      const isAuthenticated = await getSuperAdminSession()
+      if (!isAuthenticated) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    } else {
+      const isAuthenticated = await getAdminSession()
+      if (!isAuthenticated) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
     }
 
     const formData = await request.formData()
     const file = formData.get('file') as File
     const scope = formData.get('scope') as string
-    const restaurantId = formData.get('restaurantId') as string
+    const restaurantId = formData.get('restaurantId') as string | null
     const itemId = formData.get('itemId') as string | null
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
+    // For platformFooterLogo, restaurantId is not required
+    // For other scopes, restaurantId is required
+    const isPlatformScope = scope === 'platformFooterLogo'
+    if (!isPlatformScope && !restaurantId) {
+      return NextResponse.json({ error: 'restaurantId is required for this scope' }, { status: 400 })
+    }
+
     // Validate input
     const validation = uploadSchema.safeParse({
       scope,
-      restaurantId,
+      restaurantId: restaurantId || undefined,
       itemId: itemId || undefined,
     })
 
@@ -75,7 +93,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate R2 key
-    const key = generateR2Key(validation.data.scope, validation.data.restaurantId, file.name, validation.data.itemId)
+    let key: string
+    if (isPlatformScope) {
+      // Platform footer logo: platform/footer/{timestamp}-{filename}
+      const timestamp = Date.now()
+      const safeFileName = file.name
+        .replace(/[^a-zA-Z0-9.-]/g, '-')
+        .toLowerCase()
+        .substring(0, 100)
+      key = `platform/footer/${timestamp}-${safeFileName}`
+    } else {
+      key = generateR2Key(validation.data.scope, validation.data.restaurantId!, file.name, validation.data.itemId)
+    }
 
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer()

@@ -6,6 +6,7 @@ import { getSuperAdminSession, hashPin } from '@/lib/auth'
 import { z } from 'zod'
 
 const createAdminSchema = z.object({
+  restaurantId: z.string().min(1),
   pin: z.string().length(4).regex(/^\d+$/, 'PIN must be 4 digits'),
 })
 
@@ -21,9 +22,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { searchParams } = new URL(request.url)
+    const restaurantId = searchParams.get('restaurantId')
+
+    if (!restaurantId) {
+      return NextResponse.json({ error: 'restaurantId is required' }, { status: 400 })
+    }
+
     const admins = await prisma.adminUser.findMany({
+      where: {
+        restaurantId,
+        isActive: true,
+      },
+      include: {
+        restaurant: {
+          select: {
+            id: true,
+            slug: true,
+            nameEn: true,
+            nameKu: true,
+            nameAr: true,
+          },
+        },
+      },
       select: {
         id: true,
+        restaurantId: true,
+        restaurant: {
+          select: {
+            id: true,
+            slug: true,
+            nameEn: true,
+            nameKu: true,
+            nameAr: true,
+          },
+        },
+        displayName: true,
         lastLoginAt: true,
         createdAt: true,
       },
@@ -56,11 +90,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { pin } = validation.data
+    const { restaurantId, pin } = validation.data
+
+    // Verify restaurant exists
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+    })
+
+    if (!restaurant) {
+      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
+    }
+
     const pinHash = await hashPin(pin)
 
     const admin = await prisma.adminUser.create({
       data: {
+        restaurantId,
         pinHash,
       },
     })
@@ -134,11 +179,26 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Admin ID is required' }, { status: 400 })
     }
 
-    // Check if there's at least one admin remaining after deletion
-    const adminCount = await prisma.adminUser.count()
+    // Get the admin to check restaurant
+    const admin = await prisma.adminUser.findUnique({
+      where: { id: adminId },
+    })
+
+    if (!admin) {
+      return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
+    }
+
+    // Check if there's at least one admin remaining for this restaurant after deletion
+    const adminCount = await prisma.adminUser.count({
+      where: {
+        restaurantId: admin.restaurantId,
+        isActive: true,
+      },
+    })
+
     if (adminCount <= 1) {
       return NextResponse.json(
-        { error: 'Cannot delete the last admin account' },
+        { error: 'Cannot delete the last admin account for this restaurant' },
         { status: 400 }
       )
     }

@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminSession } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth'
 import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
 
@@ -16,10 +16,7 @@ const createSectionSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await requireAdminSession()
 
     const body = await request.json()
     const validation = createSectionSchema.safeParse(body)
@@ -31,21 +28,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get restaurant ID (assuming single restaurant)
-    const restaurant = await prisma.restaurant.findFirst()
-    if (!restaurant) {
-      return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
-    }
-
-    // Get max sortOrder
+    // Get max sortOrder for this restaurant
     const maxSortOrder = await prisma.section.findFirst({
-      where: { restaurantId: restaurant.id },
+      where: { restaurantId: session.restaurantId },
       orderBy: { sortOrder: 'desc' },
     })
 
     const section = await prisma.section.create({
       data: {
-        restaurantId: restaurant.id,
+        restaurantId: session.restaurantId,
         nameKu: validation.data.nameKu,
         nameEn: validation.data.nameEn,
         nameAr: validation.data.nameAr,

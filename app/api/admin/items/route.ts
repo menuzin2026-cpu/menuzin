@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAdminSession } from '@/lib/auth'
+import { requireAdminSession } from '@/lib/auth'
 import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
 
@@ -22,10 +22,7 @@ const createItemSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const isAuthenticated = await getAdminSession()
-    if (!isAuthenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const session = await requireAdminSession()
 
     const body = await request.json()
     const validation = createItemSchema.safeParse(body)
@@ -35,6 +32,24 @@ export async function POST(request: NextRequest) {
         { error: validation.error.errors[0].message },
         { status: 400 }
       )
+    }
+
+    // Verify category belongs to the admin's restaurant
+    const category = await prisma.category.findUnique({
+      where: { id: validation.data.categoryId },
+      include: {
+        section: {
+          select: { restaurantId: true },
+        },
+      },
+    })
+
+    if (!category) {
+      return NextResponse.json({ error: 'Category not found' }, { status: 404 })
+    }
+
+    if (category.section.restaurantId !== session.restaurantId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     // Get max sortOrder for this category
