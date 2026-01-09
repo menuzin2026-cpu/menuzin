@@ -8,7 +8,10 @@ export function ThemeProvider() {
     // Fetch theme and apply CSS variables with retry
     const applyTheme = async (retryCount = 0) => {
       try {
-        const response = await fetch('/data/theme')
+        // Extract slug from current pathname
+        const pathParts = window.location.pathname.split('/').filter(Boolean)
+        const slug = pathParts.length > 0 && pathParts[0] !== 'super-admin' && pathParts[0] !== 'admin' ? pathParts[0] : 'legends-restaurant'
+        const response = await fetch('/data/theme?slug=' + encodeURIComponent(slug))
         if (response.ok) {
           const data = await response.json()
           if (data.theme) {

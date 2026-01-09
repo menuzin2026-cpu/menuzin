@@ -159,7 +159,10 @@ export default async function RootLayout({
                 // Then fetch from API and update if different (with retry)
                 const fetchTheme = async (retryCount = 0) => {
                   try {
-                    const response = await fetch('/data/theme');
+                    // Extract slug from current pathname
+                    const pathParts = window.location.pathname.split('/').filter(Boolean);
+                    const slug = pathParts.length > 0 && pathParts[0] !== 'super-admin' && pathParts[0] !== 'admin' ? pathParts[0] : 'legends-restaurant';
+                    const response = await fetch('/data/theme?slug=' + encodeURIComponent(slug));
                     const data = await response.json();
                     if (data.theme && data.theme.appBg) {
                       const bgColor = data.theme.appBg;

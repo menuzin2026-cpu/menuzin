@@ -6,9 +6,12 @@ export function ThemeScript() {
   const themeScript = `
     (function() {
       try {
+        // Extract slug from current pathname
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const slug = pathParts.length > 0 && pathParts[0] !== 'super-admin' && pathParts[0] !== 'admin' ? pathParts[0] : 'legends-restaurant';
         // Fetch theme synchronously using XMLHttpRequest (blocking)
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', '/data/theme', false); // false = synchronous
+        xhr.open('GET', '/data/theme?slug=' + encodeURIComponent(slug), false); // false = synchronous
         xhr.send();
         
         if (xhr.status === 200) {
