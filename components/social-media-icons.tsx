@@ -69,20 +69,15 @@ function InstagramIcon({ className }: { className?: string }) {
   )
 }
 
-// Snapchat Icon SVG - Ghost shape (official design: rounded head, two eyes, wavy bottom)
+// Snapchat Icon - Using the official icon from Google Drive
 function SnapchatIcon({ className }: { className?: string }) {
   return (
-    <svg
+    <img
+      src="/snapchat-icon.png"
+      alt="Snapchat"
       className={className}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-      <circle cx="9" cy="9" r="1.5" fill="currentColor" />
-      <circle cx="15" cy="9" r="1.5" fill="currentColor" />
-      <path d="M7 14c0-1.1.9-2 2-2 .55 0 1.05.22 1.41.59.36-.37.86-.59 1.41-.59s1.05.22 1.41.59c.36-.37.86-.59 1.41-.59s1.05.22 1.41.59c.36-.37.86-.59 1.41-.59 1.1 0 2 .9 2 2 0 1.657-1.343 3-3 3s-3-1.343-3-3zm10 0c0-1.1.9-2 2-2 .55 0 1.05.22 1.41.59.36-.37.86-.59 1.41-.59s1.05.22 1.41.59c.36-.37.86-.59 1.41-.59s1.05.22 1.41.59c.36-.37.86-.59 1.41-.59 1.1 0 2 .9 2 2 0 1.657-1.343 3-3 3s-3-1.343-3-3z" />
-    </svg>
+      style={{ width: '1.25rem', height: '1.25rem', filter: 'brightness(0) invert(1)' }}
+    />
   )
 }
 
