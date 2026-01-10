@@ -225,7 +225,7 @@ model RestaurantAdmin {
 }
 
 model PlatformSettings {
-  id              String   @id @default("platform-1")
+  id              String   @id
   footerLogoR2Key String?  @map("footer_logo_r2_key")
   footerLogoR2Url String?  @map("footer_logo_r2_url")
   createdAt       DateTime @default(now()) @map("created_at")

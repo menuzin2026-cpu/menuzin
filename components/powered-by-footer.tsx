@@ -55,7 +55,7 @@ export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
             loading="eager"
             placeholder="blur"
             blurDataURL={blurDataURL}
-            unoptimized={footerLogoUrl.startsWith('/assets/')}
+            unoptimized={true}
             sizes="60px"
           />
         )}
