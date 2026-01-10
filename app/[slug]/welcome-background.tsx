@@ -81,9 +81,9 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
           <video
             ref={videoRef}
             key={`video-${restaurant.welcomeBgR2Key || restaurant.welcomeBackgroundMediaId}-${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}`}
-            autoPlay
             muted
             playsInline
+            autoPlay
             loop
             preload="auto"
             disablePictureInPicture

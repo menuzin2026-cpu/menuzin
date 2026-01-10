@@ -33,9 +33,20 @@ export function AdminAuthWrapper({
         })
         
         if (!response.ok) {
-          // 401 is expected when not logged in, silently redirect
+          // 401 is expected when not logged in or session expired
           if (response.status === 401) {
-            router.push(`/${slug}/admin/login`)
+            // Check if it's SESSION_EXPIRED
+            try {
+              const errorData = await response.json()
+              if (errorData.error === 'SESSION_EXPIRED' || errorData.ok === false) {
+                // Session expired - redirect to login
+                router.push(`/${slug}/admin-portal/login`)
+                return
+              }
+            } catch {
+              // If parsing fails, still redirect on 401
+            }
+            router.push(`/${slug}/admin-portal/login`)
             return
           }
           // Only log unexpected errors

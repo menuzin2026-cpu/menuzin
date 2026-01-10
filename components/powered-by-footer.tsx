@@ -52,7 +52,7 @@ export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
               height: '18px',
               aspectRatio: '60/18'
             }}
-            loading="eager"
+            priority
             placeholder="blur"
             blurDataURL={blurDataURL}
             unoptimized={true}

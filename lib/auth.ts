@@ -2,7 +2,8 @@ import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 
 const ADMIN_SESSION_COOKIE = 'admin_session'
-const SESSION_DURATION = 24 * 60 * 60 * 1000 // 24 hours
+const SESSION_DURATION = 60 * 60 * 1000 // 1 hour (in milliseconds)
+const SESSION_MAX_AGE = 3600 // 1 hour (in seconds)
 
 export async function hashPin(pin: string): Promise<string> {
   return bcrypt.hash(pin, 10)
@@ -15,16 +16,22 @@ export async function verifyPin(pin: string, hash: string): Promise<boolean> {
 export interface AdminSessionData {
   restaurantId: string
   adminUserId: string
+  issuedAt: number // Timestamp in milliseconds
 }
 
 export async function createAdminSession(restaurantId: string, adminUserId: string) {
   const cookieStore = await cookies()
-  const sessionData: AdminSessionData = { restaurantId, adminUserId }
+  const now = Date.now()
+  const sessionData: AdminSessionData = { 
+    restaurantId, 
+    adminUserId,
+    issuedAt: now // Store when session was created
+  }
   cookieStore.set(ADMIN_SESSION_COOKIE, JSON.stringify(sessionData), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: SESSION_DURATION / 1000,
+    maxAge: SESSION_MAX_AGE, // 1 hour
   })
 }
 
@@ -35,16 +42,51 @@ export async function getAdminSession(): Promise<AdminSessionData | null> {
     return null
   }
   try {
-    return JSON.parse(session.value) as AdminSessionData
+    const sessionData = JSON.parse(session.value) as AdminSessionData
+    
+    // Validate session expiry (server-side check)
+    const now = Date.now()
+    const issuedAt = sessionData.issuedAt || 0 // Fallback for old sessions
+    const elapsed = now - issuedAt
+    
+    // If session is older than 1 hour, it's expired
+    if (elapsed >= SESSION_DURATION) {
+      // Clear expired session
+      await deleteAdminSession()
+      return null
+    }
+    
+    // Ensure issuedAt is present (migrate old sessions)
+    if (!sessionData.issuedAt) {
+      sessionData.issuedAt = now
+      cookieStore.set(ADMIN_SESSION_COOKIE, JSON.stringify(sessionData), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: SESSION_MAX_AGE,
+      })
+    }
+    
+    return sessionData
   } catch {
     return null
+  }
+}
+
+// Custom error class for session expiry
+export class SessionExpiredError extends Error {
+  constructor(message: string = 'SESSION_EXPIRED') {
+    super(message)
+    this.name = 'SessionExpiredError'
   }
 }
 
 export async function requireAdminSession(): Promise<AdminSessionData> {
   const session = await getAdminSession()
   if (!session) {
-    throw new Error('Unauthorized: No admin session')
+    // Clear cookie if session is expired
+    await deleteAdminSession()
+    throw new SessionExpiredError('SESSION_EXPIRED')
   }
   
   // Verify restaurant still exists (not deleted)

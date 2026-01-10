@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAdminSession } from '@/lib/auth'
+import { requireAdminSession, SessionExpiredError, deleteAdminSession } from '@/lib/auth'
 
 export async function GET() {
   try {
@@ -48,6 +48,15 @@ export async function GET() {
 
     return NextResponse.json({ sections: normalizedSections })
   } catch (error) {
+    // Handle session expiry
+    if (error instanceof SessionExpiredError) {
+      await deleteAdminSession()
+      return NextResponse.json(
+        { ok: false, error: 'SESSION_EXPIRED' },
+        { status: 401 }
+      )
+    }
+    
     console.error('Error fetching admin menu:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     const errorStack = error instanceof Error ? error.stack : undefined

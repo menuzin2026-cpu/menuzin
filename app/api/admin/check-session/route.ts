@@ -6,7 +6,13 @@ import { getAdminSession } from '@/lib/auth'
 export async function GET() {
   const session = await getAdminSession()
   if (!session) {
-    return NextResponse.json({ authenticated: false }, { status: 401 })
+    // Session expired or not found - return SESSION_EXPIRED error
+    const { deleteAdminSession } = await import('@/lib/auth')
+    await deleteAdminSession()
+    return NextResponse.json(
+      { ok: false, error: 'SESSION_EXPIRED' },
+      { status: 401 }
+    )
   }
   
   // Verify restaurant still exists (not deleted)

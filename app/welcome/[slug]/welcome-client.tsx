@@ -121,10 +121,10 @@ export default function WelcomePageClient({ restaurant }: WelcomePageClientProps
                 <video
                   key={restaurant.welcomeBackgroundMediaId}
                   src={`/assets/${restaurant.welcomeBackgroundMediaId}`}
-                  autoPlay
-                  loop
                   muted
                   playsInline
+                  autoPlay
+                  loop
                   preload="metadata"
                   className="w-full h-full object-cover background-media-fade absolute inset-0"
                   style={{ zIndex: 2, opacity: 0, transition: 'opacity 1s ease-in' }}
