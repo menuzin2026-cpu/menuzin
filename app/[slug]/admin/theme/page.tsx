@@ -689,7 +689,6 @@ export default function ThemePage() {
                       Reset / Clear
                     </Button>
                   )}
-                  </div>
                   <p className="text-xs text-white/50">Applies tint overlay to item frames and bottom nav box. Leave empty for original liquid glass look.</p>
                 </div>
               </div>
