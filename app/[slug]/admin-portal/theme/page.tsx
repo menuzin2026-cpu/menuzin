@@ -146,7 +146,7 @@ export default function ThemePage() {
     }
   }
 
-  const handleColorChange = (key: keyof ThemeColors, value: string) => {
+  const handleColorChange = (key: keyof ThemeColors, value: string | null) => {
     // Only update the preview state, don't apply to document until save
     const newTheme = { ...previewTheme, [key]: value }
     setPreviewTheme(newTheme)
@@ -335,7 +335,8 @@ export default function ThemePage() {
   const openColorPicker = (key: keyof ThemeColors) => {
     setSelectedColor(key)
     // Convert rgba to hex for the color picker
-    const colorValue = previewTheme[key] || defaultTheme[key] || '#000000'
+    // For optional color fields, use fallback; appBg is always a string
+    const colorValue = (previewTheme[key] ?? defaultTheme[key] ?? (key === 'appBg' ? '#400810' : '#000000')) as string
     const hexColor = rgbaToHex(colorValue)
     setTempColor(hexColor)
   }
