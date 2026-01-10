@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         schema: string
       }>>`
         SELECT 
-          to_regclass('public.platform_settings') as exists,
+          to_regclass('public.platform_settings')::text as exists,
           current_database() as db,
           current_schema() as schema
       `
