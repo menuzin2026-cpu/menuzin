@@ -19,15 +19,15 @@ export async function ensureRestaurantWelcomeBgMimeTypeColumn(prisma: PrismaClie
 /**
  * Ensures social media and service charge columns exist in Restaurant table.
  * Safe to run repeatedly; uses IF NOT EXISTS.
+ * Must execute each ALTER TABLE statement separately (PostgreSQL limitation).
  */
 export async function ensureRestaurantSocialMediaColumns(prisma: PrismaClient): Promise<void> {
   try {
-    await prisma.$executeRawUnsafe(`
-      ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "instagramUrl" TEXT;
-      ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "snapchatUrl" TEXT;
-      ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "tiktokUrl" TEXT;
-      ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "serviceChargePercent" DOUBLE PRECISION DEFAULT 0;
-    `)
+    // Execute each ALTER TABLE statement separately - PostgreSQL doesn't allow multiple commands in a prepared statement
+    await prisma.$executeRawUnsafe('ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "instagramUrl" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "snapchatUrl" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "tiktokUrl" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "serviceChargePercent" DOUBLE PRECISION DEFAULT 0;')
   } catch (error) {
     // Non-fatal: if this fails (e.g., insufficient permissions), normal code may still proceed
     // and deployment can rely on standard migrations instead.

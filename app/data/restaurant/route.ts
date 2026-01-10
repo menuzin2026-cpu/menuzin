@@ -199,6 +199,7 @@ export async function GET(request: NextRequest) {
           })
         } catch (retryError: any) {
           // If still fails (e.g., missing social media columns), use raw SQL fallback
+          // Only select columns that definitely exist (core columns)
           console.warn('[DB COMPAT] Prisma query failed, using raw SQL fallback:', retryError)
           const rawResult = await prisma.$queryRawUnsafe<any[]>(
             `SELECT 
@@ -207,16 +208,17 @@ export async function GET(request: NextRequest) {
               "welcomeOverlayColor", "welcomeOverlayOpacity", "welcomeTextEn",
               "googleMapsUrl", "phoneNumber", "brandColors", "updatedAt",
               "logoR2Key", "logoR2Url", "footerLogoR2Key", "footerLogoR2Url",
-              "welcomeBgR2Key", "welcomeBgR2Url", "welcomeBgMimeType",
-              COALESCE("instagramUrl", NULL) as "instagramUrl",
-              COALESCE("snapchatUrl", NULL) as "snapchatUrl",
-              COALESCE("tiktokUrl", NULL) as "tiktokUrl",
-              COALESCE("serviceChargePercent", 0) as "serviceChargePercent"
+              "welcomeBgR2Key", "welcomeBgR2Url", "welcomeBgMimeType"
             FROM "Restaurant"
             WHERE slug = '${slug.replace(/'/g, "''")}'`
           )
           if (rawResult && rawResult.length > 0) {
             restaurant = rawResult[0]
+            // Set default values for columns that might not exist yet
+            restaurant.instagramUrl = null
+            restaurant.snapchatUrl = null
+            restaurant.tiktokUrl = null
+            restaurant.serviceChargePercent = 0
             // Fetch related media separately
             if (restaurant.logoMediaId) {
               try {
