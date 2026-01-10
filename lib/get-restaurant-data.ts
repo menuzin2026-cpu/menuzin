@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { ensureRestaurantWelcomeBgMimeTypeColumn } from '@/lib/ensure-columns'
+import { ensureRestaurantWelcomeBgMimeTypeColumn, ensureRestaurantSocialMediaColumns } from '@/lib/ensure-columns'
 
 export interface RestaurantData {
   id: string
@@ -49,6 +49,7 @@ export async function getRestaurantData(slug: string): Promise<RestaurantData | 
   try {
     // Ensure new columns exist in production before querying
     await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
+    await ensureRestaurantSocialMediaColumns(prisma)
 
     let restaurant: any = null
     
@@ -80,27 +81,74 @@ export async function getRestaurantData(slug: string): Promise<RestaurantData | 
         },
       })
     } catch (error: any) {
-      // If footerLogo relation fails, retry without it
-      if (error?.message?.includes('footerLogo') || error?.code === 'P2021') {
-        restaurant = await prisma.restaurant.findUnique({
-          where: { slug },
-          include: {
-            logo: {
-              select: {
-                id: true,
-                mimeType: true,
-                size: true,
+      // If footerLogo relation fails or column doesn't exist, retry without it
+      if (error?.message?.includes('footerLogo') || error?.code === 'P2021' || error?.code === 'P2022') {
+        try {
+          restaurant = await prisma.restaurant.findUnique({
+            where: { slug },
+            include: {
+              logo: {
+                select: {
+                  id: true,
+                  mimeType: true,
+                  size: true,
+                },
+              },
+              welcomeBackground: {
+                select: {
+                  id: true,
+                  mimeType: true,
+                  size: true,
+                },
               },
             },
-            welcomeBackground: {
-              select: {
-                id: true,
-                mimeType: true,
-                size: true,
-              },
-            },
-          },
-        })
+          })
+        } catch (retryError: any) {
+          // If still fails (e.g., missing columns), use raw SQL as fallback
+          console.warn('[DB COMPAT] Prisma query failed, using raw SQL fallback:', retryError)
+          const rawResult = await prisma.$queryRawUnsafe<any[]>(
+            `SELECT 
+              id, "nameKu", "nameEn", "nameAr",
+              "logoMediaId", "footerLogoMediaId", "welcomeBackgroundMediaId",
+              "welcomeOverlayColor", "welcomeOverlayOpacity", "welcomeTextEn",
+              "googleMapsUrl", "phoneNumber", "brandColors", "updatedAt",
+              "logoR2Key", "logoR2Url", "footerLogoR2Key", "footerLogoR2Url",
+              "welcomeBgR2Key", "welcomeBgR2Url", "welcomeBgMimeType",
+              COALESCE("instagramUrl", NULL) as "instagramUrl",
+              COALESCE("snapchatUrl", NULL) as "snapchatUrl",
+              COALESCE("tiktokUrl", NULL) as "tiktokUrl",
+              COALESCE("serviceChargePercent", 0) as "serviceChargePercent"
+            FROM "Restaurant"
+            WHERE slug = '${slug.replace(/'/g, "''")}'`
+          )
+          if (rawResult && rawResult.length > 0) {
+            restaurant = rawResult[0]
+            // Fetch related media separately
+            if (restaurant.logoMediaId) {
+              const logo = await prisma.media.findUnique({
+                where: { id: restaurant.logoMediaId },
+                select: { id: true, mimeType: true, size: true },
+              })
+              restaurant.logo = logo
+            }
+            if (restaurant.footerLogoMediaId) {
+              const footerLogo = await prisma.media.findUnique({
+                where: { id: restaurant.footerLogoMediaId },
+                select: { id: true, mimeType: true, size: true },
+              })
+              restaurant.footerLogo = footerLogo
+            }
+            if (restaurant.welcomeBackgroundMediaId) {
+              const welcomeBg = await prisma.media.findUnique({
+                where: { id: restaurant.welcomeBackgroundMediaId },
+                select: { id: true, mimeType: true, size: true },
+              })
+              restaurant.welcomeBackground = welcomeBg
+            }
+          } else {
+            return null
+          }
+        }
       } else {
         throw error
       }

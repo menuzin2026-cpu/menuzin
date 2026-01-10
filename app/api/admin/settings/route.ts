@@ -3,12 +3,13 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminSession } from '@/lib/auth'
-import { ensureRestaurantWelcomeBgMimeTypeColumn } from '@/lib/ensure-columns'
+import { ensureRestaurantWelcomeBgMimeTypeColumn, ensureRestaurantSocialMediaColumns } from '@/lib/ensure-columns'
 
 export async function GET(request: NextRequest) {
   try {
-    // Ensure DB column exists in production before querying
+    // Ensure DB columns exist in production before querying
     await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
+    await ensureRestaurantSocialMediaColumns(prisma)
 
     const session = await requireAdminSession()
 
