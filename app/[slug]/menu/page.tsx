@@ -331,7 +331,18 @@ function MenuPageContent() {
             })
             
             // Apply text colors and new theme colors as CSS variables
+            // IMPORTANT: Always clear previous restaurant's colors first to prevent mixing
             if (typeof document !== 'undefined') {
+              // Clear all theme-related CSS variables first (prevents color mixing between restaurants)
+              document.documentElement.style.removeProperty('--item-name-text-color')
+              document.documentElement.style.removeProperty('--item-price-text-color')
+              document.documentElement.style.removeProperty('--item-description-text-color')
+              document.documentElement.style.removeProperty('--bottom-nav-section-name-color')
+              document.documentElement.style.removeProperty('--category-name-color')
+              document.documentElement.style.removeProperty('--header-footer-bg-color')
+              document.documentElement.style.removeProperty('--glass-tint-color')
+              
+              // Now set only the current restaurant's theme colors (if they exist)
               if (data.theme.itemNameTextColor) {
                 document.documentElement.style.setProperty('--item-name-text-color', data.theme.itemNameTextColor)
               }
@@ -350,8 +361,6 @@ function MenuPageContent() {
               // Apply header/footer background color
               if (data.theme.headerFooterBgColor) {
                 document.documentElement.style.setProperty('--header-footer-bg-color', data.theme.headerFooterBgColor)
-              } else {
-                document.documentElement.style.removeProperty('--header-footer-bg-color')
               }
               // Apply glass tint color (convert hex to rgba with low alpha for overlay)
               if (data.theme.glassTintColor) {
@@ -376,8 +385,6 @@ function MenuPageContent() {
                 }
                 // If already rgba/rgb, keep it as is (user can set custom alpha)
                 document.documentElement.style.setProperty('--glass-tint-color', tintColor)
-              } else {
-                document.documentElement.style.removeProperty('--glass-tint-color')
               }
             }
           }
