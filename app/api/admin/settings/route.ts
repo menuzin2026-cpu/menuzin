@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     // If slug parameter is provided, verify it matches the session restaurant (additional security check)
     if (slugParam && restaurant.slug !== slugParam) {
       console.error(`[SECURITY] Slug mismatch: session restaurantId=${session.restaurantId}, restaurant slug=${restaurant.slug}, param slug=${slugParam}`)
-      return NextResponse.json({ error: 'Unauthorized: Restaurant mismatch' }, { status: 403 })
+      return NextResponse.json({ error: 'SESSION_RESTAURANT_MISMATCH', message: 'Session restaurant does not match URL restaurant' }, { status: 403 })
     }
 
     // Log for debugging (in development only)
@@ -87,14 +87,32 @@ export async function GET(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Error fetching settings:', error)
+    const errorMessage = error?.message || 'Unknown error'
+    
+    // Handle specific auth errors
+    if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session')) {
+      return NextResponse.json(
+        { error: 'UNAUTHORIZED', message: errorMessage },
+        { status: 401 }
+      )
+    }
+    
+    if (errorMessage.includes('Restaurant not found')) {
+      return NextResponse.json(
+        { error: 'SESSION_RESTAURANT_MISMATCH', message: errorMessage },
+        { status: 403 }
+      )
+    }
+    
+    // Only return 500 for unexpected errors
     console.error('Error details:', {
-      message: error?.message,
+      message: errorMessage,
       code: error?.code,
       stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
     })
     return NextResponse.json({ 
       error: 'Internal server error',
-      message: error?.message || 'Unknown error',
+      message: errorMessage,
       details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
     }, { status: 500 })
   }
@@ -129,7 +147,7 @@ export async function PUT(request: NextRequest) {
     // If slug is provided in body, verify it matches the session restaurant (additional security check)
     if (body.slug && restaurant.slug !== body.slug) {
       console.error(`[SECURITY] Slug mismatch on PUT: session restaurantId=${session.restaurantId}, restaurant slug=${restaurant.slug}, body slug=${body.slug}`)
-      return NextResponse.json({ error: 'Unauthorized: Restaurant mismatch' }, { status: 403 })
+      return NextResponse.json({ error: 'SESSION_RESTAURANT_MISMATCH', message: 'Session restaurant does not match request restaurant' }, { status: 403 })
     }
 
     // Helper function to generate slug from restaurant name
@@ -350,9 +368,27 @@ export async function PUT(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Error updating settings:', error)
+    const errorMessage = error?.message || 'Unknown error'
+    
+    // Handle specific auth errors
+    if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session')) {
+      return NextResponse.json(
+        { error: 'UNAUTHORIZED', message: errorMessage },
+        { status: 401 }
+      )
+    }
+    
+    if (errorMessage.includes('Restaurant not found')) {
+      return NextResponse.json(
+        { error: 'SESSION_RESTAURANT_MISMATCH', message: errorMessage },
+        { status: 403 }
+      )
+    }
+    
+    // Only return 500 for unexpected errors
     return NextResponse.json({ 
       error: 'Internal server error',
-      message: error?.message || 'Unknown error',
+      message: errorMessage,
       details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
     }, { status: 500 })
   }

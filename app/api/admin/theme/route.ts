@@ -18,9 +18,28 @@ const themeSchema = z.object({
   glassTintColor: z.string().nullable().optional(),
 })
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await requireAdminSession()
+
+    // Get restaurant by session restaurantId to get its slug
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: session.restaurantId },
+      select: { id: true, slug: true },
+    })
+    
+    if (!restaurant) {
+      return NextResponse.json({ error: 'SESSION_RESTAURANT_MISMATCH', message: 'Restaurant not found for session' }, { status: 403 })
+    }
+
+    // Validate slug parameter matches session restaurant (if provided)
+    const { searchParams } = new URL(request.url)
+    const slugParam = searchParams.get('slug')
+    
+    if (slugParam && restaurant.slug !== slugParam) {
+      console.error(`[SECURITY] Session restaurant mismatch: session slug=${restaurant.slug}, URL slug=${slugParam}`)
+      return NextResponse.json({ error: 'SESSION_RESTAURANT_MISMATCH', message: 'Session restaurant does not match URL restaurant' }, { status: 403 })
+    }
 
     let theme = await prisma.theme.findUnique({
       where: { restaurantId: session.restaurantId },
@@ -65,6 +84,23 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching theme:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
+    // Handle specific auth errors
+    if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session')) {
+      return NextResponse.json(
+        { error: 'UNAUTHORIZED', message: errorMessage },
+        { status: 401 }
+      )
+    }
+    
+    if (errorMessage.includes('Restaurant not found')) {
+      return NextResponse.json(
+        { error: 'SESSION_RESTAURANT_MISMATCH', message: errorMessage },
+        { status: 403 }
+      )
+    }
+    
+    // Only return 500 for unexpected errors
     return NextResponse.json(
       { error: 'Internal server error', details: errorMessage },
       { 
@@ -81,7 +117,24 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await requireAdminSession()
 
+    // Get restaurant by session restaurantId to get its slug
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: session.restaurantId },
+      select: { id: true, slug: true },
+    })
+    
+    if (!restaurant) {
+      return NextResponse.json({ error: 'SESSION_RESTAURANT_MISMATCH', message: 'Restaurant not found for session' }, { status: 403 })
+    }
+
     const body = await request.json()
+    
+    // Validate slug if provided in body
+    if (body.slug && restaurant.slug !== body.slug) {
+      console.error(`[SECURITY] Session restaurant mismatch on PUT: session slug=${restaurant.slug}, body slug=${body.slug}`)
+      return NextResponse.json({ error: 'SESSION_RESTAURANT_MISMATCH', message: 'Session restaurant does not match request restaurant' }, { status: 403 })
+    }
+    
     const validation = themeSchema.safeParse(body)
 
     if (!validation.success) {
@@ -176,6 +229,23 @@ export async function PUT(request: NextRequest) {
   } catch (error) {
     console.error('Error saving theme:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
+    // Handle specific auth errors
+    if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session')) {
+      return NextResponse.json(
+        { error: 'UNAUTHORIZED', message: errorMessage },
+        { status: 401 }
+      )
+    }
+    
+    if (errorMessage.includes('Restaurant not found')) {
+      return NextResponse.json(
+        { error: 'SESSION_RESTAURANT_MISMATCH', message: errorMessage },
+        { status: 403 }
+      )
+    }
+    
+    // Only return 500 for unexpected errors
     return NextResponse.json(
       { error: 'Internal server error', details: errorMessage },
       { status: 500 }

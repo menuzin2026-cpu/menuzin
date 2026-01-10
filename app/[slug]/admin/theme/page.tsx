@@ -122,14 +122,27 @@ export default function ThemePage() {
         credentials: 'include', // Include cookies for authentication
       })
       
-      if (response.status === 401) {
-        // Unauthorized - redirect to login
-        router.push(`/${slug}/admin-portal/login`)
+      const data = await response.json()
+      
+      if (response.status === 401 || response.status === 403) {
+        // Check if it's a restaurant mismatch error
+        if (data.error === 'SESSION_RESTAURANT_MISMATCH') {
+          // Session is for different restaurant - clear session and redirect
+          try {
+            await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+          } catch (logoutError) {
+            // Ignore logout errors
+          }
+          toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
+          router.push(`/${slug}/admin/login`)
+          return
+        }
+        // Other auth errors - redirect to login
+        router.push(`/${slug}/admin/login`)
         return
       }
       
       if (response.ok) {
-        const data = await response.json()
         if (data.theme) {
           const themeData = { ...defaultTheme, ...data.theme }
           setTheme(themeData)
@@ -304,9 +317,24 @@ export default function ThemePage() {
         body: JSON.stringify(themeToSave),
       })
 
-      if (response.status === 401) {
-        toast.error('Session expired. Please login again.')
-        router.push(`/${slug}/admin-portal/login`)
+      const errorData = await response.json().catch(() => ({}))
+      
+      if (response.status === 401 || response.status === 403) {
+        // Check if it's a restaurant mismatch error
+        if (errorData.error === 'SESSION_RESTAURANT_MISMATCH') {
+          // Session is for different restaurant - clear session and redirect
+          try {
+            await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+          } catch (logoutError) {
+            // Ignore logout errors
+          }
+          toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
+          router.push(`/${slug}/admin/login`)
+          return
+        }
+        // Other auth errors
+        toast.error(errorData.message || 'Session expired. Please login again.')
+        router.push(`/${slug}/admin/login`)
         return
       }
 
@@ -329,8 +357,7 @@ export default function ThemePage() {
         }
         toast.success('Theme saved successfully!')
       } else {
-        const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.error || 'Failed to save theme'
+        const errorMessage = errorData.error || errorData.message || 'Failed to save theme'
         toast.error(errorMessage)
       }
     } catch (error) {

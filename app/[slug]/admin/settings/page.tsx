@@ -68,6 +68,27 @@ export default function SettingsPage() {
   const [uploadingBackground, setUploadingBackground] = useState(false)
   const [appBgColor, setAppBgColor] = useState<string>('#400810')
 
+  // Helper function to handle restaurant mismatch error
+  const handleMismatchError = async (response: Response, errorData: any): Promise<boolean> => {
+    if (response.status === 401 || response.status === 403) {
+      if (errorData.error === 'SESSION_RESTAURANT_MISMATCH') {
+        try {
+          await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+        } catch (logoutError) {
+          // Ignore logout errors
+        }
+        toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
+        router.push(`/${slug}/admin/login`)
+        return true // Indicates mismatch was handled
+      }
+      // Other auth errors
+      toast.error(errorData.message || 'Session expired. Please login again.')
+      router.push(`/${slug}/admin/login`)
+      return true
+    }
+    return false // Not a mismatch error
+  }
+
   useEffect(() => {
     fetchSettings()
     fetchTheme()
@@ -93,8 +114,27 @@ export default function SettingsPage() {
   const fetchSettings = async () => {
     try {
       const response = await fetch(`/api/admin/settings?slug=${slug}`)
+      const data = await response.json()
+      
+      if (response.status === 401 || response.status === 403) {
+        // Check if it's a restaurant mismatch error
+        if (data.error === 'SESSION_RESTAURANT_MISMATCH') {
+          // Session is for different restaurant - clear session and redirect
+          try {
+            await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+          } catch (logoutError) {
+            // Ignore logout errors
+          }
+          toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
+          router.push(`/${slug}/admin/login`)
+          return
+        }
+        // Other auth errors - redirect to login
+        router.push(`/${slug}/admin/login`)
+        return
+      }
+      
       if (response.ok) {
-        const data = await response.json()
         setSettings(data)
         // Update service charge input field with current value
         setServiceChargeInput(data.serviceChargePercent?.toString() || '0')
@@ -114,9 +154,13 @@ export default function SettingsPage() {
         } else if (data.welcomeBackgroundMediaId) {
           setBackgroundPreview(`/assets/${data.welcomeBackgroundMediaId}`)
         }
+      } else {
+        console.error('Error fetching settings:', response.status, response.statusText)
+        toast.error('Failed to load settings')
       }
     } catch (error) {
       console.error('Error fetching settings:', error)
+      toast.error('Failed to load settings')
     }
   }
 
@@ -150,6 +194,7 @@ export default function SettingsPage() {
       const updateResponse = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...settings,
           logoR2Key: key,
@@ -158,13 +203,20 @@ export default function SettingsPage() {
         }),
       })
 
+      const updateData = await updateResponse.json().catch(() => ({}))
+      
+      // Check for mismatch error
+      const handled = await handleMismatchError(updateResponse, updateData)
+      if (handled) {
+        return
+      }
+
       if (updateResponse.ok) {
-        const updatedData = await updateResponse.json()
         setSettings({ ...settings, logoR2Key: key, logoR2Url: publicUrl })
         setLogoPreview(publicUrl)
         toast.success('Logo uploaded successfully!')
       } else {
-        throw new Error('Failed to update logo')
+        throw new Error(updateData.message || 'Failed to update logo')
       }
     } catch (error: any) {
       console.error('Error uploading logo:', error)
@@ -205,6 +257,7 @@ export default function SettingsPage() {
       const updateResponse = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...settings,
           footerLogoR2Key: key,
@@ -213,13 +266,20 @@ export default function SettingsPage() {
         }),
       })
 
+      const updateData = await updateResponse.json().catch(() => ({}))
+      
+      // Check for mismatch error
+      const handled = await handleMismatchError(updateResponse, updateData)
+      if (handled) {
+        return
+      }
+
       if (updateResponse.ok) {
-        const updatedData = await updateResponse.json()
         setSettings({ ...settings, footerLogoR2Key: key, footerLogoR2Url: publicUrl })
         setFooterLogoPreview(publicUrl)
         toast.success('Footer logo uploaded successfully!')
       } else {
-        throw new Error('Failed to update footer logo')
+        throw new Error(updateData.message || 'Failed to update footer logo')
       }
     } catch (error: any) {
       console.error('Error uploading footer logo:', error)
@@ -281,6 +341,7 @@ export default function SettingsPage() {
       const updateResponse = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...settings,
           welcomeBgR2Key: key,
@@ -290,14 +351,20 @@ export default function SettingsPage() {
         }),
       })
 
+      const updateData = await updateResponse.json().catch(() => ({}))
+      
+      // Check for mismatch error
+      const handled = await handleMismatchError(updateResponse, updateData)
+      if (handled) {
+        return
+      }
+
       if (updateResponse.ok) {
-        const updatedData = await updateResponse.json()
         setSettings({ ...settings, welcomeBgR2Key: key, welcomeBgR2Url: publicUrl, welcomeBgMimeType: file.type })
         setBackgroundPreview(publicUrl)
         toast.success('Background uploaded successfully!')
       } else {
-        const errorData = await updateResponse.json().catch(() => ({}))
-        throw new Error(errorData.message || 'Failed to update background')
+        throw new Error(updateData.message || 'Failed to update background')
       }
     } catch (error: any) {
       console.error('Error uploading background:', error)
@@ -377,8 +444,30 @@ export default function SettingsPage() {
       const response = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(saveData),
       })
+
+      const errorData = await response.json().catch(() => ({}))
+      
+      if (response.status === 401 || response.status === 403) {
+        // Check if it's a restaurant mismatch error
+        if (errorData.error === 'SESSION_RESTAURANT_MISMATCH') {
+          // Session is for different restaurant - clear session and redirect
+          try {
+            await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+          } catch (logoutError) {
+            // Ignore logout errors
+          }
+          toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
+          router.push(`/${slug}/admin/login`)
+          return
+        }
+        // Other auth errors
+        toast.error(errorData.message || 'Session expired. Please login again.')
+        router.push(`/${slug}/admin/login`)
+        return
+      }
 
       if (response.ok) {
         const updatedData = await response.json()
@@ -393,8 +482,7 @@ export default function SettingsPage() {
           window.dispatchEvent(new Event('service-charge-updated'))
         }
       } else {
-        const errorData = await response.json().catch(() => ({}))
-        toast.error(errorData.message || 'Failed to save settings')
+        toast.error(errorData.message || errorData.error || 'Failed to save settings')
         console.error('Settings save error:', errorData)
       }
     } catch (error) {
