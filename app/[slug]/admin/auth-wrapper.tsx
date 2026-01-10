@@ -14,8 +14,13 @@ export function AdminAuthWrapper({
   const slug = params.slug as string
 
   useEffect(() => {
+    // Only run on admin pages (not public pages like /menu or /welcome)
+    if (!pathname || (!pathname.includes('/admin') && !pathname.includes('/admin-portal'))) {
+      return
+    }
+
     // Skip auth check for login page
-    if (pathname?.endsWith('/admin/login')) {
+    if (pathname?.endsWith('/admin/login') || pathname?.endsWith('/admin-portal/login')) {
       return
     }
 
