@@ -55,6 +55,7 @@ export default function SettingsPage() {
     footerLogoMediaId: null,
     welcomeBackgroundMediaId: null,
   })
+  const [serviceChargeInput, setServiceChargeInput] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
@@ -95,6 +96,8 @@ export default function SettingsPage() {
       if (response.ok) {
         const data = await response.json()
         setSettings(data)
+        // Update service charge input field with current value
+        setServiceChargeInput(data.serviceChargePercent?.toString() || '0')
         // Use R2 URL if available, otherwise fall back to old media ID
         if (data.logoR2Url) {
           setLogoPreview(data.logoR2Url)
@@ -378,9 +381,17 @@ export default function SettingsPage() {
       })
 
       if (response.ok) {
+        const updatedData = await response.json()
         toast.success('Settings saved successfully!')
         // Refresh settings to get updated data
-        fetchSettings()
+        setSettings(updatedData)
+        setServiceChargeInput(updatedData.serviceChargePercent?.toString() || '0')
+        // Trigger menu page refresh if it's open (using localStorage event and custom event)
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('service-charge-updated', Date.now().toString())
+          window.dispatchEvent(new Event('storage'))
+          window.dispatchEvent(new Event('service-charge-updated'))
+        }
       } else {
         const errorData = await response.json().catch(() => ({}))
         toast.error(errorData.message || 'Failed to save settings')
@@ -568,11 +579,42 @@ export default function SettingsPage() {
                     min="0"
                     max="100"
                     step="0.1"
-                    value={settings.serviceChargePercent ?? 0}
+                    value={serviceChargeInput === '' ? '' : serviceChargeInput}
                     onChange={(e) => {
-                      const value = parseFloat(e.target.value) || 0
-                      const clamped = Math.max(0, Math.min(100, value))
-                      setSettings({ ...settings, serviceChargePercent: clamped })
+                      const inputValue = e.target.value
+                      // Allow user to clear field completely - don't force to 0 immediately
+                      setServiceChargeInput(inputValue)
+                      
+                      // Update settings based on input value
+                      if (inputValue === '' || inputValue === '-') {
+                        // Field is being cleared - set to 0 for now (will be saved as 0)
+                        setSettings({ ...settings, serviceChargePercent: 0 })
+                      } else {
+                        // Try to parse the value
+                        const numValue = parseFloat(inputValue)
+                        if (!isNaN(numValue)) {
+                          const clamped = Math.max(0, Math.min(100, numValue))
+                          setSettings({ ...settings, serviceChargePercent: clamped })
+                          // Only update input if value was clamped (to show user the clamped value)
+                          if (numValue !== clamped && numValue.toString() !== inputValue) {
+                            setServiceChargeInput(clamped.toString())
+                          }
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // When field loses focus, ensure it has a valid number (default to 0 if empty)
+                      const inputValue = e.target.value.trim()
+                      if (inputValue === '' || inputValue === '-' || isNaN(parseFloat(inputValue))) {
+                        setServiceChargeInput('0')
+                        setSettings({ ...settings, serviceChargePercent: 0 })
+                      } else {
+                        const numValue = parseFloat(inputValue)
+                        const clamped = Math.max(0, Math.min(100, numValue))
+                        const finalValue = isNaN(clamped) ? 0 : clamped
+                        setServiceChargeInput(finalValue.toString())
+                        setSettings({ ...settings, serviceChargePercent: finalValue })
+                      }
                     }}
                     placeholder="0"
                   />

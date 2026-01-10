@@ -53,6 +53,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const restaurantServiceCharge = (restaurant as any).serviceChargePercent ?? 0
+    // Log for debugging
+    console.log('[SETTINGS GET] Restaurant ID:', session.restaurantId)
+    console.log('[SETTINGS GET] Service charge percent from DB:', restaurantServiceCharge, '(type:', typeof restaurantServiceCharge, ')')
+
     return NextResponse.json({
       id: restaurant.id,
       nameKu: restaurant.nameKu,
@@ -64,7 +69,7 @@ export async function GET(request: NextRequest) {
       instagramUrl: (restaurant as any).instagramUrl || null,
       snapchatUrl: (restaurant as any).snapchatUrl || null,
       tiktokUrl: (restaurant as any).tiktokUrl || null,
-      serviceChargePercent: (restaurant as any).serviceChargePercent || 0,
+      serviceChargePercent: restaurantServiceCharge,
       welcomeOverlayColor: restaurant.welcomeOverlayColor,
       welcomeOverlayOpacity: restaurant.welcomeOverlayOpacity,
       welcomeTextEn: restaurant.welcomeTextEn || '',
@@ -234,11 +239,11 @@ export async function PUT(request: NextRequest) {
       updateData.serviceChargePercent = (restaurant as any).serviceChargePercent ?? 0
     }
 
-    // Log the update data for debugging
+    // Log the update data for debugging (always log in production to track issues)
+    console.log('[SETTINGS UPDATE] Restaurant ID:', session.restaurantId)
+    console.log('[SETTINGS UPDATE] Service charge percent from body:', body.serviceChargePercent, '(type:', typeof body.serviceChargePercent, ')')
+    console.log('[SETTINGS UPDATE] Service charge percent to save:', updateData.serviceChargePercent, '(type:', typeof updateData.serviceChargePercent, ')')
     if (process.env.NODE_ENV === 'development') {
-      console.log('[SETTINGS UPDATE] Restaurant ID:', session.restaurantId)
-      console.log('[SETTINGS UPDATE] Service charge percent from body:', body.serviceChargePercent)
-      console.log('[SETTINGS UPDATE] Service charge percent to save:', updateData.serviceChargePercent)
       console.log('[SETTINGS UPDATE] Update data:', JSON.stringify(updateData, null, 2))
     }
 
@@ -313,6 +318,9 @@ export async function PUT(request: NextRequest) {
       // Don't fail the request if fallback update fails
     }
 
+    const savedServiceCharge = (updated as any).serviceChargePercent ?? 0
+    console.log('[SETTINGS UPDATE] Service charge percent saved to DB:', savedServiceCharge, '(type:', typeof savedServiceCharge, ')')
+    
     return NextResponse.json({
       id: updated.id,
       nameKu: updated.nameKu,
@@ -324,7 +332,7 @@ export async function PUT(request: NextRequest) {
       instagramUrl: (updated as any).instagramUrl || null,
       snapchatUrl: (updated as any).snapchatUrl || null,
       tiktokUrl: (updated as any).tiktokUrl || null,
-      serviceChargePercent: (updated as any).serviceChargePercent || 0,
+      serviceChargePercent: savedServiceCharge,
       welcomeOverlayColor: updated.welcomeOverlayColor,
       welcomeOverlayOpacity: updated.welcomeOverlayOpacity,
       welcomeTextEn: updated.welcomeTextEn || '',

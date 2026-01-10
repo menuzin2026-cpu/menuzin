@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { MenuHeader } from '@/components/menu-header'
 import { FloatingActionBar } from '@/components/floating-action-bar'
@@ -109,6 +109,36 @@ function MenuPageContent() {
   const isUserScrollingNav = useRef(false)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Memoized fetch function for restaurant data (including service charge)
+  const fetchRestaurantData = useCallback(async () => {
+    try {
+      const res = await fetch(`/data/restaurant?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setRestaurant(data)
+        // Set service charge from restaurant data
+        if (data.serviceChargePercent !== undefined && data.serviceChargePercent !== null) {
+          const serviceCharge = typeof data.serviceChargePercent === 'number' 
+            ? data.serviceChargePercent 
+            : parseFloat(String(data.serviceChargePercent))
+          setServiceChargePercent(isNaN(serviceCharge) ? 0 : serviceCharge)
+          console.log('[MENU PAGE] Service charge fetched:', isNaN(serviceCharge) ? 0 : serviceCharge)
+        } else {
+          setServiceChargePercent(0)
+          console.log('[MENU PAGE] Service charge not found, defaulting to 0')
+        }
+      } else {
+        console.error('Error fetching restaurant data:', res.status, res.statusText)
+        setServiceChargePercent(0)
+      }
+    } catch (error) {
+      console.error('Error fetching restaurant data:', error)
+      setServiceChargePercent(0)
+    }
+  }, [slug]) // Dependency on slug
+
   useEffect(() => {
     // Load language from URL or localStorage
     const langParam = searchParams.get('lang')
@@ -205,34 +235,8 @@ function MenuPageContent() {
       }
     }
     fetchMenu()
-
-    const fetchRestaurant = async (retryCount = 0) => {
-      try {
-        const res = await fetch(`/data/restaurant?slug=${slug}`)
-        if (!res.ok) {
-          if (res.status === 404) {
-            // Restaurant not found - stop trying (middleware ensures only valid slugs reach here)
-            console.error('Restaurant not found for slug:', slug)
-            return
-          }
-          throw new Error('Failed to fetch')
-        }
-        const data = await res.json()
-        setRestaurant(data)
-        // Extract service charge percentage from restaurant data
-        if (data.serviceChargePercent !== undefined && data.serviceChargePercent !== null) {
-          setServiceChargePercent(data.serviceChargePercent)
-        } else {
-          setServiceChargePercent(0)
-        }
-      } catch (error) {
-        console.error('Error fetching restaurant:', error)
-        if (retryCount < 1) {
-          setTimeout(() => fetchRestaurant(retryCount + 1), 500)
-        }
-      }
-    }
-    fetchRestaurant()
+    // Initial fetch of restaurant data (including service charge)
+    fetchRestaurantData()
 
     // Fetch global footer logo from platform settings (applies to ALL restaurants)
     const fetchPlatformFooterLogo = async () => {
@@ -406,14 +410,16 @@ function MenuPageContent() {
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // Page became visible, refetch to get latest typography settings
+        // Page became visible, refetch to get latest settings
         fetchUiSettings()
+        fetchRestaurantData()
       }
     }
 
     const handleFocus = () => {
-      // Window regained focus, refetch to get latest typography settings
+      // Window regained focus, refetch to get latest settings
       fetchUiSettings()
+      fetchRestaurantData()
     }
 
     // Listen for storage events (when admin saves settings in another tab)
@@ -422,33 +428,44 @@ function MenuPageContent() {
         // Admin panel saved typography, refetch immediately
         fetchUiSettings()
       }
+      if (e.key === 'service-charge-updated') {
+        // Admin panel saved service charge, refetch restaurant data immediately
+        fetchRestaurantData()
+      }
     }
 
     // Listen for custom events (when admin saves settings in same tab)
     const handleTypographyUpdate = () => {
       fetchUiSettings()
     }
+    
+    const handleServiceChargeUpdate = () => {
+      fetchRestaurantData()
+    }
 
-    // Periodic refresh every 3 seconds when page is visible (to catch admin changes)
+    // Periodic refresh every 5 seconds when page is visible (to catch admin changes)
     const intervalId = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchUiSettings()
+        fetchRestaurantData()
       }
-    }, 3000)
+    }, 5000) // 5 seconds to reduce load
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('focus', handleFocus)
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('typography-updated', handleTypographyUpdate)
+    window.addEventListener('service-charge-updated', handleServiceChargeUpdate)
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('focus', handleFocus)
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('typography-updated', handleTypographyUpdate)
+      window.removeEventListener('service-charge-updated', handleServiceChargeUpdate)
       clearInterval(intervalId)
     }
-  }, [])
+  }, [slug, fetchRestaurantData]) // fetchUiSettings is defined inside this effect, so no need to include it
 
   // Set up Intersection Observer to track visible categories on scroll
   useEffect(() => {

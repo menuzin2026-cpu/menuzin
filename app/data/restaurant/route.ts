@@ -344,7 +344,7 @@ export async function GET(request: NextRequest) {
         instagramUrl: (restaurant as any).instagramUrl || null,
         snapchatUrl: (restaurant as any).snapchatUrl || null,
         tiktokUrl: (restaurant as any).tiktokUrl || null,
-        serviceChargePercent: (restaurant as any).serviceChargePercent || 0,
+        serviceChargePercent: (restaurant as any).serviceChargePercent != null ? Number((restaurant as any).serviceChargePercent) : 0,
         brandColors: restaurant.brandColors,
         updatedAt: restaurant.updatedAt,
       },
