@@ -111,6 +111,91 @@ function MenuPageContent() {
   const isUserScrollingNav = useRef(false)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Fetch theme data for menu background and text colors (shared function)
+  const fetchTheme = useCallback(async () => {
+    if (!slug) return
+    try {
+      const res = await fetch(`/data/theme?slug=${encodeURIComponent(slug)}`, {
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.theme) {
+          setTheme({
+            menuBackgroundR2Url: data.theme.menuBackgroundR2Url || null,
+            itemNameTextColor: data.theme.itemNameTextColor || null,
+            itemPriceTextColor: data.theme.itemPriceTextColor || null,
+            itemDescriptionTextColor: data.theme.itemDescriptionTextColor || null,
+            bottomNavSectionNameColor: data.theme.bottomNavSectionNameColor || null,
+            categoryNameColor: data.theme.categoryNameColor || null,
+            headerFooterBgColor: data.theme.headerFooterBgColor || null,
+            glassTintColor: data.theme.glassTintColor || null,
+          })
+          
+          // Apply text colors and new theme colors as CSS variables
+          // IMPORTANT: Always clear previous restaurant's colors first to prevent mixing
+          if (typeof document !== 'undefined') {
+            // Clear all theme-related CSS variables first (prevents color mixing between restaurants)
+            document.documentElement.style.removeProperty('--item-name-text-color')
+            document.documentElement.style.removeProperty('--item-price-text-color')
+            document.documentElement.style.removeProperty('--item-description-text-color')
+            document.documentElement.style.removeProperty('--bottom-nav-section-name-color')
+            document.documentElement.style.removeProperty('--category-name-color')
+            document.documentElement.style.removeProperty('--header-footer-bg-color')
+            document.documentElement.style.removeProperty('--glass-tint-color')
+            
+            // Now set only the current restaurant's theme colors (if they exist)
+            if (data.theme.itemNameTextColor) {
+              document.documentElement.style.setProperty('--item-name-text-color', data.theme.itemNameTextColor)
+            }
+            if (data.theme.itemPriceTextColor) {
+              document.documentElement.style.setProperty('--item-price-text-color', data.theme.itemPriceTextColor)
+            }
+            if (data.theme.itemDescriptionTextColor) {
+              document.documentElement.style.setProperty('--item-description-text-color', data.theme.itemDescriptionTextColor)
+            }
+            if (data.theme.bottomNavSectionNameColor) {
+              document.documentElement.style.setProperty('--bottom-nav-section-name-color', data.theme.bottomNavSectionNameColor)
+            }
+            if (data.theme.categoryNameColor) {
+              document.documentElement.style.setProperty('--category-name-color', data.theme.categoryNameColor)
+            }
+            // Apply header/footer background color
+            if (data.theme.headerFooterBgColor) {
+              document.documentElement.style.setProperty('--header-footer-bg-color', data.theme.headerFooterBgColor)
+            }
+            // Apply glass tint color (convert hex to rgba with low alpha for overlay)
+            if (data.theme.glassTintColor) {
+              // Convert hex to rgba with 0.2 alpha (20% opacity for subtle tint)
+              // Handles #RRGGBB, #RGB, and already rgba/rgb formats
+              let tintColor = data.theme.glassTintColor
+              if (tintColor.startsWith('#')) {
+                // Normalize hex color (handle both 3 and 6 digit)
+                let hex = tintColor.slice(1)
+                if (hex.length === 3) {
+                  hex = hex.split('').map((c: string) => c + c).join('')
+                }
+                if (hex.length === 6) {
+                  const r = parseInt(hex.slice(0, 2), 16)
+                  const g = parseInt(hex.slice(2, 4), 16)
+                  const b = parseInt(hex.slice(4, 6), 16)
+                  tintColor = `rgba(${r}, ${g}, ${b}, 0.2)`
+                }
+              } else if (!tintColor.startsWith('rgba') && !tintColor.startsWith('rgb')) {
+                // If it's not hex, rgba, or rgb, default to a safe rgba
+                tintColor = `rgba(255, 255, 255, 0.2)`
+              }
+              // If already rgba/rgb, keep it as is (user can set custom alpha)
+              document.documentElement.style.setProperty('--glass-tint-color', tintColor)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching theme:', error)
+    }
+  }, [slug])
+
   // Memoized fetch function for restaurant data (including service charge)
   const fetchRestaurantData = useCallback(async () => {
     try {
@@ -338,89 +423,7 @@ function MenuPageContent() {
         })
       })
 
-    // Fetch theme data for menu background and text colors
-    const fetchTheme = async () => {
-      try {
-        const res = await fetch(`/data/theme?slug=${encodeURIComponent(slug)}`, {
-          cache: 'no-store',
-        })
-        if (res.ok) {
-          const data = await res.json()
-          if (data.theme) {
-            setTheme({
-              menuBackgroundR2Url: data.theme.menuBackgroundR2Url || null,
-              itemNameTextColor: data.theme.itemNameTextColor || null,
-              itemPriceTextColor: data.theme.itemPriceTextColor || null,
-              itemDescriptionTextColor: data.theme.itemDescriptionTextColor || null,
-              bottomNavSectionNameColor: data.theme.bottomNavSectionNameColor || null,
-              categoryNameColor: data.theme.categoryNameColor || null,
-              headerFooterBgColor: data.theme.headerFooterBgColor || null,
-              glassTintColor: data.theme.glassTintColor || null,
-            })
-            
-            // Apply text colors and new theme colors as CSS variables
-            // IMPORTANT: Always clear previous restaurant's colors first to prevent mixing
-            if (typeof document !== 'undefined') {
-              // Clear all theme-related CSS variables first (prevents color mixing between restaurants)
-              document.documentElement.style.removeProperty('--item-name-text-color')
-              document.documentElement.style.removeProperty('--item-price-text-color')
-              document.documentElement.style.removeProperty('--item-description-text-color')
-              document.documentElement.style.removeProperty('--bottom-nav-section-name-color')
-              document.documentElement.style.removeProperty('--category-name-color')
-              document.documentElement.style.removeProperty('--header-footer-bg-color')
-              document.documentElement.style.removeProperty('--glass-tint-color')
-              
-              // Now set only the current restaurant's theme colors (if they exist)
-              if (data.theme.itemNameTextColor) {
-                document.documentElement.style.setProperty('--item-name-text-color', data.theme.itemNameTextColor)
-              }
-              if (data.theme.itemPriceTextColor) {
-                document.documentElement.style.setProperty('--item-price-text-color', data.theme.itemPriceTextColor)
-              }
-              if (data.theme.itemDescriptionTextColor) {
-                document.documentElement.style.setProperty('--item-description-text-color', data.theme.itemDescriptionTextColor)
-              }
-              if (data.theme.bottomNavSectionNameColor) {
-                document.documentElement.style.setProperty('--bottom-nav-section-name-color', data.theme.bottomNavSectionNameColor)
-              }
-              if (data.theme.categoryNameColor) {
-                document.documentElement.style.setProperty('--category-name-color', data.theme.categoryNameColor)
-              }
-              // Apply header/footer background color
-              if (data.theme.headerFooterBgColor) {
-                document.documentElement.style.setProperty('--header-footer-bg-color', data.theme.headerFooterBgColor)
-              }
-              // Apply glass tint color (convert hex to rgba with low alpha for overlay)
-              if (data.theme.glassTintColor) {
-                // Convert hex to rgba with 0.2 alpha (20% opacity for subtle tint)
-                // Handles #RRGGBB, #RGB, and already rgba/rgb formats
-                let tintColor = data.theme.glassTintColor
-                if (tintColor.startsWith('#')) {
-                  // Normalize hex color (handle both 3 and 6 digit)
-                  let hex = tintColor.slice(1)
-                  if (hex.length === 3) {
-                    hex = hex.split('').map((c: string) => c + c).join('')
-                  }
-                  if (hex.length === 6) {
-                    const r = parseInt(hex.slice(0, 2), 16)
-                    const g = parseInt(hex.slice(2, 4), 16)
-                    const b = parseInt(hex.slice(4, 6), 16)
-                    tintColor = `rgba(${r}, ${g}, ${b}, 0.2)`
-                  }
-                } else if (!tintColor.startsWith('rgba') && !tintColor.startsWith('rgb')) {
-                  // If it's not hex, rgba, or rgb, default to a safe rgba
-                  tintColor = `rgba(255, 255, 255, 0.2)`
-                }
-                // If already rgba/rgb, keep it as is (user can set custom alpha)
-                document.documentElement.style.setProperty('--glass-tint-color', tintColor)
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching theme:', error)
-      }
-    }
+    // Fetch theme on mount
     fetchTheme()
 
     return () => {
@@ -436,7 +439,7 @@ function MenuPageContent() {
         detectOverflow()
       }, 500)
     }
-  }, [searchParams, slug])
+  }, [searchParams, slug, fetchTheme])
 
   // Auto-select section when sections are loaded and no section is selected (fallback safety)
   useEffect(() => {
@@ -591,7 +594,7 @@ function MenuPageContent() {
       window.removeEventListener('service-charge-updated', handleServiceChargeUpdate)
       window.removeEventListener('theme-updated', handleThemeUpdate)
     }
-  }, [slug, fetchRestaurantData]) // fetchUiSettings is defined inside this effect, so no need to include it
+  }, [slug, fetchRestaurantData, fetchTheme]) // Include fetchTheme in dependencies
 
   // Set up Intersection Observer to track visible categories on scroll
   useEffect(() => {
