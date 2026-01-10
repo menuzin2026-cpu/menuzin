@@ -16,7 +16,22 @@ export default async function WelcomePage({ params }: PageProps) {
   // Fetch restaurant data server-side
   const restaurant = await prisma.restaurant.findUnique({
     where: { slug },
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      nameKu: true,
+      nameEn: true,
+      nameAr: true,
+      logoMediaId: true,
+      welcomeBackgroundMediaId: true,
+      welcomeOverlayColor: true,
+      welcomeOverlayOpacity: true,
+      welcomeTextEn: true,
+      googleMapsUrl: true,
+      phoneNumber: true,
+      instagramUrl: true,
+      snapchatUrl: true,
+      tiktokUrl: true,
       logo: {
         select: {
           id: true,

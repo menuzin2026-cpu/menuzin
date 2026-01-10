@@ -12,6 +12,9 @@ interface Item {
   nameKu: string
   nameEn: string
   nameAr: string
+  descriptionKu?: string | null
+  descriptionEn?: string | null
+  descriptionAr?: string | null
   price: number
   imageMediaId: string | null
   imageR2Key?: string | null
@@ -126,16 +129,30 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
           <h3 
             className="font-semibold mb-1 line-clamp-1 break-words"
             style={{ 
-              color: 'var(--auto-text-primary, #FFFFFF)',
+              color: 'var(--item-name-text-color, var(--auto-text-primary, #FFFFFF))',
               fontSize: 'var(--menu-item-name-size)'
             }}
           >
             {getLocalizedText(item, currentLang)}
           </h3>
+          {item.descriptionEn || item.descriptionKu || item.descriptionAr ? (
+            <p 
+              className="text-xs mb-2 line-clamp-2 break-words opacity-80"
+              style={{ 
+                color: 'var(--item-description-text-color, var(--auto-text-secondary, rgba(255, 255, 255, 0.9)))',
+                fontSize: 'var(--menu-item-desc-size)'
+              }}
+            >
+              {currentLang === 'en' ? item.descriptionEn : currentLang === 'ku' ? item.descriptionKu : item.descriptionAr}
+            </p>
+          ) : null}
           <div className="flex items-center justify-between">
             <span 
-              className="text-[var(--price-text)] font-bold"
-              style={{ fontSize: 'var(--menu-item-price-size)' }}
+              className="font-bold"
+              style={{ 
+                color: 'var(--item-price-text-color, var(--price-text, #FBBF24))',
+                fontSize: 'var(--menu-item-price-size)' 
+              }}
             >
               {formatPrice(item.price)}
             </span>

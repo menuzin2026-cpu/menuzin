@@ -37,6 +37,10 @@ export interface RestaurantData {
   welcomeTextEn: string | null
   googleMapsUrl: string | null
   phoneNumber: string | null
+  instagramUrl: string | null
+  snapchatUrl: string | null
+  tiktokUrl: string | null
+  serviceChargePercent: number | null
   brandColors: any
   updatedAt: Date
 }
@@ -143,6 +147,10 @@ export async function getRestaurantData(slug: string): Promise<RestaurantData | 
       welcomeTextEn: restaurant.welcomeTextEn,
       googleMapsUrl: restaurant.googleMapsUrl,
       phoneNumber: restaurant.phoneNumber,
+      instagramUrl: restaurantData.instagramUrl || null,
+      snapchatUrl: restaurantData.snapchatUrl || null,
+      tiktokUrl: restaurantData.tiktokUrl || null,
+      serviceChargePercent: restaurantData.serviceChargePercent || 0,
       brandColors: restaurant.brandColors,
       updatedAt: restaurant.updatedAt,
     }

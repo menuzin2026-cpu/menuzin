@@ -6,6 +6,7 @@ import { WelcomeLogo } from './welcome-logo'
 import { WelcomeText } from './welcome-text'
 import { WelcomeContact } from './welcome-contact'
 import { WelcomeLanguageButtons } from './welcome-language-buttons'
+import { SocialMediaIcons } from '@/components/social-media-icons'
 
 interface PageProps {
   params: {
@@ -30,6 +31,7 @@ export default async function WelcomePage({ params }: PageProps) {
       <WelcomeText restaurant={restaurant} isLoaded={true} />
       <WelcomeLanguageButtons slug={slug} isLoaded={true} />
       <WelcomeContact restaurant={restaurant} isLoaded={true} />
+      <SocialMediaIcons restaurant={restaurant} isLoaded={true} />
     </WelcomeClient>
   )
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MapPin, Phone } from 'lucide-react'
 import { Language, languages } from '@/lib/i18n'
+import { SocialMediaIcons } from '@/components/social-media-icons'
 
 interface Restaurant {
   id: string
@@ -18,6 +19,9 @@ interface Restaurant {
   welcomeTextEn: string | null
   googleMapsUrl: string | null
   phoneNumber: string | null
+  instagramUrl?: string | null
+  snapchatUrl?: string | null
+  tiktokUrl?: string | null
   logo?: {
     id: string
     mimeType: string
@@ -252,6 +256,14 @@ export default function WelcomePageClient({ restaurant }: WelcomePageClientProps
             </a>
           )}
         </div>
+
+        {/* Social Media Icons - Below Phone/Location */}
+        {(restaurant.instagramUrl || restaurant.snapchatUrl || restaurant.tiktokUrl) && (
+          <SocialMediaIcons 
+            restaurant={restaurant}
+            isLoaded={isLoaded}
+          />
+        )}
       </div>
     </div>
   )

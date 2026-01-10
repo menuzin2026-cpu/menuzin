@@ -5,7 +5,7 @@ import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { z } from 'zod'
 
 const uploadSchema = z.object({
-  scope: z.enum(['logo', 'footerLogo', 'welcomeBg', 'itemImage', 'categoryImage', 'platformFooterLogo']),
+  scope: z.enum(['logo', 'footerLogo', 'welcomeBg', 'menuBg', 'itemImage', 'categoryImage', 'platformFooterLogo']),
   restaurantId: z.string().optional(),
   itemId: z.string().optional(),
 })

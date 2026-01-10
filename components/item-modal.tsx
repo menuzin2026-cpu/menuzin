@@ -88,21 +88,30 @@ export function ItemModal({ item, currentLang, isOpen, onClose }: ItemModalProps
         {/* Content */}
         <div className="p-6">
           <h2 
-            className="font-bold text-white mb-2"
-            style={{ fontSize: 'var(--menu-item-name-size, 1.5rem)' }}
+            className="font-bold mb-2"
+            style={{ 
+              color: 'var(--item-name-text-color, var(--auto-text-primary, #FFFFFF))',
+              fontSize: 'var(--menu-item-name-size, 1.5rem)' 
+            }}
           >
             {getLocalizedText(item, currentLang)}
           </h2>
           <p 
-            className="font-bold text-[var(--price-text)] mb-4"
-            style={{ fontSize: 'var(--menu-item-price-size, 1.25rem)' }}
+            className="font-bold mb-4"
+            style={{ 
+              color: 'var(--item-price-text-color, var(--price-text, #FBBF24))',
+              fontSize: 'var(--menu-item-price-size, 1.25rem)' 
+            }}
           >
             {formatPrice(item.price)}
           </p>
           {getLocalizedDescription(item, currentLang) && (
             <p 
-              className="text-white/90 leading-relaxed"
-              style={{ fontSize: 'var(--menu-item-desc-size, 0.875rem)' }}
+              className="leading-relaxed"
+              style={{ 
+                color: 'var(--item-description-text-color, var(--auto-text-secondary, rgba(255, 255, 255, 0.9)))',
+                fontSize: 'var(--menu-item-desc-size, 0.875rem)' 
+              }}
             >
               {getLocalizedDescription(item, currentLang)}
             </p>

@@ -27,7 +27,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           theme: {
-            appBg: '#FFFFFF', // Neutral white default
+            appBg: '#400810', // Default background
+            menuBackgroundR2Key: null,
+            menuBackgroundR2Url: null,
+            itemNameTextColor: null,
+            itemPriceTextColor: null,
+            itemDescriptionTextColor: null,
+            bottomNavSectionNameColor: null,
+            categoryNameColor: null,
           },
         },
         {
@@ -67,13 +74,29 @@ export async function GET(request: NextRequest) {
       theme = await prisma.theme.create({
         data: {
           restaurantId: restaurant.id,
-          appBg: '#FFFFFF', // Neutral white background for new restaurants
+          appBg: '#400810', // Default background
         },
       })
     }
 
+    // Safely access new fields that may not exist yet
+    const themeResponse = theme as any
+
     return NextResponse.json(
-      { theme },
+      { theme: {
+        id: theme.id,
+        appBg: theme.appBg,
+        menuBackgroundR2Key: themeResponse.menuBackgroundR2Key || null,
+        menuBackgroundR2Url: themeResponse.menuBackgroundR2Url || null,
+        itemNameTextColor: themeResponse.itemNameTextColor || null,
+        itemPriceTextColor: themeResponse.itemPriceTextColor || null,
+        itemDescriptionTextColor: themeResponse.itemDescriptionTextColor || null,
+        bottomNavSectionNameColor: themeResponse.bottomNavSectionNameColor || null,
+        categoryNameColor: themeResponse.categoryNameColor || null,
+        restaurantId: theme.restaurantId,
+        createdAt: theme.createdAt,
+        updatedAt: theme.updatedAt,
+      } },
       {
         headers: {
           'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -86,7 +109,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         theme: {
-          appBg: '#FFFFFF', // Neutral white default
+          appBg: '#400810', // Default background
+          menuBackgroundR2Key: null,
+          menuBackgroundR2Url: null,
+          itemNameTextColor: null,
+          itemPriceTextColor: null,
+          itemDescriptionTextColor: null,
+          bottomNavSectionNameColor: null,
+          categoryNameColor: null,
         },
       },
       {

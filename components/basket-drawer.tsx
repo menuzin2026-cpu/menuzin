@@ -23,6 +23,7 @@ interface BasketDrawerProps {
   items: BasketItem[]
   currentLang: Language
   onQuantityChange: (itemId: string, delta: number) => void
+  serviceChargePercent?: number
 }
 
 export function BasketDrawer({
@@ -31,10 +32,11 @@ export function BasketDrawer({
   items,
   currentLang,
   onQuantityChange,
+  serviceChargePercent = 0,
 }: BasketDrawerProps) {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const serviceCharge = subtotal * 0.1 // 10% service charge
-  const total = subtotal + serviceCharge
+  const serviceChargeAmount = subtotal * (serviceChargePercent / 100)
+  const total = subtotal + serviceChargeAmount
 
   if (!isOpen) return null
 
@@ -94,14 +96,20 @@ export function BasketDrawer({
                 )}
                 <div className="flex-1 min-w-0">
                   <h3 
-                    className="font-semibold text-white truncate"
-                    style={{ fontSize: 'var(--menu-item-name-size)' }}
+                    className="font-semibold truncate"
+                    style={{ 
+                      color: 'var(--item-name-text-color, var(--auto-text-primary, #FFFFFF))',
+                      fontSize: 'var(--menu-item-name-size)' 
+                    }}
                   >
                     {getLocalizedText(item, currentLang)}
                   </h3>
                   <p 
-                    className="text-[var(--price-text)] font-bold"
-                    style={{ fontSize: 'var(--menu-item-price-size)' }}
+                    className="font-bold"
+                    style={{ 
+                      color: 'var(--item-price-text-color, var(--price-text, #FBBF24))',
+                      fontSize: 'var(--menu-item-price-size)' 
+                    }}
                   >
                     {formatPrice(item.price)} × {item.quantity}
                   </p>
@@ -142,14 +150,16 @@ export function BasketDrawer({
                   {formatPrice(subtotal)}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-white/80">
-                  Service Charge (10%):
-                </span>
-                <span className="text-sm font-semibold text-white">
-                  {formatPrice(serviceCharge)}
-                </span>
-              </div>
+              {serviceChargePercent > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-white/80">
+                    Service Charge ({serviceChargePercent}%):
+                  </span>
+                  <span className="text-sm font-semibold text-white">
+                    {formatPrice(serviceChargeAmount)}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between pt-2 border-t border-white/20">
                 <span className="text-lg font-semibold text-white">
                   Total:

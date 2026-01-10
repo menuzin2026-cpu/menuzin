@@ -6,7 +6,14 @@ import { requireAdminSession } from '@/lib/auth'
 import { z } from 'zod'
 
 const themeSchema = z.object({
-  appBg: z.string(),
+  appBg: z.string().optional(),
+  menuBackgroundR2Key: z.string().nullable().optional(),
+  menuBackgroundR2Url: z.string().nullable().optional(),
+  itemNameTextColor: z.string().nullable().optional(),
+  itemPriceTextColor: z.string().nullable().optional(),
+  itemDescriptionTextColor: z.string().nullable().optional(),
+  bottomNavSectionNameColor: z.string().nullable().optional(),
+  categoryNameColor: z.string().nullable().optional(),
 })
 
 export async function GET() {
@@ -22,13 +29,29 @@ export async function GET() {
       theme = await prisma.theme.create({
         data: {
           restaurantId: session.restaurantId,
-          appBg: '#FFFFFF', // Neutral white background for new restaurants
+          appBg: '#400810', // Default background
         },
       })
     }
 
+    // Safely access new fields that may not exist yet
+    const themeResponse = theme as any
+
     return NextResponse.json(
-      { theme },
+      { theme: {
+        id: theme.id,
+        appBg: theme.appBg,
+        menuBackgroundR2Key: themeResponse.menuBackgroundR2Key || null,
+        menuBackgroundR2Url: themeResponse.menuBackgroundR2Url || null,
+        itemNameTextColor: themeResponse.itemNameTextColor || null,
+        itemPriceTextColor: themeResponse.itemPriceTextColor || null,
+        itemDescriptionTextColor: themeResponse.itemDescriptionTextColor || null,
+        bottomNavSectionNameColor: themeResponse.bottomNavSectionNameColor || null,
+        categoryNameColor: themeResponse.categoryNameColor || null,
+        restaurantId: theme.restaurantId,
+        createdAt: theme.createdAt,
+        updatedAt: theme.updatedAt,
+      } },
       {
         headers: {
           'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
@@ -64,22 +87,74 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const themeData = validation.data
+    const validatedData = validation.data
+
+    // Get existing theme to preserve fields not being updated
+    const existingTheme = await prisma.theme.findUnique({
+      where: { restaurantId: session.restaurantId },
+    })
+
+    // Prepare update data - only include fields that are provided
+    const updateData: any = {}
+    
+    if (validatedData.appBg !== undefined) {
+      updateData.appBg = validatedData.appBg
+    } else if (!existingTheme) {
+      updateData.appBg = '#400810' // Default if creating new
+    }
+    
+    if (validatedData.menuBackgroundR2Key !== undefined) {
+      updateData.menuBackgroundR2Key = validatedData.menuBackgroundR2Key
+    }
+    if (validatedData.menuBackgroundR2Url !== undefined) {
+      updateData.menuBackgroundR2Url = validatedData.menuBackgroundR2Url
+    }
+    if (validatedData.itemNameTextColor !== undefined) {
+      updateData.itemNameTextColor = validatedData.itemNameTextColor
+    }
+    if (validatedData.itemPriceTextColor !== undefined) {
+      updateData.itemPriceTextColor = validatedData.itemPriceTextColor
+    }
+    if (validatedData.itemDescriptionTextColor !== undefined) {
+      updateData.itemDescriptionTextColor = validatedData.itemDescriptionTextColor
+    }
+    if (validatedData.bottomNavSectionNameColor !== undefined) {
+      updateData.bottomNavSectionNameColor = validatedData.bottomNavSectionNameColor
+    }
+    if (validatedData.categoryNameColor !== undefined) {
+      updateData.categoryNameColor = validatedData.categoryNameColor
+    }
 
     // Upsert theme for THIS restaurant only (restaurantId from session)
     const theme = await prisma.theme.upsert({
       where: { restaurantId: session.restaurantId }, // Ensures we only update the admin's restaurant theme
-      update: themeData, // Update existing theme for this restaurant
+      update: updateData, // Update existing theme for this restaurant
       create: {
         restaurantId: session.restaurantId, // Create new theme for this restaurant
-        ...themeData,
+        appBg: validatedData.appBg || '#400810',
+        ...updateData,
       },
     })
 
     console.log('Theme updated successfully for restaurant:', session.restaurantId)
 
+    const themeResponse = theme as any
+
     return NextResponse.json(
-      { theme, success: true },
+      { theme: {
+        id: theme.id,
+        appBg: theme.appBg,
+        menuBackgroundR2Key: themeResponse.menuBackgroundR2Key || null,
+        menuBackgroundR2Url: themeResponse.menuBackgroundR2Url || null,
+        itemNameTextColor: themeResponse.itemNameTextColor || null,
+        itemPriceTextColor: themeResponse.itemPriceTextColor || null,
+        itemDescriptionTextColor: themeResponse.itemDescriptionTextColor || null,
+        bottomNavSectionNameColor: themeResponse.bottomNavSectionNameColor || null,
+        categoryNameColor: themeResponse.categoryNameColor || null,
+        restaurantId: theme.restaurantId,
+        createdAt: theme.createdAt,
+        updatedAt: theme.updatedAt,
+      }, success: true },
       {
         headers: {
           'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',

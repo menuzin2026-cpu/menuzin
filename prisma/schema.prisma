@@ -29,6 +29,10 @@ model Restaurant {
   welcomeTextEn                        String?
   googleMapsUrl                        String?
   phoneNumber                          String?
+  instagramUrl                         String?
+  snapchatUrl                          String?
+  tiktokUrl                            String?
+  serviceChargePercent                 Float?            @default(0) @map("service_charge_percent")
   brandColors                          Json?
   createdAt                            DateTime          @default(now())
   updatedAt                            DateTime          @updatedAt
@@ -161,12 +165,19 @@ model UiSettings {
 }
 
 model Theme {
-  id           String     @id @default(cuid())
-  appBg        String     @default("#400810")
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  restaurantId String     @unique
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  id                        String     @id @default(cuid())
+  appBg                     String     @default("#400810")
+  menuBackgroundR2Key       String?    @map("menu_background_r2_key")
+  menuBackgroundR2Url       String?    @map("menu_background_r2_url")
+  itemNameTextColor         String?    @map("item_name_text_color")
+  itemPriceTextColor        String?    @map("item_price_text_color")
+  itemDescriptionTextColor  String?    @map("item_description_text_color")
+  bottomNavSectionNameColor String?    @map("bottom_nav_section_name_color")
+  categoryNameColor         String?    @map("category_name_color")
+  createdAt                 DateTime   @default(now())
+  updatedAt                 DateTime   @updatedAt
+  restaurantId              String     @unique
+  restaurant                Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
 
 model FallbackSettings {

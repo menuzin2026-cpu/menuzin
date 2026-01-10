@@ -93,6 +93,15 @@ function MenuPageContent() {
     bottomNavSectionSize: 13,
     bottomNavCategorySize: 13,
   })
+  const [theme, setTheme] = useState<{
+    menuBackgroundR2Url?: string | null
+    itemNameTextColor?: string | null
+    itemPriceTextColor?: string | null
+    itemDescriptionTextColor?: string | null
+    bottomNavSectionNameColor?: string | null
+    categoryNameColor?: string | null
+  } | null>(null)
+  const [serviceChargePercent, setServiceChargePercent] = useState<number>(0)
   
   // Refs for bottom navigation auto-scroll
   const categoryNavContainerRef = useRef<HTMLDivElement>(null)
@@ -210,6 +219,12 @@ function MenuPageContent() {
         }
         const data = await res.json()
         setRestaurant(data)
+        // Extract service charge percentage from restaurant data
+        if (data.serviceChargePercent !== undefined && data.serviceChargePercent !== null) {
+          setServiceChargePercent(data.serviceChargePercent)
+        } else {
+          setServiceChargePercent(0)
+        }
       } catch (error) {
         console.error('Error fetching restaurant:', error)
         if (retryCount < 1) {
@@ -264,6 +279,53 @@ function MenuPageContent() {
       .catch((error) => {
         console.error('Error fetching UI settings:', error)
       })
+
+    // Fetch theme data for menu background and text colors
+    const fetchTheme = async () => {
+      try {
+        const res = await fetch(`/data/theme?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
+          cache: 'no-store',
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.theme) {
+            setTheme({
+              menuBackgroundR2Url: data.theme.menuBackgroundR2Url || null,
+              itemNameTextColor: data.theme.itemNameTextColor || null,
+              itemPriceTextColor: data.theme.itemPriceTextColor || null,
+              itemDescriptionTextColor: data.theme.itemDescriptionTextColor || null,
+              bottomNavSectionNameColor: data.theme.bottomNavSectionNameColor || null,
+              categoryNameColor: data.theme.categoryNameColor || null,
+            })
+            
+            // Apply text colors as CSS variables
+            if (typeof document !== 'undefined') {
+              if (data.theme.itemNameTextColor) {
+                document.documentElement.style.setProperty('--item-name-text-color', data.theme.itemNameTextColor)
+              }
+              if (data.theme.itemPriceTextColor) {
+                document.documentElement.style.setProperty('--item-price-text-color', data.theme.itemPriceTextColor)
+              }
+              if (data.theme.itemDescriptionTextColor) {
+                document.documentElement.style.setProperty('--item-description-text-color', data.theme.itemDescriptionTextColor)
+              }
+              if (data.theme.bottomNavSectionNameColor) {
+                document.documentElement.style.setProperty('--bottom-nav-section-name-color', data.theme.bottomNavSectionNameColor)
+              }
+              if (data.theme.categoryNameColor) {
+                document.documentElement.style.setProperty('--category-name-color', data.theme.categoryNameColor)
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching theme:', error)
+      }
+    }
+    fetchTheme()
+
+    // Extract service charge from restaurant data (already fetched above)
+    // Will be set when restaurant data is fetched
 
     // Debug overflow in development
     if (process.env.NODE_ENV === 'development') {
@@ -621,14 +683,23 @@ function MenuPageContent() {
     }
   }
 
+  // Calculate background style with image overlay if exists
+  const backgroundStyle: React.CSSProperties = {
+    backgroundColor: 'var(--app-bg, #400810)',
+  }
+  
+  if (theme?.menuBackgroundR2Url) {
+    backgroundStyle.backgroundImage = `url(${theme.menuBackgroundR2Url})`
+    backgroundStyle.backgroundSize = 'cover'
+    backgroundStyle.backgroundPosition = 'center'
+    backgroundStyle.backgroundRepeat = 'no-repeat'
+    backgroundStyle.backgroundAttachment = 'fixed'
+  }
+
   return (
     <div 
       className="min-h-dvh w-full overflow-x-hidden" 
-      style={{ 
-        backgroundColor: 'var(--app-bg, #400810)',
-        // CSS variables are now set server-side via UiSettingsInjector script in head
-        // No need to set them here to prevent flash
-      }}
+      style={backgroundStyle}
     >
       <MenuHeader
         logoUrl={restaurant?.logoR2Url || (restaurant?.logoMediaId ? `/assets/${restaurant.logoMediaId}` : undefined)}
@@ -744,7 +815,7 @@ function MenuPageContent() {
                         <span 
                           className="relative font-semibold whitespace-nowrap"
                           style={{ 
-                            color: 'var(--auto-text-primary, #FFFFFF)',
+                            color: theme?.bottomNavSectionNameColor || 'var(--auto-text-primary, #FFFFFF)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -814,7 +885,7 @@ function MenuPageContent() {
                           <span 
                             className="relative font-semibold whitespace-nowrap"
                             style={{ 
-                              color: 'var(--auto-text-primary, #FFFFFF)',
+                              color: theme?.categoryNameColor || 'var(--auto-text-primary, #FFFFFF)',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -901,7 +972,7 @@ function MenuPageContent() {
                           className="relative font-bold transition-all duration-300"
                           style={{ 
                             fontSize: 'var(--menu-category-size)',
-                            color: 'var(--auto-text-primary, #FFFFFF)',
+                            color: theme?.categoryNameColor || 'var(--auto-text-primary, #FFFFFF)',
                           }}
                         >
                           {getLocalizedText(category, currentLang)}
@@ -958,6 +1029,7 @@ function MenuPageContent() {
         items={basket}
         currentLang={currentLang}
         onQuantityChange={handleQuantityChange}
+        serviceChargePercent={serviceChargePercent}
       />
 
       {/* Powered By Footer */}

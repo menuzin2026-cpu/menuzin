@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "instagramUrl" TEXT,
+ADD COLUMN IF NOT EXISTS "snapchatUrl" TEXT,
+ADD COLUMN IF NOT EXISTS "tiktokUrl" TEXT;
+

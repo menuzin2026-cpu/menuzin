@@ -4,17 +4,29 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { X, Copy, Check, Palette } from 'lucide-react'
+import { X, Copy, Check, Palette, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { HexColorPicker } from 'react-colorful'
 import { generateColorScheme, normalizeToHex } from '@/lib/color-utils'
 
 interface ThemeColors {
   appBg: string
+  menuBackgroundR2Url?: string | null
+  itemNameTextColor?: string | null
+  itemPriceTextColor?: string | null
+  itemDescriptionTextColor?: string | null
+  bottomNavSectionNameColor?: string | null
+  categoryNameColor?: string | null
 }
 
 const defaultTheme: ThemeColors = {
   appBg: '#400810',
+  menuBackgroundR2Url: null,
+  itemNameTextColor: null,
+  itemPriceTextColor: null,
+  itemDescriptionTextColor: null,
+  bottomNavSectionNameColor: null,
+  categoryNameColor: null,
 }
 
 // Helper function to convert rgba/rgb to hex (for color picker)
@@ -67,6 +79,9 @@ export default function ThemePage() {
   const [tempColor, setTempColor] = useState<string>('#000000')
   const [copied, setCopied] = useState<string | null>(null)
   const colorPickerRef = useRef<HTMLDivElement>(null)
+  const [menuBgPreview, setMenuBgPreview] = useState<string | null>(null)
+  const [uploadingMenuBg, setUploadingMenuBg] = useState(false)
+  const [restaurantId, setRestaurantId] = useState<string | null>(null)
 
   // Apply theme immediately before paint to prevent flash
   useLayoutEffect(() => {
@@ -78,6 +93,22 @@ export default function ThemePage() {
   useEffect(() => {
     // Fetch the actual theme from API after initial render
     fetchTheme()
+    
+    // Fetch restaurant ID for menu background upload
+    const fetchRestaurantId = async () => {
+      try {
+        const response = await fetch('/api/admin/settings')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.id) {
+            setRestaurantId(data.id)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching restaurant ID:', error)
+      }
+    }
+    fetchRestaurantId()
   }, [])
 
   const fetchTheme = async () => {
@@ -99,6 +130,9 @@ export default function ThemePage() {
           const themeData = { ...defaultTheme, ...data.theme }
           setTheme(themeData)
           setPreviewTheme(themeData)
+          if (themeData.menuBackgroundR2Url) {
+            setMenuBgPreview(themeData.menuBackgroundR2Url)
+          }
           // Apply immediately on load
           applyThemeToDocument(themeData)
         }
@@ -171,48 +205,128 @@ export default function ThemePage() {
     })
   }
 
-  const handleSave = async () => {
+  const handleMenuBackgroundUpload = async (file: File) => {
+    if (!restaurantId) {
+      toast.error('Restaurant ID not found')
+      return
+    }
+
+    setUploadingMenuBg(true)
+    try {
+      const isImage = file.type.startsWith('image/')
+      if (!isImage) {
+        toast.error('Please upload an image (JPEG, PNG, WebP) file')
+        setUploadingMenuBg(false)
+        return
+      }
+
+      const maxSize = 10 * 1024 * 1024
+      if (file.size > maxSize) {
+        toast.error('File size must be less than 10MB')
+        setUploadingMenuBg(false)
+        return
+      }
+
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('scope', 'menuBg')
+      formData.append('restaurantId', restaurantId)
+
+      const uploadResponse = await fetch('/api/r2/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || 'Failed to upload menu background')
+      }
+
+      const { key, publicUrl } = await uploadResponse.json()
+      const updatedTheme = { ...previewTheme, menuBackgroundR2Url: publicUrl, menuBackgroundR2Key: key }
+      setPreviewTheme(updatedTheme)
+      setMenuBgPreview(publicUrl)
+      
+      const saveResponse = await fetch('/api/admin/theme', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updatedTheme),
+      })
+
+      if (saveResponse.ok) {
+        const data = await saveResponse.json()
+        if (data.theme) {
+          setTheme({ ...defaultTheme, ...data.theme })
+        }
+        toast.success('Menu background uploaded successfully!')
+      } else {
+        throw new Error('Failed to save menu background')
+      }
+    } catch (error: any) {
+      console.error('Error uploading menu background:', error)
+      toast.error(error.message || 'Failed to upload menu background')
+    } finally {
+      setUploadingMenuBg(false)
+    }
+  }
+
+  const handleMenuBackgroundRemove = async () => {
+    setMenuBgPreview(null)
+    const updatedTheme = { ...previewTheme, menuBackgroundR2Url: null, menuBackgroundR2Key: null }
+    setPreviewTheme(updatedTheme)
+    await handleSave(updatedTheme)
+  }
+
+  const handleMenuBackgroundChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      handleMenuBackgroundUpload(file)
+    }
+  }
+
+  const handleSave = async (themeToSave: ThemeColors = previewTheme) => {
     setIsLoading(true)
     try {
       const response = await fetch('/api/admin/theme', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Include cookies for authentication
-        body: JSON.stringify(previewTheme),
+        credentials: 'include',
+        body: JSON.stringify(themeToSave),
       })
 
       if (response.status === 401) {
-        // Unauthorized - redirect to login
         toast.error('Session expired. Please login again.')
         router.push(`/${slug}/admin-portal/login`)
         return
       }
 
       if (response.status === 405) {
-        // Method not allowed
         toast.error('Invalid request method. Please refresh and try again.')
         return
       }
 
       if (response.ok) {
         const data = await response.json()
-        setTheme(previewTheme)
-        applyThemeToDocument(previewTheme)
-        // Cache in localStorage for immediate application on next page load
+        if (data.theme) {
+          setTheme({ ...defaultTheme, ...data.theme })
+        }
+        applyThemeToDocument(themeToSave)
         try {
-          localStorage.setItem('theme-appBg', previewTheme.appBg)
+          localStorage.setItem(`theme-appBg-${slug}`, themeToSave.appBg)
+          localStorage.removeItem('theme-appBg')
         } catch (e) {
           // localStorage might not be available
         }
-        toast.success('Background color saved successfully!')
+        toast.success('Theme saved successfully!')
       } else {
         const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.error || 'Failed to save background color'
+        const errorMessage = errorData.error || 'Failed to save theme'
         toast.error(errorMessage)
       }
     } catch (error) {
       console.error('Error saving theme:', error)
-      toast.error('Failed to save background color. Please check your connection.')
+      toast.error('Failed to save theme. Please check your connection.')
     } finally {
       setIsLoading(false)
     }
@@ -359,11 +473,208 @@ export default function ThemePage() {
                   This color will be used for all components (text, boxes, frames).
                 </p>
               </div>
+
+              {/* Menu Page Background Image */}
+              <div className="space-y-2 pt-4 border-t border-white/10">
+                <label className="block text-sm font-medium text-white">
+                  Menu Page Background Image
+                </label>
+                <div className="space-y-2">
+                  {menuBgPreview && (
+                    <div className="relative inline-block">
+                      <img
+                        src={menuBgPreview}
+                        alt="Menu Background Preview"
+                        className="h-32 w-auto object-cover rounded-lg border-2 border-white/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleMenuBackgroundRemove}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:bg-white/5 transition-colors">
+                    {!menuBgPreview && (
+                      <div className="flex flex-col items-center justify-center pt-3 pb-4">
+                        <Upload className="w-6 h-6 mb-2 text-white/70" />
+                        <p className="text-sm text-white/70">Click to upload background</p>
+                        <p className="text-xs text-white/50 mt-1">PNG, JPG, WEBP (max 10MB)</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleMenuBackgroundChange}
+                      disabled={uploadingMenuBg}
+                    />
+                  </label>
+                  {uploadingMenuBg && (
+                    <p className="text-sm text-white/70">Uploading background...</p>
+                  )}
+                  <p className="text-xs text-white/50">
+                    Background image will appear on menu page only (not welcome page). Leave empty to use default background color.
+                  </p>
+                </div>
+              </div>
+
+              {/* Text Color Options */}
+              <div className="space-y-4 pt-4 border-t border-white/10">
+                <h3 className="text-base font-semibold text-white">Text Colors</h3>
+                
+                {/* Item Name Text Color */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Item Name Text Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={previewTheme.itemNameTextColor || ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
+                          handleColorChange('itemNameTextColor', value || null)
+                        }
+                      }}
+                      className="flex-1 text-sm"
+                      placeholder="Default: #FFFFFF"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openColorPicker('itemNameTextColor')}
+                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
+                      style={{ backgroundColor: previewTheme.itemNameTextColor ? normalizeToHex(previewTheme.itemNameTextColor) : '#FFFFFF' }}
+                      aria-label="Pick item name text color"
+                    />
+                  </div>
+                  <p className="text-xs text-white/50">Leave empty to use default (white)</p>
+                </div>
+
+                {/* Item Price Text Color */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Item Price Text Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={previewTheme.itemPriceTextColor || ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
+                          handleColorChange('itemPriceTextColor', value || null)
+                        }
+                      }}
+                      className="flex-1 text-sm"
+                      placeholder="Default: #FBBF24"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openColorPicker('itemPriceTextColor')}
+                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
+                      style={{ backgroundColor: previewTheme.itemPriceTextColor ? normalizeToHex(previewTheme.itemPriceTextColor) : '#FBBF24' }}
+                      aria-label="Pick item price text color"
+                    />
+                  </div>
+                  <p className="text-xs text-white/50">Leave empty to use default (gold)</p>
+                </div>
+
+                {/* Item Description Text Color */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Item Description Text Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={previewTheme.itemDescriptionTextColor || ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
+                          handleColorChange('itemDescriptionTextColor', value || null)
+                        }
+                      }}
+                      className="flex-1 text-sm"
+                      placeholder="Default: #E2E8F0"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openColorPicker('itemDescriptionTextColor')}
+                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
+                      style={{ backgroundColor: previewTheme.itemDescriptionTextColor ? normalizeToHex(previewTheme.itemDescriptionTextColor) : '#E2E8F0' }}
+                      aria-label="Pick item description text color"
+                    />
+                  </div>
+                  <p className="text-xs text-white/50">Leave empty to use default (light gray)</p>
+                </div>
+
+                {/* Category Name Color */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Category Name Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={previewTheme.categoryNameColor || ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
+                          handleColorChange('categoryNameColor', value || null)
+                        }
+                      }}
+                      className="flex-1 text-sm"
+                      placeholder="Default: #FFFFFF"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openColorPicker('categoryNameColor')}
+                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
+                      style={{ backgroundColor: previewTheme.categoryNameColor ? normalizeToHex(previewTheme.categoryNameColor) : '#FFFFFF' }}
+                      aria-label="Pick category name color"
+                    />
+                  </div>
+                  <p className="text-xs text-white/50">Applies to category names in menu page and bottom nav</p>
+                </div>
+
+                {/* Bottom Nav Section Name Color */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Bottom Nav Section Name Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={previewTheme.bottomNavSectionNameColor || ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
+                          handleColorChange('bottomNavSectionNameColor', value || null)
+                        }
+                      }}
+                      className="flex-1 text-sm"
+                      placeholder="Default: #FFFFFF"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openColorPicker('bottomNavSectionNameColor')}
+                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
+                      style={{ backgroundColor: previewTheme.bottomNavSectionNameColor ? normalizeToHex(previewTheme.bottomNavSectionNameColor) : '#FFFFFF' }}
+                      aria-label="Pick bottom nav section name color"
+                    />
+                  </div>
+                  <p className="text-xs text-white/50">Applies to section labels in bottom navigation</p>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-4 pt-6 mt-6 border-t border-white/20">
               <Button 
-                onClick={handleSave} 
+                onClick={() => handleSave()} 
                 disabled={isLoading} 
                 variant="ghost"
                 className="flex-1"
@@ -372,7 +683,7 @@ export default function ThemePage() {
                   color: 'var(--auto-text-primary, #FFFFFF)',
                 }}
               >
-                {isLoading ? 'Saving...' : 'Save Background Color'}
+                {isLoading ? 'Saving...' : 'Save Theme'}
               </Button>
             </div>
           </div>
@@ -391,7 +702,7 @@ export default function ThemePage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-white">
-                    Pick Background Color
+                    Pick {selectedColor === 'appBg' ? 'Background' : selectedColor === 'itemNameTextColor' ? 'Item Name Text' : selectedColor === 'itemPriceTextColor' ? 'Item Price Text' : selectedColor === 'itemDescriptionTextColor' ? 'Item Description Text' : selectedColor === 'categoryNameColor' ? 'Category Name' : selectedColor === 'bottomNavSectionNameColor' ? 'Bottom Nav Section Name' : 'Color'} Color
                   </h2>
                   <button
                     onClick={closeColorPicker}

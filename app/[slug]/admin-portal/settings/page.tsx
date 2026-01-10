@@ -15,6 +15,10 @@ interface RestaurantSettings {
   slug?: string
   googleMapsUrl: string
   phoneNumber: string
+  instagramUrl?: string | null
+  snapchatUrl?: string | null
+  tiktokUrl?: string | null
+  serviceChargePercent?: number | null
   welcomeOverlayColor: string
   welcomeOverlayOpacity: number
   welcomeTextEn: string
@@ -40,6 +44,10 @@ export default function SettingsPage() {
     nameAr: '',
     googleMapsUrl: '',
     phoneNumber: '',
+    instagramUrl: '',
+    snapchatUrl: '',
+    tiktokUrl: '',
+    serviceChargePercent: 0,
     welcomeOverlayColor: '#000000',
     welcomeOverlayOpacity: 0.5,
     welcomeTextEn: '',
@@ -490,6 +498,81 @@ export default function SettingsPage() {
                   placeholder="+964 750 123 4567"
                 />
               </div>
+              
+              {/* Social Media Links */}
+              <div className="pt-4 border-t border-white/10">
+                <h3 className="text-lg font-semibold text-white mb-4">Social Media</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Instagram URL
+                    </label>
+                    <Input
+                      type="url"
+                      value={settings.instagramUrl || ''}
+                      onChange={(e) => setSettings({ ...settings, instagramUrl: e.target.value || null })}
+                      placeholder="https://instagram.com/yourpage"
+                    />
+                    <p className="text-xs text-white/50 mt-1">
+                      Leave empty to hide Instagram icon
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Snapchat URL
+                    </label>
+                    <Input
+                      type="url"
+                      value={settings.snapchatUrl || ''}
+                      onChange={(e) => setSettings({ ...settings, snapchatUrl: e.target.value || null })}
+                      placeholder="https://snapchat.com/add/yourusername"
+                    />
+                    <p className="text-xs text-white/50 mt-1">
+                      Leave empty to hide Snapchat icon
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      TikTok URL
+                    </label>
+                    <Input
+                      type="url"
+                      value={settings.tiktokUrl || ''}
+                      onChange={(e) => setSettings({ ...settings, tiktokUrl: e.target.value || null })}
+                      placeholder="https://tiktok.com/@yourusername"
+                    />
+                    <p className="text-xs text-white/50 mt-1">
+                      Leave empty to hide TikTok icon
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Service Charge */}
+              <div className="pt-4 border-t border-white/10">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Service Charge (%)
+                  </label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={settings.serviceChargePercent ?? 0}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value) || 0
+                      const clamped = Math.max(0, Math.min(100, value))
+                      setSettings({ ...settings, serviceChargePercent: clamped })
+                    }}
+                    placeholder="0"
+                  />
+                  <p className="text-xs text-white/50 mt-1">
+                    Percentage added to basket subtotal (0-100, decimals allowed, e.g., 10 or 2.5)
+                  </p>
+                </div>
+              </div>
+              
               {settings.slug && (
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
