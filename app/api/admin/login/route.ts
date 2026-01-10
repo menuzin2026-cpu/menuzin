@@ -72,10 +72,19 @@ export async function POST(request: NextRequest) {
       data: { lastLoginAt: new Date() },
     })
 
+    // Verify admin's restaurantId matches the login restaurant (security check)
+    if (matchedAdmin.restaurantId !== restaurant.id) {
+      console.error(`[SECURITY] Admin restaurantId mismatch: admin restaurantId=${matchedAdmin.restaurantId}, login restaurantId=${restaurant.id}, slug=${slug}`)
+      return NextResponse.json({ error: 'Invalid admin for this restaurant' }, { status: 403 })
+    }
+
     // Create session with restaurant_id and admin_user_id
     await createAdminSession(restaurant.id, matchedAdmin.id)
 
-    return NextResponse.json({ success: true, adminId: matchedAdmin.id, restaurantId: restaurant.id })
+    // Log successful login for debugging
+    console.log(`[LOGIN] Admin logged in: restaurantId=${restaurant.id}, slug=${slug}, adminId=${matchedAdmin.id}`)
+
+    return NextResponse.json({ success: true, adminId: matchedAdmin.id, restaurantId: restaurant.id, slug: restaurant.slug })
   } catch (error) {
     console.error('[ERROR] Admin login error:', error)
     console.error('[ERROR] Error details:', {

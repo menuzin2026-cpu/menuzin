@@ -36,6 +36,17 @@ export function AdminAuthWrapper({
           // Only log unexpected errors
           console.error('Auth check failed with status:', response.status)
           router.push(`/${slug}/admin-portal/login`)
+          return
+        }
+
+        // Verify session restaurant matches URL slug (CRITICAL for data isolation)
+        const sessionData = await response.json()
+        if (sessionData.authenticated && sessionData.restaurantSlug && sessionData.restaurantSlug !== slug) {
+          // Session is for different restaurant - clear session and redirect to login
+          console.error(`[SECURITY] Session restaurant mismatch: session slug=${sessionData.restaurantSlug}, URL slug=${slug}`)
+          await fetch('/api/admin/logout', { method: 'POST' })
+          router.push(`/${slug}/admin/login`)
+          return
         }
       } catch (error) {
         // Only log unexpected errors, not network issues

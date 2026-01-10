@@ -13,7 +13,7 @@ export async function GET() {
   const { prisma } = await import('@/lib/prisma')
   const restaurant = await prisma.restaurant.findUnique({
     where: { id: session.restaurantId },
-    select: { id: true },
+    select: { id: true, slug: true },
   })
   
   if (!restaurant) {
@@ -29,6 +29,7 @@ export async function GET() {
   return NextResponse.json({ 
     authenticated: true,
     restaurantId: session.restaurantId,
+    restaurantSlug: restaurant.slug, // Include slug for validation in auth wrapper
     adminUserId: session.adminUserId,
   })
 }
