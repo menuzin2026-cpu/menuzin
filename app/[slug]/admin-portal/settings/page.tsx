@@ -349,9 +349,11 @@ export default function SettingsPage() {
     setIsLoading(true)
     try {
       // Ensure R2 fields are explicitly set to null if they should be removed
+      // Explicitly include serviceChargePercent to ensure it's always sent (even if 0)
       const saveData = {
         ...settings,
         slug,
+        serviceChargePercent: settings.serviceChargePercent ?? 0, // Ensure it's always sent, default to 0
         // Explicitly include R2 fields - if they're null in state, send null to clear them
         logoR2Key: settings.logoR2Key ?? null,
         logoR2Url: settings.logoR2Url ?? null,
@@ -361,6 +363,13 @@ export default function SettingsPage() {
         welcomeBgR2Url: settings.welcomeBgR2Url ?? null,
         welcomeBgMimeType: settings.welcomeBgMimeType ?? null,
       }
+      
+      // Log the save data for debugging
+      console.log('[SETTINGS SAVE] Saving data:', {
+        restaurantId: settings.id,
+        slug,
+        serviceChargePercent: saveData.serviceChargePercent,
+      })
       
       const response = await fetch('/api/admin/settings', {
         method: 'PUT',

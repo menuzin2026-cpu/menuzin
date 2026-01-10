@@ -13,11 +13,56 @@ export async function GET(request: NextRequest) {
 
     const session = await requireAdminSession()
 
+    // Validate slug parameter matches session restaurant (if provided)
+    const { searchParams } = new URL(request.url)
+    const slugParam = searchParams.get('slug')
+    
+    // Get restaurant by session restaurantId (CRITICAL: Always use session restaurantId for data isolation)
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: session.restaurantId },
+      select: {
+        id: true,
+        slug: true,
+        nameKu: true,
+        nameEn: true,
+        nameAr: true,
+        googleMapsUrl: true,
+        phoneNumber: true,
+        welcomeOverlayColor: true,
+        welcomeOverlayOpacity: true,
+        welcomeTextEn: true,
+        logoMediaId: true,
+        footerLogoMediaId: true,
+        welcomeBackgroundMediaId: true,
+        brandColors: true,
+        updatedAt: true,
+        instagramUrl: true,
+        snapchatUrl: true,
+        tiktokUrl: true,
+        serviceChargePercent: true,
+        logoR2Key: true,
+        logoR2Url: true,
+        footerLogoR2Key: true,
+        footerLogoR2Url: true,
+        welcomeBgR2Key: true,
+        welcomeBgR2Url: true,
+        welcomeBgMimeType: true,
+      },
     })
     if (!restaurant) {
+      console.error(`[SECURITY] Restaurant not found for session restaurantId=${session.restaurantId}`)
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
+    }
+
+    // If slug parameter is provided, verify it matches the session restaurant (additional security check)
+    if (slugParam && restaurant.slug !== slugParam) {
+      console.error(`[SECURITY] Slug mismatch: session restaurantId=${session.restaurantId}, restaurant slug=${restaurant.slug}, param slug=${slugParam}`)
+      return NextResponse.json({ error: 'Unauthorized: Restaurant mismatch' }, { status: 403 })
+    }
+
+    // Log for debugging (in development only)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[SETTINGS GET] Fetching settings for restaurantId=${session.restaurantId}, slug=${restaurant.slug}`)
     }
 
     // Safely access fields that might not exist
@@ -79,24 +124,34 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Ensure DB column exists in production before updating
+    // Ensure DB columns exist in production before updating
     await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
+    await ensureRestaurantSocialMediaColumns(prisma)
 
     const session = await requireAdminSession()
 
     const body = await request.json()
     
     // Log the incoming data for debugging
+    console.log(`[SETTINGS PUT] Session restaurantId=${session.restaurantId}`)
+    console.log(`[SETTINGS PUT] Body slug=${body.slug}`)
     if (process.env.NODE_ENV === 'development') {
-      console.log('Settings update request body:', JSON.stringify(body, null, 2))
+      console.log('[SETTINGS PUT] Request body:', JSON.stringify(body, null, 2))
     }
 
-    // Get restaurant by restaurantId from session
+    // Get restaurant by restaurantId from session (CRITICAL: Always use session restaurantId for data isolation)
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: session.restaurantId },
     })
     if (!restaurant) {
+      console.error(`[SECURITY] Restaurant not found for session restaurantId=${session.restaurantId}`)
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
+    }
+
+    // If slug is provided in body, verify it matches the session restaurant (additional security check)
+    if (body.slug && restaurant.slug !== body.slug) {
+      console.error(`[SECURITY] Slug mismatch on PUT: session restaurantId=${session.restaurantId}, restaurant slug=${restaurant.slug}, body slug=${body.slug}`)
+      return NextResponse.json({ error: 'Unauthorized: Restaurant mismatch' }, { status: 403 })
     }
 
     // Helper function to generate slug from restaurant name
@@ -119,7 +174,6 @@ export async function PUT(request: NextRequest) {
       instagramUrl: body.instagramUrl !== undefined ? (body.instagramUrl || null) : (restaurant as any).instagramUrl || null,
       snapchatUrl: body.snapchatUrl !== undefined ? (body.snapchatUrl || null) : (restaurant as any).snapchatUrl || null,
       tiktokUrl: body.tiktokUrl !== undefined ? (body.tiktokUrl || null) : (restaurant as any).tiktokUrl || null,
-      serviceChargePercent: body.serviceChargePercent !== undefined ? (body.serviceChargePercent === null || body.serviceChargePercent === '' ? 0 : parseFloat(body.serviceChargePercent)) : ((restaurant as any).serviceChargePercent || 0),
       welcomeOverlayColor: body.welcomeOverlayColor !== undefined ? body.welcomeOverlayColor : restaurant.welcomeOverlayColor,
       welcomeOverlayOpacity: body.welcomeOverlayOpacity !== undefined ? parseFloat(body.welcomeOverlayOpacity) : restaurant.welcomeOverlayOpacity,
     }
@@ -192,9 +246,27 @@ export async function PUT(request: NextRequest) {
       updateData.welcomeBgMimeType = body.welcomeBgMimeType || null
     }
 
+    // Handle serviceChargePercent - must be explicitly handled to allow 0 values
+    if (body.serviceChargePercent !== undefined) {
+      if (body.serviceChargePercent === null || body.serviceChargePercent === '') {
+        updateData.serviceChargePercent = 0
+      } else {
+        const parsed = typeof body.serviceChargePercent === 'number' 
+          ? body.serviceChargePercent 
+          : parseFloat(String(body.serviceChargePercent))
+        updateData.serviceChargePercent = isNaN(parsed) ? 0 : Math.max(0, Math.min(100, parsed))
+      }
+    } else {
+      // If not provided, keep existing value (or default to 0 if null/undefined)
+      updateData.serviceChargePercent = (restaurant as any).serviceChargePercent ?? 0
+    }
+
     // Log the update data for debugging
     if (process.env.NODE_ENV === 'development') {
-      console.log('Update data:', JSON.stringify(updateData, null, 2))
+      console.log('[SETTINGS UPDATE] Restaurant ID:', session.restaurantId)
+      console.log('[SETTINGS UPDATE] Service charge percent from body:', body.serviceChargePercent)
+      console.log('[SETTINGS UPDATE] Service charge percent to save:', updateData.serviceChargePercent)
+      console.log('[SETTINGS UPDATE] Update data:', JSON.stringify(updateData, null, 2))
     }
 
     const updated = await prisma.restaurant.update({
