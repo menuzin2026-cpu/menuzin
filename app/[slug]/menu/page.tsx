@@ -126,10 +126,8 @@ function MenuPageContent() {
             ? data.serviceChargePercent 
             : parseFloat(String(data.serviceChargePercent))
           setServiceChargePercent(isNaN(serviceCharge) ? 0 : serviceCharge)
-          console.log('[MENU PAGE] Service charge fetched:', isNaN(serviceCharge) ? 0 : serviceCharge)
         } else {
           setServiceChargePercent(0)
-          console.log('[MENU PAGE] Service charge not found, defaulting to 0')
         }
       } else {
         console.error('Error fetching restaurant data:', res.status, res.statusText)
@@ -298,17 +296,51 @@ function MenuPageContent() {
       }
     }
 
-    // Fetch UI settings for this restaurant (pass slug to filter by restaurantId)
-    fetch(`/api/ui-settings?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
+    // Fetch UI settings for this restaurant (only once per slug)
+    const abortController = new AbortController()
+    fetch(`/api/ui-settings?slug=${encodeURIComponent(slug)}`, {
       cache: 'no-store',
+      signal: abortController.signal,
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch UI settings: ${res.status}`)
+        }
+        return res.json()
+      })
       .then((data) => {
         setUiSettings(data)
+        // Update service charge from UI settings if available
+        if (data.serviceChargePercent !== undefined && data.serviceChargePercent !== null) {
+          const serviceCharge = typeof data.serviceChargePercent === 'number' 
+            ? data.serviceChargePercent 
+            : parseFloat(String(data.serviceChargePercent))
+          if (!isNaN(serviceCharge)) {
+            setServiceChargePercent(serviceCharge)
+          }
+        }
       })
       .catch((error) => {
-        console.error('Error fetching UI settings:', error)
+        // Only log if not aborted (component unmounted)
+        if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+          console.error('Error fetching UI settings:', error)
+        }
+        // Set defaults on error
+        setUiSettings({
+          sectionTitleSize: 22,
+          categoryTitleSize: 16,
+          itemNameSize: 14,
+          itemDescriptionSize: 14,
+          itemPriceSize: 16,
+          headerLogoSize: 32,
+          bottomNavSectionSize: 13,
+          bottomNavCategorySize: 13,
+        })
       })
+
+    return () => {
+      abortController.abort()
+    }
 
     // Fetch theme data for menu background and text colors
     const fetchTheme = async () => {
@@ -458,20 +490,42 @@ function MenuPageContent() {
 
   // Refetch UI settings when page becomes visible (after admin changes)
   useEffect(() => {
+    if (!slug) return
+
+    const abortController = new AbortController()
+    
     const fetchUiSettings = () => {
-      fetch(`/api/ui-settings?t=${Date.now()}`, {
+      fetch(`/api/ui-settings?slug=${encodeURIComponent(slug)}`, {
         cache: 'no-store',
+        signal: abortController.signal,
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache',
         },
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`Failed to fetch UI settings: ${res.status}`)
+          }
+          return res.json()
+        })
         .then((data) => {
           setUiSettings(data)
+          // Update service charge from UI settings if available
+          if (data.serviceChargePercent !== undefined && data.serviceChargePercent !== null) {
+            const serviceCharge = typeof data.serviceChargePercent === 'number' 
+              ? data.serviceChargePercent 
+              : parseFloat(String(data.serviceChargePercent))
+            if (!isNaN(serviceCharge)) {
+              setServiceChargePercent(serviceCharge)
+            }
+          }
         })
         .catch((error) => {
-          console.error('Error fetching UI settings:', error)
+          // Only log if not aborted
+          if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+            console.error('Error fetching UI settings:', error)
+          }
         })
     }
 
@@ -510,13 +564,8 @@ function MenuPageContent() {
       fetchRestaurantData()
     }
 
-    // Periodic refresh every 5 seconds when page is visible (to catch admin changes)
-    const intervalId = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        fetchUiSettings()
-        fetchRestaurantData()
-      }
-    }, 5000) // 5 seconds to reduce load
+    // Periodic refresh removed - rely on storage events and visibility changes instead
+    // This prevents spam and reduces server load
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('focus', handleFocus)
@@ -525,12 +574,12 @@ function MenuPageContent() {
     window.addEventListener('service-charge-updated', handleServiceChargeUpdate)
 
     return () => {
+      abortController.abort()
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('focus', handleFocus)
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('typography-updated', handleTypographyUpdate)
       window.removeEventListener('service-charge-updated', handleServiceChargeUpdate)
-      clearInterval(intervalId)
     }
   }, [slug, fetchRestaurantData]) // fetchUiSettings is defined inside this effect, so no need to include it
 
