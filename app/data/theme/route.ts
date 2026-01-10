@@ -125,6 +125,8 @@ export async function GET(request: NextRequest) {
           itemDescriptionTextColor: null,
           bottomNavSectionNameColor: null,
           categoryNameColor: null,
+          headerFooterBgColor: null,
+          glassTintColor: null,
         },
       },
       {
