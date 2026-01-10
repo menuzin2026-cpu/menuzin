@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { MapPin, Phone } from 'lucide-react'
 import { Language, languages } from '@/lib/i18n'
@@ -40,6 +40,7 @@ interface WelcomePageClientProps {
 
 export default function WelcomePageClient({ restaurant }: WelcomePageClientProps) {
   const router = useRouter()
+  const videoRef = useRef<HTMLVideoElement>(null)
   const [selectedLang, setSelectedLang] = useState<Language>('en')
   const [backgroundMimeType, setBackgroundMimeType] = useState<string | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -87,6 +88,37 @@ export default function WelcomePageClient({ restaurant }: WelcomePageClientProps
     }
   }, [restaurant.welcomeBackgroundMediaId])
 
+  // Force video play on iOS when video loads
+  useEffect(() => {
+    if (shouldLoadVideo && videoRef.current && backgroundMimeType?.startsWith('video/')) {
+      const video = videoRef.current
+      
+      const tryPlay = () => {
+        if (video && video.readyState >= 2) { // HAVE_CURRENT_DATA
+          video.muted = true
+          video.play().catch(() => {
+            // Silently handle play errors (iOS may block autoplay)
+          })
+        }
+      }
+
+      // Try to play immediately if ready
+      tryPlay()
+
+      // Also try when video is ready
+      const handleCanPlay = () => tryPlay()
+      const handleLoadedMetadata = () => tryPlay()
+      
+      video.addEventListener('canplay', handleCanPlay)
+      video.addEventListener('loadedmetadata', handleLoadedMetadata)
+
+      return () => {
+        video.removeEventListener('canplay', handleCanPlay)
+        video.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      }
+    }
+  }, [shouldLoadVideo, backgroundMimeType])
+
   const handleLanguageSelect = (lang: Language) => {
     setSelectedLang(lang)
     localStorage.setItem('language', lang)
@@ -119,21 +151,58 @@ export default function WelcomePageClient({ restaurant }: WelcomePageClientProps
               {/* Video - loads lazily */}
               {shouldLoadVideo && (
                 <video
+                  ref={videoRef}
                   key={restaurant.welcomeBackgroundMediaId}
                   src={`/assets/${restaurant.welcomeBackgroundMediaId}`}
                   muted
                   playsInline
                   autoPlay
                   loop
-                  preload="metadata"
+                  preload="auto"
                   className="w-full h-full object-cover background-media-fade absolute inset-0"
                   style={{ zIndex: 2, opacity: 0, transition: 'opacity 1s ease-in' }}
+                  onLoadedMetadata={(e) => {
+                    // Force play on iOS when metadata is loaded
+                    const video = e.currentTarget
+                    if (video) {
+                      video.muted = true
+                      video.play().catch(() => {
+                        // iOS may block autoplay - silently handle
+                      })
+                    }
+                  }}
+                  onCanPlay={(e) => {
+                    // Force play on iOS when video can play
+                    const video = e.currentTarget
+                    if (video) {
+                      video.muted = true
+                      video.play().catch(() => {
+                        // iOS may block autoplay - silently handle
+                      })
+                      // Fade in video once loaded
+                      setTimeout(() => {
+                        video.style.opacity = '1'
+                      }, 100)
+                    }
+                  }}
                   onLoadedData={(e) => {
-                    // Fade in video once loaded
-                    const target = e.currentTarget
-                    setTimeout(() => {
-                      target.style.opacity = '1'
-                    }, 100)
+                    // Force play again when data is loaded
+                    const video = e.currentTarget
+                    if (video) {
+                      video.muted = true
+                      video.play().catch(() => {})
+                      // Fade in video once loaded
+                      setTimeout(() => {
+                        video.style.opacity = '1'
+                      }, 100)
+                    }
+                  }}
+                  onPlay={() => {
+                    // Video started playing - ensure muted state is maintained
+                    const video = videoRef.current
+                    if (video) {
+                      video.muted = true
+                    }
                   }}
                   onError={() => {
                     // If video fails to load, fall back to image

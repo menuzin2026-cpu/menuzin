@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAdminSession } from '@/lib/auth'
+import { requireAdminSession, SessionExpiredError, deleteAdminSession } from '@/lib/auth'
 import { ensureRestaurantWelcomeBgMimeTypeColumn, ensureRestaurantSocialMediaColumns } from '@/lib/ensure-columns'
 
 export async function GET(request: NextRequest) {
@@ -11,7 +11,16 @@ export async function GET(request: NextRequest) {
     await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
     await ensureRestaurantSocialMediaColumns(prisma)
 
-    const session = await requireAdminSession()
+    let session
+    try {
+      session = await requireAdminSession()
+    } catch (sessionError) {
+      if (sessionError instanceof SessionExpiredError) {
+        await deleteAdminSession()
+        return NextResponse.json({ error: 'SESSION_EXPIRED' }, { status: 401 })
+      }
+      throw sessionError
+    }
 
     // Validate slug parameter matches session restaurant (if provided)
     const { searchParams } = new URL(request.url)
@@ -86,11 +95,17 @@ export async function GET(request: NextRequest) {
       welcomeBgMimeType: getR2Field('welcomeBgMimeType'),
     })
   } catch (error: any) {
+    if (error instanceof SessionExpiredError) {
+      await deleteAdminSession()
+      return NextResponse.json({ error: 'SESSION_EXPIRED' }, { status: 401 })
+    }
+    
     console.error('Error fetching settings:', error)
     const errorMessage = error?.message || 'Unknown error'
     
     // Handle specific auth errors
-    if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session')) {
+    if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session') || errorMessage.includes('Session expired')) {
+      await deleteAdminSession()
       return NextResponse.json(
         { error: 'UNAUTHORIZED', message: errorMessage },
         { status: 401 }
@@ -124,7 +139,16 @@ export async function PUT(request: NextRequest) {
     await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
     await ensureRestaurantSocialMediaColumns(prisma)
 
-    const session = await requireAdminSession()
+    let session
+    try {
+      session = await requireAdminSession()
+    } catch (sessionError) {
+      if (sessionError instanceof SessionExpiredError) {
+        await deleteAdminSession()
+        return NextResponse.json({ error: 'SESSION_EXPIRED' }, { status: 401 })
+      }
+      throw sessionError
+    }
 
     const body = await request.json()
     
@@ -367,11 +391,17 @@ export async function PUT(request: NextRequest) {
       welcomeBgMimeType: (updated as any).welcomeBgMimeType || null,
     })
   } catch (error: any) {
+    if (error instanceof SessionExpiredError) {
+      await deleteAdminSession()
+      return NextResponse.json({ error: 'SESSION_EXPIRED' }, { status: 401 })
+    }
+    
     console.error('Error updating settings:', error)
     const errorMessage = error?.message || 'Unknown error'
     
     // Handle specific auth errors
-    if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session')) {
+    if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session') || errorMessage.includes('Session expired')) {
+      await deleteAdminSession()
       return NextResponse.json(
         { error: 'UNAUTHORIZED', message: errorMessage },
         { status: 401 }

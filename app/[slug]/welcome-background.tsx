@@ -31,7 +31,9 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
     }
   }, [])
 
-  // Handle video playback
+  // Handle video playback - iOS requires programmatic play()
+  // Note: Event handlers in JSX (onLoadedMetadata, onCanPlay) handle most cases
+  // This useEffect is a fallback for when video is already loaded
   useEffect(() => {
     if (!videoRef.current) return
     const video = videoRef.current
@@ -39,15 +41,19 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
     const mimeType = restaurant.welcomeBgMimeType || restaurant.welcomeBackground?.mimeType
     const isVideo = mimeType?.startsWith('video/') ?? false
     
-    if (isVideo && !prefersReducedMotion) {
+    if (!isVideo || prefersReducedMotion) {
+      video.pause()
+      return
+    }
+
+    // Try to play immediately if video is already loaded (fallback for fast connections)
+    if (video.readyState >= 2) { // HAVE_CURRENT_DATA or better
       video.muted = true
       video.play().catch(() => {
-        // Silently handle play errors
+        // Silently handle play errors (iOS may block autoplay)
       })
-    } else if (isVideo && prefersReducedMotion) {
-      video.pause()
     }
-  }, [restaurant.welcomeBgMimeType, restaurant.welcomeBackground?.mimeType, prefersReducedMotion])
+  }, [restaurant.welcomeBgMimeType, restaurant.welcomeBackground?.mimeType, prefersReducedMotion, isLoaded])
 
   // Use R2 URL if available, otherwise fall back to old media ID
   const backgroundUrl = restaurant.welcomeBgR2Url || (restaurant.welcomeBackgroundMediaId ? `/assets/${restaurant.welcomeBackgroundMediaId}?v=${restaurant.updatedAt ? new Date(restaurant.updatedAt).getTime() : Date.now()}` : null)
@@ -96,6 +102,33 @@ export function WelcomeBackground({ restaurant, isLoaded }: WelcomeBackgroundPro
               width: '100%',
               height: '100%',
               objectFit: 'cover'
+            }}
+            onLoadedMetadata={(e) => {
+              // Force play on iOS when metadata is loaded
+              const video = e.currentTarget
+              if (video && !prefersReducedMotion) {
+                video.muted = true
+                video.play().catch(() => {
+                  // iOS may block autoplay - silently handle
+                })
+              }
+            }}
+            onCanPlay={(e) => {
+              // Force play on iOS when video can play
+              const video = e.currentTarget
+              if (video && !prefersReducedMotion) {
+                video.muted = true
+                video.play().catch(() => {
+                  // iOS may block autoplay - silently handle
+                })
+              }
+            }}
+            onPlay={() => {
+              // Video started playing - ensure muted state is maintained
+              const video = videoRef.current
+              if (video) {
+                video.muted = true
+              }
             }}
           >
             <source 

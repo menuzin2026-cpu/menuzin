@@ -304,6 +304,12 @@ export default function ThemePage() {
       if (parsed?.ok && parsed?.theme) {
         setTheme({ ...defaultTheme, ...parsed.theme })
         toast.success('Menu background uploaded successfully!')
+        // Trigger menu page refresh if it's open (using localStorage event and custom event)
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('theme-updated', Date.now().toString())
+          window.dispatchEvent(new Event('storage'))
+          window.dispatchEvent(new Event('theme-updated'))
+        }
       } else {
         throw new Error('Invalid response format')
       }
@@ -389,6 +395,12 @@ export default function ThemePage() {
           // localStorage might not be available
         }
         toast.success('Theme saved successfully!')
+        // Trigger menu page refresh if it's open (using localStorage event and custom event)
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('theme-updated', Date.now().toString())
+          window.dispatchEvent(new Event('storage'))
+          window.dispatchEvent(new Event('theme-updated'))
+        }
       } else {
         console.error('Invalid response format:', parsed)
         toast.error('Failed to save theme')

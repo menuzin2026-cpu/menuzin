@@ -338,14 +338,10 @@ function MenuPageContent() {
         })
       })
 
-    return () => {
-      abortController.abort()
-    }
-
     // Fetch theme data for menu background and text colors
     const fetchTheme = async () => {
       try {
-        const res = await fetch(`/data/theme?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
+        const res = await fetch(`/data/theme?slug=${encodeURIComponent(slug)}`, {
           cache: 'no-store',
         })
         if (res.ok) {
@@ -426,6 +422,10 @@ function MenuPageContent() {
       }
     }
     fetchTheme()
+
+    return () => {
+      abortController.abort()
+    }
 
     // Extract service charge from restaurant data (already fetched above)
     // Will be set when restaurant data is fetched
@@ -553,6 +553,10 @@ function MenuPageContent() {
         // Admin panel saved service charge, refetch restaurant data immediately
         fetchRestaurantData()
       }
+      if (e.key === 'theme-updated') {
+        // Admin panel saved theme (including menu background), refetch theme immediately
+        fetchTheme()
+      }
     }
 
     // Listen for custom events (when admin saves settings in same tab)
@@ -563,6 +567,10 @@ function MenuPageContent() {
     const handleServiceChargeUpdate = () => {
       fetchRestaurantData()
     }
+    
+    const handleThemeUpdate = () => {
+      fetchTheme()
+    }
 
     // Periodic refresh removed - rely on storage events and visibility changes instead
     // This prevents spam and reduces server load
@@ -572,6 +580,7 @@ function MenuPageContent() {
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('typography-updated', handleTypographyUpdate)
     window.addEventListener('service-charge-updated', handleServiceChargeUpdate)
+    window.addEventListener('theme-updated', handleThemeUpdate)
 
     return () => {
       abortController.abort()
@@ -580,6 +589,7 @@ function MenuPageContent() {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('typography-updated', handleTypographyUpdate)
       window.removeEventListener('service-charge-updated', handleServiceChargeUpdate)
+      window.removeEventListener('theme-updated', handleThemeUpdate)
     }
   }, [slug, fetchRestaurantData]) // fetchUiSettings is defined inside this effect, so no need to include it
 

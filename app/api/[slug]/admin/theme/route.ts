@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAdminSession, deleteAdminSession } from '@/lib/auth'
+import { requireAdminSession, deleteAdminSession, SessionExpiredError } from '@/lib/auth'
 import { ensureThemeColumns } from '@/lib/ensure-columns'
 import { z } from 'zod'
 
@@ -95,8 +95,13 @@ export async function GET(
       )
     } catch (sessionError) {
       // Handle auth errors
+      if (sessionError instanceof SessionExpiredError) {
+        await deleteAdminSession()
+        return NextResponse.json({ ok: false, error: 'SESSION_EXPIRED' }, { status: 401 })
+      }
       const errorMessage = sessionError instanceof Error ? sessionError.message : 'Unknown error'
-      if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session')) {
+      if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session') || errorMessage.includes('Session expired')) {
+        await deleteAdminSession()
         return NextResponse.json({ ok: false, error: 'UNAUTHORIZED', message: errorMessage }, { status: 401 })
       }
       throw sessionError
@@ -144,8 +149,13 @@ export async function PUT(
     try {
       session = await requireAdminSession()
     } catch (sessionError) {
+      if (sessionError instanceof SessionExpiredError) {
+        await deleteAdminSession()
+        return NextResponse.json({ ok: false, error: 'SESSION_EXPIRED' }, { status: 401 })
+      }
       const errorMessage = sessionError instanceof Error ? sessionError.message : 'Unknown error'
-      if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session')) {
+      if (errorMessage.includes('Unauthorized') || errorMessage.includes('No admin session') || errorMessage.includes('Session expired')) {
+        await deleteAdminSession()
         return NextResponse.json({ ok: false, error: 'UNAUTHORIZED', message: errorMessage }, { status: 401 })
       }
       throw sessionError
