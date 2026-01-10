@@ -70,20 +70,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get theme for this restaurant
-    let theme = await prisma.theme.findUnique({
+    // Use upsert to ensure theme always exists (never fail due to missing theme)
+    const theme = await prisma.theme.upsert({
       where: { restaurantId: restaurant.id },
+      update: {}, // No update needed if exists
+      create: {
+        restaurantId: restaurant.id,
+        appBg: '#400810', // Default background
+      },
     })
-
-    // If theme doesn't exist, create it with neutral defaults
-    if (!theme) {
-      theme = await prisma.theme.create({
-        data: {
-          restaurantId: restaurant.id,
-          appBg: '#400810', // Default background
-        },
-      })
-    }
 
     // Safely access new fields that may not exist yet
     const themeResponse = theme as any

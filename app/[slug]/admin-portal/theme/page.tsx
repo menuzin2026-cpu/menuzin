@@ -117,44 +117,55 @@ export default function ThemePage() {
 
   const fetchTheme = async () => {
     try {
-      const response = await fetch('/api/admin/theme', {
+      const response = await fetch(`/api/${slug}/admin/theme`, {
         method: 'GET',
         credentials: 'include', // Include cookies for authentication
       })
       
-      const data = await response.json()
+      // Fix "body stream already read" error by reading response once
+      const raw = await response.text()
+      let parsed = null
+      try {
+        parsed = raw ? JSON.parse(raw) : null
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError)
+      }
       
-      if (response.status === 401 || response.status === 403) {
-        // Check if it's a restaurant mismatch error
-        if (data.error === 'SESSION_RESTAURANT_MISMATCH') {
-          // Session is for different restaurant - clear session and redirect
-          try {
-            await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
-          } catch (logoutError) {
-            // Ignore logout errors
+      if (!response.ok) {
+        const errorMsg = parsed?.error || parsed?.message || raw || `HTTP ${response.status}`
+        if (response.status === 401 || response.status === 403) {
+          // Check if it's a restaurant mismatch error
+          if (parsed?.error === 'SESSION_RESTAURANT_MISMATCH') {
+            // Session is for different restaurant - clear session and redirect
+            try {
+              await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+            } catch (logoutError) {
+              // Ignore logout errors
+            }
+            toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
+            router.push(`/${slug}/admin-portal/login`)
+            return
           }
-          toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
+          // Other auth errors - redirect to login
           router.push(`/${slug}/admin-portal/login`)
           return
         }
-        // Other auth errors - redirect to login
-        router.push(`/${slug}/admin-portal/login`)
+        console.error('Error fetching theme:', response.status, errorMsg)
+        toast.error('Failed to load theme settings')
         return
       }
       
-      if (response.ok) {
-        if (data.theme) {
-          const themeData = { ...defaultTheme, ...data.theme }
-          setTheme(themeData)
-          setPreviewTheme(themeData)
-          if (themeData.menuBackgroundR2Url) {
-            setMenuBgPreview(themeData.menuBackgroundR2Url)
-          }
-          // Apply immediately on load
-          applyThemeToDocument(themeData)
+      if (parsed?.ok && parsed?.theme) {
+        const themeData = { ...defaultTheme, ...parsed.theme }
+        setTheme(themeData)
+        setPreviewTheme(themeData)
+        if (themeData.menuBackgroundR2Url) {
+          setMenuBgPreview(themeData.menuBackgroundR2Url)
         }
+        // Apply immediately on load
+        applyThemeToDocument(themeData)
       } else {
-        console.error('Error fetching theme:', response.status, response.statusText)
+        console.error('Invalid response format:', parsed)
         toast.error('Failed to load theme settings')
       }
     } catch (error) {
@@ -264,38 +275,47 @@ export default function ThemePage() {
       setPreviewTheme(updatedTheme)
       setMenuBgPreview(publicUrl)
       
-      const saveResponse = await fetch('/api/admin/theme', {
+      const saveResponse = await fetch(`/api/${slug}/admin/theme`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(updatedTheme),
       })
 
-      const saveData = await saveResponse.json().catch(() => ({}))
+      // Fix "body stream already read" error by reading response once
+      const raw = await saveResponse.text()
+      let parsed = null
+      try {
+        parsed = raw ? JSON.parse(raw) : null
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError)
+      }
       
-      if (saveResponse.status === 401 || saveResponse.status === 403) {
-        // Check if it's a restaurant mismatch error
-        if (saveData.error === 'SESSION_RESTAURANT_MISMATCH') {
-          // Session is for different restaurant - clear session and redirect
-          try {
-            await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
-          } catch (logoutError) {
-            // Ignore logout errors
+      if (!saveResponse.ok) {
+        const errorMsg = parsed?.error || parsed?.message || raw || `HTTP ${saveResponse.status}`
+        if (saveResponse.status === 401 || saveResponse.status === 403) {
+          // Check if it's a restaurant mismatch error
+          if (parsed?.error === 'SESSION_RESTAURANT_MISMATCH') {
+            // Session is for different restaurant - clear session and redirect
+            try {
+              await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+            } catch (logoutError) {
+              // Ignore logout errors
+            }
+            toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
+            router.push(`/${slug}/admin-portal/login`)
+            return
           }
-          toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
-          router.push(`/${slug}/admin-portal/login`)
-          return
+          throw new Error(parsed?.message || 'Session expired. Please login again.')
         }
-        throw new Error(saveData.message || 'Session expired. Please login again.')
+        throw new Error(errorMsg)
       }
 
-      if (saveResponse.ok) {
-        if (saveData.theme) {
-          setTheme({ ...defaultTheme, ...saveData.theme })
-        }
+      if (parsed?.ok && parsed?.theme) {
+        setTheme({ ...defaultTheme, ...parsed.theme })
         toast.success('Menu background uploaded successfully!')
       } else {
-        throw new Error(saveData.message || 'Failed to save menu background')
+        throw new Error('Invalid response format')
       }
     } catch (error: any) {
       console.error('Error uploading menu background:', error)
@@ -322,44 +342,55 @@ export default function ThemePage() {
   const handleSave = async (themeToSave: ThemeColors = previewTheme) => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/admin/theme', {
+      const response = await fetch(`/api/${slug}/admin/theme`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(themeToSave),
       })
 
-      const errorData = await response.json().catch(() => ({}))
+      // Fix "body stream already read" error by reading response once
+      const raw = await response.text()
+      let parsed = null
+      try {
+        parsed = raw ? JSON.parse(raw) : null
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError)
+      }
       
-      if (response.status === 401 || response.status === 403) {
-        // Check if it's a restaurant mismatch error
-        if (errorData.error === 'SESSION_RESTAURANT_MISMATCH') {
-          // Session is for different restaurant - clear session and redirect
-          try {
-            await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
-          } catch (logoutError) {
-            // Ignore logout errors
+      if (!response.ok) {
+        const errorMsg = parsed?.error || parsed?.message || raw || `HTTP ${response.status}`
+        if (response.status === 401 || response.status === 403) {
+          // Check if it's a restaurant mismatch error
+          if (parsed?.error === 'SESSION_RESTAURANT_MISMATCH') {
+            // Session is for different restaurant - clear session and redirect
+            try {
+              await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+            } catch (logoutError) {
+              // Ignore logout errors
+            }
+            toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
+            router.push(`/${slug}/admin-portal/login`)
+            return
           }
-          toast.error('You are logged into another restaurant. Please login again.', { duration: 5000 })
+          // Other auth errors
+          toast.error(parsed?.message || 'Session expired. Please login again.')
           router.push(`/${slug}/admin-portal/login`)
           return
         }
-        // Other auth errors
-        toast.error(errorData.message || 'Session expired. Please login again.')
-        router.push(`/${slug}/admin-portal/login`)
-        return
-      }
 
-      if (response.status === 405) {
-        toast.error('Invalid request method. Please refresh and try again.')
-        return
-      }
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.theme) {
-          setTheme({ ...defaultTheme, ...data.theme })
+        if (response.status === 405) {
+          toast.error('Invalid request method. Please refresh and try again.')
+          return
         }
+
+        const errorMessage = parsed?.error || parsed?.message || errorMsg || 'Failed to save theme'
+        toast.error(errorMessage)
+        return
+      }
+
+      if (parsed?.ok && parsed?.theme) {
+        setTheme({ ...defaultTheme, ...parsed.theme })
         applyThemeToDocument(themeToSave)
         try {
           localStorage.setItem(`theme-appBg-${slug}`, themeToSave.appBg)
@@ -369,8 +400,8 @@ export default function ThemePage() {
         }
         toast.success('Theme saved successfully!')
       } else {
-        const errorMessage = errorData.error || errorData.message || 'Failed to save theme'
-        toast.error(errorMessage)
+        console.error('Invalid response format:', parsed)
+        toast.error('Failed to save theme')
       }
     } catch (error) {
       console.error('Error saving theme:', error)
@@ -603,6 +634,22 @@ export default function ThemePage() {
                       aria-label="Pick header/footer background color"
                     />
                   </div>
+                  {previewTheme.headerFooterBgColor && (
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        handleColorChange('headerFooterBgColor', null)
+                        // Save immediately to persist NULL
+                        const updatedTheme = { ...previewTheme, headerFooterBgColor: null }
+                        setPreviewTheme(updatedTheme)
+                        await handleSave(updatedTheme)
+                      }}
+                      variant="outline"
+                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                    >
+                      Reset / Clear
+                    </Button>
+                  )}
                   <p className="text-xs text-white/50">Applies to both header and footer backgrounds. Leave empty to use default.</p>
                 </div>
               </div>
@@ -635,18 +682,23 @@ export default function ThemePage() {
                       style={{ backgroundColor: previewTheme.glassTintColor ? normalizeToHex(previewTheme.glassTintColor) : 'transparent' }}
                       aria-label="Pick glass tint color"
                     />
-                    {previewTheme.glassTintColor && (
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          handleColorChange('glassTintColor', null)
-                        }}
-                        className="text-xs bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-white px-3 py-1"
-                      >
-                        Remove Color
-                      </Button>
-                    )}
                   </div>
+                  {previewTheme.glassTintColor && (
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        handleColorChange('glassTintColor', null)
+                        // Save immediately to persist NULL
+                        const updatedTheme = { ...previewTheme, glassTintColor: null }
+                        setPreviewTheme(updatedTheme)
+                        await handleSave(updatedTheme)
+                      }}
+                      variant="outline"
+                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                    >
+                      Reset / Clear
+                    </Button>
+                  )}
                   <p className="text-xs text-white/50">Applies tint overlay to item frames and bottom nav box. Leave empty for original liquid glass look.</p>
                 </div>
               </div>
