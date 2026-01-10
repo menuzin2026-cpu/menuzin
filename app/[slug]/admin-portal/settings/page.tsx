@@ -448,20 +448,28 @@ export default function SettingsPage() {
         body: JSON.stringify(saveData),
       })
 
-      const errorData = await response.json().catch(() => ({}))
+      // Fix "body stream already read" error by reading response once
+      const raw = await response.text()
+      let parsed = null
+      try {
+        parsed = raw ? JSON.parse(raw) : null
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError)
+      }
       
       // Check for mismatch error
-      const handled = await handleMismatchError(response, errorData)
+      const handled = await handleMismatchError(response, parsed || {})
       if (handled) {
         return
       }
 
       if (response.ok) {
-        const updatedData = await response.json()
         toast.success('Settings saved successfully!')
         // Refresh settings to get updated data
-        setSettings(updatedData)
-        setServiceChargeInput(updatedData.serviceChargePercent?.toString() || '0')
+        if (parsed) {
+          setSettings(parsed)
+          setServiceChargeInput(parsed.serviceChargePercent?.toString() || '0')
+        }
         // Trigger menu page refresh if it's open (using localStorage event and custom event)
         if (typeof window !== 'undefined') {
           window.localStorage.setItem('service-charge-updated', Date.now().toString())
@@ -469,8 +477,8 @@ export default function SettingsPage() {
           window.dispatchEvent(new Event('service-charge-updated'))
         }
       } else {
-        toast.error(errorData.message || errorData.error || 'Failed to save settings')
-        console.error('Settings save error:', errorData)
+        toast.error(parsed?.message || parsed?.error || 'Failed to save settings')
+        console.error('Settings save error:', parsed)
       }
     } catch (error) {
       console.error('Error saving settings:', error)

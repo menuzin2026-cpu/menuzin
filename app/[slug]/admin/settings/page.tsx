@@ -448,11 +448,18 @@ export default function SettingsPage() {
         body: JSON.stringify(saveData),
       })
 
-      const errorData = await response.json().catch(() => ({}))
+      // Fix "body stream already read" error by reading response once
+      const raw = await response.text()
+      let parsed = null
+      try {
+        parsed = raw ? JSON.parse(raw) : null
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError)
+      }
       
       if (response.status === 401 || response.status === 403) {
         // Check if it's a restaurant mismatch error
-        if (errorData.error === 'SESSION_RESTAURANT_MISMATCH') {
+        if (parsed?.error === 'SESSION_RESTAURANT_MISMATCH') {
           // Session is for different restaurant - clear session and redirect
           try {
             await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
@@ -464,17 +471,18 @@ export default function SettingsPage() {
           return
         }
         // Other auth errors
-        toast.error(errorData.message || 'Session expired. Please login again.')
+        toast.error(parsed?.message || 'Session expired. Please login again.')
         router.push(`/${slug}/admin/login`)
         return
       }
 
       if (response.ok) {
-        const updatedData = await response.json()
         toast.success('Settings saved successfully!')
         // Refresh settings to get updated data
-        setSettings(updatedData)
-        setServiceChargeInput(updatedData.serviceChargePercent?.toString() || '0')
+        if (parsed) {
+          setSettings(parsed)
+          setServiceChargeInput(parsed.serviceChargePercent?.toString() || '0')
+        }
         // Trigger menu page refresh if it's open (using localStorage event and custom event)
         if (typeof window !== 'undefined') {
           window.localStorage.setItem('service-charge-updated', Date.now().toString())
@@ -482,8 +490,8 @@ export default function SettingsPage() {
           window.dispatchEvent(new Event('service-charge-updated'))
         }
       } else {
-        toast.error(errorData.message || errorData.error || 'Failed to save settings')
-        console.error('Settings save error:', errorData)
+        toast.error(parsed?.message || parsed?.error || 'Failed to save settings')
+        console.error('Settings save error:', parsed)
       }
     } catch (error) {
       console.error('Error saving settings:', error)
