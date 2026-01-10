@@ -4,17 +4,34 @@
 -- Renames columns from camelCase to snake_case to match Prisma schema
 -- ============================================
 
--- Step 1: Check if old table "PlatformSettings" exists and rename to "platform_settings"
+-- Step 1: Handle table rename - only if PlatformSettings exists and platform_settings doesn't
 DO $$
 BEGIN
-    -- If old PascalCase table exists, rename it
+    -- If old PascalCase table exists AND platform_settings doesn't exist, rename it
     IF EXISTS (
         SELECT 1 FROM information_schema.tables 
         WHERE table_schema = 'public' 
         AND table_name = 'PlatformSettings'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'platform_settings'
     ) THEN
         ALTER TABLE "PlatformSettings" RENAME TO platform_settings;
         RAISE NOTICE 'Renamed table PlatformSettings to platform_settings';
+    ELSIF EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'PlatformSettings'
+    ) AND EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'platform_settings'
+    ) THEN
+        -- Both tables exist - drop the old one after migrating data if needed
+        -- (For now, just drop the old table since we want platform_settings)
+        DROP TABLE IF EXISTS "PlatformSettings" CASCADE;
+        RAISE NOTICE 'Dropped old PlatformSettings table (platform_settings already exists)';
     END IF;
 END $$;
 
