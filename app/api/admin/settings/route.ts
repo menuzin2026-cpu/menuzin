@@ -18,36 +18,9 @@ export async function GET(request: NextRequest) {
     const slugParam = searchParams.get('slug')
     
     // Get restaurant by session restaurantId (CRITICAL: Always use session restaurantId for data isolation)
+    // Don't use select here - we need to safely access fields that might not exist yet
     const restaurant = await prisma.restaurant.findUnique({
       where: { id: session.restaurantId },
-      select: {
-        id: true,
-        slug: true,
-        nameKu: true,
-        nameEn: true,
-        nameAr: true,
-        googleMapsUrl: true,
-        phoneNumber: true,
-        welcomeOverlayColor: true,
-        welcomeOverlayOpacity: true,
-        welcomeTextEn: true,
-        logoMediaId: true,
-        footerLogoMediaId: true,
-        welcomeBackgroundMediaId: true,
-        brandColors: true,
-        updatedAt: true,
-        instagramUrl: true,
-        snapchatUrl: true,
-        tiktokUrl: true,
-        serviceChargePercent: true,
-        logoR2Key: true,
-        logoR2Url: true,
-        footerLogoR2Key: true,
-        footerLogoR2Url: true,
-        welcomeBgR2Key: true,
-        welcomeBgR2Url: true,
-        welcomeBgMimeType: true,
-      },
     })
     if (!restaurant) {
       console.error(`[SECURITY] Restaurant not found for session restaurantId=${session.restaurantId}`)
