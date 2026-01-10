@@ -77,11 +77,19 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, adminId: matchedAdmin.id, restaurantId: restaurant.id })
   } catch (error) {
-    console.error('Login error:', error)
+    console.error('[ERROR] Admin login error:', error)
+    console.error('[ERROR] Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    })
     if (error instanceof Error && error.message === 'Restaurant not found') {
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
     }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' && error instanceof Error ? error.message : undefined
+    }, { status: 500 })
   }
 }
 
