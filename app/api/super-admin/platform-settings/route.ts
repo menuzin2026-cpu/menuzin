@@ -91,25 +91,14 @@ export async function PUT(request: NextRequest) {
     }
 
     console.log('[PLATFORM SETTINGS PUT] Update data (camelCase for Prisma):', JSON.stringify(updateData, null, 2))
-    console.log('[PLATFORM SETTINGS PUT] Attempting upsert to table: platform_settings, where id="platform-1"')
     console.log('[PLATFORM SETTINGS PUT] Prisma model: PlatformSettings')
-    console.log('[PLATFORM SETTINGS PUT] Mapped table: platform_settings (via @@map)')
+    console.log('[PLATFORM SETTINGS PUT] Mapped table: platform_settings (via @@map("platform_settings"))')
     console.log('[PLATFORM SETTINGS PUT] Mapped fields: footerLogoR2Key -> footer_logo_r2_key, footerLogoR2Url -> footer_logo_r2_url')
-    
-    // First, try to verify table exists by attempting a simple query
-    try {
-      const testQuery = await prisma.$queryRaw`SELECT table_name FROM information_schema.tables WHERE table_name = 'platform_settings'`
-      console.log('[PLATFORM SETTINGS PUT] Table verification query result:', JSON.stringify(testQuery, null, 2))
-    } catch (testError: any) {
-      console.error('[PLATFORM SETTINGS PUT] Table verification failed:', testError?.message)
-      console.error('[PLATFORM SETTINGS PUT] Table verification error code:', testError?.code)
-    }
 
     // Use upsert to ensure settings exist (singleton pattern: id='platform-1')
-    // Prisma maps: footerLogoR2Key -> footer_logo_r2_key, footerLogoR2Url -> footer_logo_r2_url
-    // NOTE: Prisma model name is "PlatformSettings", table name is "platform_settings" (via @@map)
-    // NOTE: Field names are camelCase in Prisma, snake_case in DB (via @map)
-    console.log('[PLATFORM SETTINGS PUT] Executing upsert...')
+    // Prisma model: PlatformSettings (camelCase)
+    // Database table: platform_settings (snake_case, via @@map)
+    // Prisma fields (camelCase) -> DB columns (snake_case, via @map)
     const updated = await prisma.platformSettings.upsert({
       where: { id: 'platform-1' },
       update: updateData,
