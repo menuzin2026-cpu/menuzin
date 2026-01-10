@@ -35,4 +35,21 @@ export async function ensureRestaurantSocialMediaColumns(prisma: PrismaClient): 
   }
 }
 
+/**
+ * Ensures new theme columns exist in Theme table.
+ * Safe to run repeatedly; uses IF NOT EXISTS.
+ * Must execute each ALTER TABLE statement separately (PostgreSQL limitation).
+ */
+export async function ensureThemeColumns(prisma: PrismaClient): Promise<void> {
+  try {
+    // Execute each ALTER TABLE statement separately - PostgreSQL doesn't allow multiple commands in a prepared statement
+    await prisma.$executeRawUnsafe('ALTER TABLE "Theme" ADD COLUMN IF NOT EXISTS "header_footer_bg_color" TEXT;')
+    await prisma.$executeRawUnsafe('ALTER TABLE "Theme" ADD COLUMN IF NOT EXISTS "glass_tint_color" TEXT;')
+  } catch (error) {
+    // Non-fatal: if this fails (e.g., insufficient permissions), normal code may still proceed
+    // and deployment can rely on standard migrations instead.
+    console.warn('[DB COMPAT] Failed to ensure theme columns:', error)
+  }
+}
+
 

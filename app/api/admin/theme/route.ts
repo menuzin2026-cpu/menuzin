@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic"
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminSession } from '@/lib/auth'
+import { ensureThemeColumns } from '@/lib/ensure-columns'
 import { z } from 'zod'
 
 const themeSchema = z.object({
@@ -20,6 +21,9 @@ const themeSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    // Ensure DB columns exist in production before querying
+    await ensureThemeColumns(prisma)
+    
     const session = await requireAdminSession()
 
     // Get restaurant by session restaurantId to get its slug
@@ -115,6 +119,9 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    // Ensure DB columns exist in production before updating
+    await ensureThemeColumns(prisma)
+    
     const session = await requireAdminSession()
 
     // Get restaurant by session restaurantId to get its slug

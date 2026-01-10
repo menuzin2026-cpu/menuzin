@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { ensureThemeColumns } from '@/lib/ensure-columns'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
+    // Ensure DB columns exist in production before querying
+    await ensureThemeColumns(prisma)
+    
     // Get slug from query parameter or referer header
     const { searchParams } = new URL(request.url)
     let slug = searchParams.get('slug')
