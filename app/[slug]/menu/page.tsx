@@ -362,7 +362,7 @@ function MenuPageContent() {
                   // Normalize hex color (handle both 3 and 6 digit)
                   let hex = tintColor.slice(1)
                   if (hex.length === 3) {
-                    hex = hex.split('').map(c => c + c).join('')
+                    hex = hex.split('').map((c: string) => c + c).join('')
                   }
                   if (hex.length === 6) {
                     const r = parseInt(hex.slice(0, 2), 16)
