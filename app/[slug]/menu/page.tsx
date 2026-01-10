@@ -10,6 +10,7 @@ import { ItemModal } from '@/components/item-modal'
 import { SearchDrawer } from '@/components/search-drawer'
 import { BasketDrawer } from '@/components/basket-drawer'
 import { PoweredByFooter } from '@/components/powered-by-footer'
+import { CategorySectionSkeleton, SectionHeaderSkeleton } from '@/components/menu-skeleton'
 import { Language } from '@/lib/i18n'
 import { getLocalizedText } from '@/lib/i18n'
 import { detectOverflow } from '@/lib/debug-overflow'
@@ -234,61 +235,134 @@ function MenuPageContent() {
       localStorage.setItem('language', lang)
     }
 
-    // Fetch data with retry
+    // Fetch menu data with progressive loading (bootstrap first, then full menu)
     const fetchMenu = async (retryCount = 0) => {
       try {
-        setIsLoadingMenu(true)
-        // Pass slug to filter by restaurant
-        const res = await fetch(`/data/menu?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
-          cache: 'no-store',
-        })
+        // First, try to get bootstrap data (fast, cached) for immediate structure
+        try {
+          const bootstrapRes = await fetch(`/api/${slug}/public/menu-bootstrap`)
+          if (bootstrapRes.ok) {
+            const bootstrapData = await bootstrapRes.json()
+            
+            // Set restaurant info and theme immediately if available
+            if (bootstrapData.restaurant) {
+              setRestaurant(bootstrapData.restaurant)
+              if (bootstrapData.restaurant.serviceChargePercent !== undefined) {
+                setServiceChargePercent(bootstrapData.restaurant.serviceChargePercent ?? 0)
+              }
+            }
+            if (bootstrapData.theme) {
+              setTheme(bootstrapData.theme)
+              // Apply CSS variables immediately
+              if (typeof document !== 'undefined' && bootstrapData.theme) {
+                document.documentElement.style.removeProperty('--item-name-text-color')
+                document.documentElement.style.removeProperty('--item-price-text-color')
+                document.documentElement.style.removeProperty('--item-description-text-color')
+                document.documentElement.style.removeProperty('--bottom-nav-section-name-color')
+                document.documentElement.style.removeProperty('--category-name-color')
+                document.documentElement.style.removeProperty('--header-footer-bg-color')
+                document.documentElement.style.removeProperty('--glass-tint-color')
+                
+                if (bootstrapData.theme.itemNameTextColor) {
+                  document.documentElement.style.setProperty('--item-name-text-color', bootstrapData.theme.itemNameTextColor)
+                }
+                if (bootstrapData.theme.itemPriceTextColor) {
+                  document.documentElement.style.setProperty('--item-price-text-color', bootstrapData.theme.itemPriceTextColor)
+                }
+                if (bootstrapData.theme.itemDescriptionTextColor) {
+                  document.documentElement.style.setProperty('--item-description-text-color', bootstrapData.theme.itemDescriptionTextColor)
+                }
+                if (bootstrapData.theme.bottomNavSectionNameColor) {
+                  document.documentElement.style.setProperty('--bottom-nav-section-name-color', bootstrapData.theme.bottomNavSectionNameColor)
+                }
+                if (bootstrapData.theme.categoryNameColor) {
+                  document.documentElement.style.setProperty('--category-name-color', bootstrapData.theme.categoryNameColor)
+                }
+                if (bootstrapData.theme.headerFooterBgColor) {
+                  document.documentElement.style.setProperty('--header-footer-bg-color', bootstrapData.theme.headerFooterBgColor)
+                }
+                if (bootstrapData.theme.glassTintColor) {
+                  document.documentElement.style.setProperty('--glass-tint-color', bootstrapData.theme.glassTintColor)
+                }
+              }
+            }
+            
+            // Set sections structure (without items) to show navigation immediately
+            if (bootstrapData.sections && Array.isArray(bootstrapData.sections)) {
+              const sectionsWithoutItems = bootstrapData.sections.map((s: any) => ({
+                ...s,
+                categories: s.categories.map((c: any) => ({ ...c, items: [] })),
+              }))
+              setSections(sectionsWithoutItems)
+              
+              // Auto-select section if structure is available
+              if (sectionsWithoutItems.length > 0) {
+                const storageKey = `menu-section-${slug}-${lang}`
+                const savedSectionId = localStorage.getItem(storageKey)
+                const savedSection = savedSectionId 
+                  ? sectionsWithoutItems.find((s: Section) => s.id === savedSectionId && s.isActive)
+                  : null
+                
+                if (savedSection) {
+                  setActiveSectionId(savedSection.id)
+                } else {
+                  const sortedSections = sectionsWithoutItems
+                    .filter((s: Section) => s.isActive)
+                    .sort((a: Section, b: Section) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                  if (sortedSections.length > 0) {
+                    setActiveSectionId(sortedSections[0].id)
+                    localStorage.setItem(storageKey, sortedSections[0].id)
+                  }
+                }
+                setActiveCategoryId(null)
+              }
+            }
+          }
+        } catch (bootstrapError) {
+          // Bootstrap failed, continue with full menu fetch
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Bootstrap fetch failed, falling back to full menu:', bootstrapError)
+          }
+        }
+        
+        // Now fetch full menu data (with items) - this can be slower but is cached
+        const res = await fetch(`/data/menu?slug=${encodeURIComponent(slug)}`)
         if (!res.ok) {
           if (res.status === 404) {
-            // Restaurant not found (deleted) - show 404 state
             console.error('Restaurant not found for slug:', slug)
             setSections([])
             setAllItems([])
             setIsLoadingMenu(false)
-            // Empty sections will trigger empty state UI
             return
           }
           throw new Error(`Failed to fetch menu: ${res.status} ${res.statusText}`)
         }
         const data = await res.json()
-        // Ensure sections is always an array
         const sectionsData = Array.isArray(data?.sections) ? data.sections : []
+        
+        // Update sections with full data (including items)
         setSections(sectionsData)
         
-        // Auto-select section: check localStorage first, then use first available
-        let selectedSectionId: string | null = null
-        if (sectionsData.length > 0) {
+        // Auto-select section if not already selected
+        if (sectionsData.length > 0 && !activeSectionId) {
           const storageKey = `menu-section-${slug}-${lang}`
           const savedSectionId = localStorage.getItem(storageKey)
-          
-          // Check if saved section still exists in fetched sections
           const savedSection = savedSectionId 
             ? sectionsData.find((s: Section) => s.id === savedSectionId && s.isActive)
             : null
           
           if (savedSection) {
-            selectedSectionId = savedSection.id
+            setActiveSectionId(savedSection.id)
           } else {
-            // Use first active section, sorted by sortOrder
             const sortedSections = sectionsData
               .filter((s: Section) => s.isActive)
               .sort((a: Section, b: Section) => (a.sortOrder || 0) - (b.sortOrder || 0))
             if (sortedSections.length > 0) {
-              selectedSectionId = sortedSections[0].id
-              // Save to localStorage
+              setActiveSectionId(sortedSections[0].id)
               localStorage.setItem(storageKey, sortedSections[0].id)
             }
           }
-          
-          // Set state synchronously to avoid race condition
-          if (selectedSectionId) {
-            setActiveSectionId(selectedSectionId)
-            setActiveCategoryId(null) // Reset active category when sections load
-          }
+          setActiveCategoryId(null)
         }
         
         // Flatten all items for search
@@ -303,20 +377,16 @@ function MenuPageContent() {
           }
         })
         setAllItems(items)
-        
-        // Loading state will be managed by useEffect that watches sections and activeSectionId
-        // This ensures loading only ends when state is fully ready
+        setIsLoadingMenu(false)
       } catch (error) {
         console.error('Error fetching menu:', error)
         if (retryCount < 1) {
           setTimeout(() => fetchMenu(retryCount + 1), 500)
           return
         }
-        // Ensure sections is always an array even on error
         setSections([])
         setAllItems([])
-        // Loading state will be managed by useEffect (sections.length === 0 will trigger it)
-        // Don't show error to user - page will just show empty state
+        setIsLoadingMenu(false)
       }
     }
     fetchMenu()
@@ -324,14 +394,11 @@ function MenuPageContent() {
     // Fetch both header logo (restaurant data) and footer logo together to sync loading
     const fetchLogosTogether = async () => {
       try {
-        // Fetch both in parallel
+        // Fetch both in parallel (restaurant data already fetched in bootstrap, but fetch footer logo)
         const [restaurantRes, footerLogoRes] = await Promise.all([
-          fetch(`/data/restaurant?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
-            cache: 'no-store',
-          }),
-          fetch(`/api/platform-settings?t=${Date.now()}`, {
-            cache: 'no-store',
-          })
+          // Only fetch if not already set from bootstrap
+          restaurant ? Promise.resolve({ ok: true, json: async () => restaurant } as Response) : fetch(`/data/restaurant?slug=${encodeURIComponent(slug)}`),
+          fetch(`/api/platform-settings`)
         ])
 
         // Process restaurant data (header logo + service charge)
@@ -1071,7 +1138,21 @@ function MenuPageContent() {
 
       <div className="pb-20 relative z-10 w-full overflow-x-hidden" style={{ paddingBottom: '180px' }}>
         {/* Items Grid - Grouped by Category */}
-        {isLoadingMenu ? null : sections.length === 0 ? (
+        {isLoadingMenu ? (
+          // Show skeleton UI immediately while loading
+          <div className="px-2 sm:px-4 space-y-8 pt-4 w-full max-w-full">
+            {/* Show skeleton for first section/category */}
+            <div className="space-y-4">
+              <SectionHeaderSkeleton />
+              <CategorySectionSkeleton />
+            </div>
+            {/* Show one more skeleton for variety */}
+            <div className="space-y-4">
+              <SectionHeaderSkeleton />
+              <CategorySectionSkeleton />
+            </div>
+          </div>
+        ) : sections.length === 0 ? (
           <div className="flex items-center justify-center min-h-[50vh] px-4">
             <p className="text-white/70 text-center">No sections available.</p>
           </div>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const revalidate = 60 // Revalidate every 60 seconds (public endpoint, safe to cache)
 
 export async function GET(request: NextRequest) {
   try {
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       { sections: sections || [] },
       {
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
         },
       }
     )
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
       {
         status: 200,
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
         },
       }
     )
