@@ -17,6 +17,8 @@ interface ThemeColors {
   itemDescriptionTextColor?: string | null
   bottomNavSectionNameColor?: string | null
   categoryNameColor?: string | null
+  headerFooterBgColor?: string | null
+  glassTintColor?: string | null
 }
 
 const defaultTheme: ThemeColors = {
@@ -27,6 +29,8 @@ const defaultTheme: ThemeColors = {
   itemDescriptionTextColor: null,
   bottomNavSectionNameColor: null,
   categoryNameColor: null,
+  headerFooterBgColor: null,
+  glassTintColor: null,
 }
 
 // Helper function to convert rgba/rgb to hex (for color picker)
@@ -341,9 +345,13 @@ export default function ThemePage() {
     setSelectedColor(key)
     // Convert rgba to hex for the color picker
     // For optional color fields, use fallback; appBg is always a string
-    const colorValue = (previewTheme[key] ?? defaultTheme[key] ?? (key === 'appBg' ? '#400810' : '#000000')) as string
-    const hexColor = rgbaToHex(colorValue)
-    setTempColor(hexColor)
+    const colorValue = (previewTheme[key] ?? defaultTheme[key] ?? (key === 'appBg' ? '#400810' : (key === 'headerFooterBgColor' || key === 'glassTintColor' ? '#FFFFFF' : '#000000'))) as string | null
+    if (colorValue) {
+      const hexColor = rgbaToHex(colorValue)
+      setTempColor(hexColor)
+    } else {
+      setTempColor('#FFFFFF')
+    }
   }
 
   const closeColorPicker = () => {
@@ -524,6 +532,83 @@ export default function ThemePage() {
                   <p className="text-xs text-white/50">
                     Background image will appear on menu page only (not welcome page). Leave empty to use default background color.
                   </p>
+                </div>
+              </div>
+
+              {/* Header & Footer Background Color */}
+              <div className="space-y-4 pt-4 border-t border-white/10">
+                <h3 className="text-base font-semibold text-white">Header & Footer</h3>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Header/Footer Background Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={previewTheme.headerFooterBgColor || ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
+                          handleColorChange('headerFooterBgColor', value || null)
+                        }
+                      }}
+                      className="flex-1 text-sm"
+                      placeholder="Default: current background"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openColorPicker('headerFooterBgColor')}
+                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
+                      style={{ backgroundColor: previewTheme.headerFooterBgColor ? normalizeToHex(previewTheme.headerFooterBgColor) : 'transparent' }}
+                      aria-label="Pick header/footer background color"
+                    />
+                  </div>
+                  <p className="text-xs text-white/50">Applies to both header and footer backgrounds. Leave empty to use default.</p>
+                </div>
+              </div>
+
+              {/* Liquid Glass Tint */}
+              <div className="space-y-4 pt-4 border-t border-white/10">
+                <h3 className="text-base font-semibold text-white">Liquid Glass</h3>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Glass Tint (Items + Bottom Nav)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={previewTheme.glassTintColor || ''}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
+                          handleColorChange('glassTintColor', value || null)
+                        }
+                      }}
+                      className="flex-1 text-sm"
+                      placeholder="Default: original liquid glass"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => openColorPicker('glassTintColor')}
+                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
+                      style={{ backgroundColor: previewTheme.glassTintColor ? normalizeToHex(previewTheme.glassTintColor) : 'transparent' }}
+                      aria-label="Pick glass tint color"
+                    />
+                    {previewTheme.glassTintColor && (
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          handleColorChange('glassTintColor', null)
+                        }}
+                        className="text-xs bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-white px-3 py-1"
+                      >
+                        Remove Color
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-white/50">Applies tint overlay to item frames and bottom nav box. Leave empty for original liquid glass look.</p>
                 </div>
               </div>
 
@@ -708,7 +793,7 @@ export default function ThemePage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-white">
-                    Pick {selectedColor === 'appBg' ? 'Background' : selectedColor === 'itemNameTextColor' ? 'Item Name Text' : selectedColor === 'itemPriceTextColor' ? 'Item Price Text' : selectedColor === 'itemDescriptionTextColor' ? 'Item Description Text' : selectedColor === 'categoryNameColor' ? 'Category Name' : selectedColor === 'bottomNavSectionNameColor' ? 'Bottom Nav Section Name' : 'Color'} Color
+                    Pick {selectedColor === 'appBg' ? 'Background' : selectedColor === 'itemNameTextColor' ? 'Item Name Text' : selectedColor === 'itemPriceTextColor' ? 'Item Price Text' : selectedColor === 'itemDescriptionTextColor' ? 'Item Description Text' : selectedColor === 'categoryNameColor' ? 'Category Name' : selectedColor === 'bottomNavSectionNameColor' ? 'Bottom Nav Section Name' : selectedColor === 'headerFooterBgColor' ? 'Header/Footer Background' : selectedColor === 'glassTintColor' ? 'Glass Tint' : 'Color'} Color
                   </h2>
                   <button
                     onClick={closeColorPicker}

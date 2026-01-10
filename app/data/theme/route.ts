@@ -35,6 +35,8 @@ export async function GET(request: NextRequest) {
             itemDescriptionTextColor: null,
             bottomNavSectionNameColor: null,
             categoryNameColor: null,
+            headerFooterBgColor: null,
+            glassTintColor: null,
           },
         },
         {
@@ -93,6 +95,8 @@ export async function GET(request: NextRequest) {
         itemDescriptionTextColor: themeResponse.itemDescriptionTextColor || null,
         bottomNavSectionNameColor: themeResponse.bottomNavSectionNameColor || null,
         categoryNameColor: themeResponse.categoryNameColor || null,
+        headerFooterBgColor: themeResponse.headerFooterBgColor || null,
+        glassTintColor: themeResponse.glassTintColor || null,
         restaurantId: theme.restaurantId,
         createdAt: theme.createdAt,
         updatedAt: theme.updatedAt,

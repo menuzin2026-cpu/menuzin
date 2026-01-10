@@ -68,7 +68,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
       )}
 
       <div
-        className="rounded-2xl overflow-hidden border cursor-pointer backdrop-blur-xl h-full flex flex-col"
+        className="rounded-2xl overflow-hidden border cursor-pointer backdrop-blur-xl h-full flex flex-col relative"
         style={{
           backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
@@ -80,8 +80,16 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
         }}
         onClick={() => onItemClick(item.id)}
       >
+        {/* Glass tint overlay - preserves liquid glass effect while adding tint */}
+        <div
+          className="absolute inset-0 rounded-2xl pointer-events-none"
+          style={{
+            backgroundColor: 'var(--glass-tint-color, transparent)',
+            zIndex: 0,
+          }}
+        />
         {/* Image */}
-        <div className="aspect-square w-full relative" style={{
+        <div className="aspect-square w-full relative z-10" style={{
           backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
           margin: 0,
           padding: 0,
@@ -122,7 +130,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
         </div>
 
         {/* Content */}
-        <div className="p-2 backdrop-blur-sm flex-shrink-0" style={{
+        <div className="p-2 backdrop-blur-sm flex-shrink-0 relative z-10" style={{
           backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
           margin: 0,
         }}>

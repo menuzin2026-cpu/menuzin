@@ -14,7 +14,7 @@ export function MenuHeader({ logoUrl }: MenuHeaderProps) {
     <header 
       className="relative z-10 px-2 sm:px-4 py-4 backdrop-blur-xl transition-all duration-300 ease-in-out border-b w-full overflow-x-hidden"
       style={{
-        backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+        backgroundColor: 'var(--header-footer-bg-color, var(--auto-surface-bg, rgba(255, 255, 255, 0.1)))',
         borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
         boxShadow: `0 2px 4px -1px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
       }} 

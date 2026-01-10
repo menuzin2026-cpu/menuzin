@@ -22,7 +22,7 @@ export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
       className="fixed left-0 right-0 z-10 w-full"
       style={{
         bottom: 0,
-        backgroundColor: 'var(--app-bg, #400810)',
+        backgroundColor: 'var(--header-footer-bg-color, var(--app-bg, #400810))',
         borderTop: '1px solid var(--auto-border, rgba(255, 255, 255, 0.2))',
         paddingTop: 'calc(4px + env(safe-area-inset-bottom, 0))',
         paddingBottom: 'calc(4px + env(safe-area-inset-bottom, 0))',

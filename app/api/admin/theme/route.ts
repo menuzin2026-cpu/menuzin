@@ -14,6 +14,8 @@ const themeSchema = z.object({
   itemDescriptionTextColor: z.string().nullable().optional(),
   bottomNavSectionNameColor: z.string().nullable().optional(),
   categoryNameColor: z.string().nullable().optional(),
+  headerFooterBgColor: z.string().nullable().optional(),
+  glassTintColor: z.string().nullable().optional(),
 })
 
 export async function GET() {
@@ -48,6 +50,8 @@ export async function GET() {
         itemDescriptionTextColor: themeResponse.itemDescriptionTextColor || null,
         bottomNavSectionNameColor: themeResponse.bottomNavSectionNameColor || null,
         categoryNameColor: themeResponse.categoryNameColor || null,
+        headerFooterBgColor: themeResponse.headerFooterBgColor || null,
+        glassTintColor: themeResponse.glassTintColor || null,
         restaurantId: theme.restaurantId,
         createdAt: theme.createdAt,
         updatedAt: theme.updatedAt,
@@ -124,6 +128,12 @@ export async function PUT(request: NextRequest) {
     if (validatedData.categoryNameColor !== undefined) {
       updateData.categoryNameColor = validatedData.categoryNameColor
     }
+    if (validatedData.headerFooterBgColor !== undefined) {
+      updateData.headerFooterBgColor = validatedData.headerFooterBgColor
+    }
+    if (validatedData.glassTintColor !== undefined) {
+      updateData.glassTintColor = validatedData.glassTintColor
+    }
 
     // Upsert theme for THIS restaurant only (restaurantId from session)
     const theme = await prisma.theme.upsert({
@@ -151,6 +161,8 @@ export async function PUT(request: NextRequest) {
         itemDescriptionTextColor: themeResponse.itemDescriptionTextColor || null,
         bottomNavSectionNameColor: themeResponse.bottomNavSectionNameColor || null,
         categoryNameColor: themeResponse.categoryNameColor || null,
+        headerFooterBgColor: themeResponse.headerFooterBgColor || null,
+        glassTintColor: themeResponse.glassTintColor || null,
         restaurantId: theme.restaurantId,
         createdAt: theme.createdAt,
         updatedAt: theme.updatedAt,

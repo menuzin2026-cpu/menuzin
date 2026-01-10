@@ -100,6 +100,8 @@ function MenuPageContent() {
     itemDescriptionTextColor?: string | null
     bottomNavSectionNameColor?: string | null
     categoryNameColor?: string | null
+    headerFooterBgColor?: string | null
+    glassTintColor?: string | null
   } | null>(null)
   const [serviceChargePercent, setServiceChargePercent] = useState<number>(0)
   
@@ -235,32 +237,56 @@ function MenuPageContent() {
       }
     }
     fetchMenu()
-    // Initial fetch of restaurant data (including service charge)
-    fetchRestaurantData()
-
-    // Fetch global footer logo from platform settings (applies to ALL restaurants)
-    const fetchPlatformFooterLogo = async () => {
+    
+    // Fetch both header logo (restaurant data) and footer logo together to sync loading
+    const fetchLogosTogether = async () => {
       try {
-        const res = await fetch(`/api/platform-settings?t=${Date.now()}`, {
-          cache: 'no-store',
-        })
-        if (res.ok) {
-          const data = await res.json()
-          if (data.footerLogoR2Url) {
-            setFooterLogoUrl(data.footerLogoR2Url)
+        // Fetch both in parallel
+        const [restaurantRes, footerLogoRes] = await Promise.all([
+          fetch(`/data/restaurant?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
+            cache: 'no-store',
+          }),
+          fetch(`/api/platform-settings?t=${Date.now()}`, {
+            cache: 'no-store',
+          })
+        ])
+
+        // Process restaurant data (header logo + service charge)
+        if (restaurantRes.ok) {
+          const restaurantData = await restaurantRes.json()
+          setRestaurant(restaurantData)
+          // Set service charge from restaurant data
+          if (restaurantData.serviceChargePercent !== undefined && restaurantData.serviceChargePercent !== null) {
+            const serviceCharge = typeof restaurantData.serviceChargePercent === 'number' 
+              ? restaurantData.serviceChargePercent 
+              : parseFloat(String(restaurantData.serviceChargePercent))
+            setServiceChargePercent(isNaN(serviceCharge) ? 0 : serviceCharge)
+          } else {
+            setServiceChargePercent(0)
+          }
+        } else {
+          console.error('Error fetching restaurant data:', restaurantRes.status, restaurantRes.statusText)
+          setServiceChargePercent(0)
+        }
+
+        // Process footer logo
+        if (footerLogoRes.ok) {
+          const footerLogoData = await footerLogoRes.json()
+          if (footerLogoData.footerLogoR2Url) {
+            setFooterLogoUrl(footerLogoData.footerLogoR2Url)
           } else {
             setFooterLogoUrl(null)
           }
         } else {
-          // If API fails, set to null (no footer logo)
           setFooterLogoUrl(null)
         }
       } catch (error) {
-        console.error('Error fetching platform footer logo:', error)
+        console.error('Error fetching logos:', error)
+        setServiceChargePercent(0)
         setFooterLogoUrl(null)
       }
     }
-    fetchPlatformFooterLogo()
+    fetchLogosTogether()
 
     // Load basket from localStorage
     const savedBasket = localStorage.getItem('basket')
@@ -300,9 +326,11 @@ function MenuPageContent() {
               itemDescriptionTextColor: data.theme.itemDescriptionTextColor || null,
               bottomNavSectionNameColor: data.theme.bottomNavSectionNameColor || null,
               categoryNameColor: data.theme.categoryNameColor || null,
+              headerFooterBgColor: data.theme.headerFooterBgColor || null,
+              glassTintColor: data.theme.glassTintColor || null,
             })
             
-            // Apply text colors as CSS variables
+            // Apply text colors and new theme colors as CSS variables
             if (typeof document !== 'undefined') {
               if (data.theme.itemNameTextColor) {
                 document.documentElement.style.setProperty('--item-name-text-color', data.theme.itemNameTextColor)
@@ -318,6 +346,38 @@ function MenuPageContent() {
               }
               if (data.theme.categoryNameColor) {
                 document.documentElement.style.setProperty('--category-name-color', data.theme.categoryNameColor)
+              }
+              // Apply header/footer background color
+              if (data.theme.headerFooterBgColor) {
+                document.documentElement.style.setProperty('--header-footer-bg-color', data.theme.headerFooterBgColor)
+              } else {
+                document.documentElement.style.removeProperty('--header-footer-bg-color')
+              }
+              // Apply glass tint color (convert hex to rgba with low alpha for overlay)
+              if (data.theme.glassTintColor) {
+                // Convert hex to rgba with 0.2 alpha (20% opacity for subtle tint)
+                // Handles #RRGGBB, #RGB, and already rgba/rgb formats
+                let tintColor = data.theme.glassTintColor
+                if (tintColor.startsWith('#')) {
+                  // Normalize hex color (handle both 3 and 6 digit)
+                  let hex = tintColor.slice(1)
+                  if (hex.length === 3) {
+                    hex = hex.split('').map(c => c + c).join('')
+                  }
+                  if (hex.length === 6) {
+                    const r = parseInt(hex.slice(0, 2), 16)
+                    const g = parseInt(hex.slice(2, 4), 16)
+                    const b = parseInt(hex.slice(4, 6), 16)
+                    tintColor = `rgba(${r}, ${g}, ${b}, 0.2)`
+                  }
+                } else if (!tintColor.startsWith('rgba') && !tintColor.startsWith('rgb')) {
+                  // If it's not hex, rgba, or rgb, default to a safe rgba
+                  tintColor = `rgba(255, 255, 255, 0.2)`
+                }
+                // If already rgba/rgb, keep it as is (user can set custom alpha)
+                document.documentElement.style.setProperty('--glass-tint-color', tintColor)
+              } else {
+                document.documentElement.style.removeProperty('--glass-tint-color')
               }
             }
           }
@@ -761,9 +821,17 @@ function MenuPageContent() {
                 boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
               }}
             >
+              {/* Glass tint overlay - preserves liquid glass effect while adding tint */}
+              <div
+                className="absolute inset-0 rounded-xl pointer-events-none"
+                style={{
+                  backgroundColor: 'var(--glass-tint-color, transparent)',
+                  zIndex: 0,
+                }}
+              />
               {/* Left triangular accent */}
               <div 
-                className="absolute left-0 top-0 bottom-0"
+                className="absolute left-0 top-0 bottom-0 z-10"
                 style={{
                   width: '1.125rem',
                   background: `linear-gradient(to right, var(--auto-edge-accent, rgba(64, 8, 16, 0.4)), transparent)`,
@@ -773,7 +841,7 @@ function MenuPageContent() {
               ></div>
               {/* Right triangular accent */}
               <div 
-                className="absolute right-0 top-0 bottom-0"
+                className="absolute right-0 top-0 bottom-0 z-10"
                 style={{
                   width: '1.125rem',
                   background: `linear-gradient(to left, var(--auto-edge-accent, rgba(64, 8, 16, 0.4)), transparent)`,
@@ -783,7 +851,7 @@ function MenuPageContent() {
               ></div>
               
               {/* Sections - Fixed, no scroll */}
-              <div className="flex gap-1.5 sm:gap-2 items-center justify-center mb-2 w-full overflow-hidden">
+              <div className="flex gap-1.5 sm:gap-2 items-center justify-center mb-2 w-full overflow-hidden relative z-10">
                 {sections.filter((s) => s.isActive).map((section) => {
                   const isActive = activeSectionId === section.id
                   return (
@@ -850,7 +918,7 @@ function MenuPageContent() {
               {activeCategories.length > 0 && (
                 <div 
                   ref={categoryNavContainerRef}
-                  className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide items-center w-full" 
+                  className="flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide items-center w-full relative z-10" 
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {activeCategories.map((category) => {

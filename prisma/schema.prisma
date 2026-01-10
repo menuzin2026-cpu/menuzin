@@ -175,6 +175,8 @@ model Theme {
   itemDescriptionTextColor  String?    @map("item_description_text_color")
   bottomNavSectionNameColor String?    @map("bottom_nav_section_name_color")
   categoryNameColor         String?    @map("category_name_color")
+  headerFooterBgColor       String?    @map("header_footer_bg_color")
+  glassTintColor            String?    @map("glass_tint_color")
   createdAt                 DateTime   @default(now())
   updatedAt                 DateTime   @updatedAt
   restaurantId              String     @unique
