@@ -5,7 +5,8 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // directUrl = env("DIRECT_URL") // Uncomment when you have a working DIRECT_URL for migrations
+  // Note: For now, migrations use DATABASE_URL via pooler which works for status/resolve commands
 }
 
 model Restaurant {
