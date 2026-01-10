@@ -68,16 +68,20 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('[PLATFORM SETTINGS PUT] Request body:', JSON.stringify(body, null, 2))
+    
     const validation = updatePlatformSettingsSchema.safeParse(body)
 
     if (!validation.success) {
+      console.error('[PLATFORM SETTINGS PUT] Validation failed:', validation.error)
       return NextResponse.json(
         { error: validation.error.errors[0].message },
         { status: 400 }
       )
     }
 
-    // Prepare update data - include all fields from validation (they may be null to clear values)
+    // Prepare update data - map camelCase input to Prisma model fields
+    // Prisma will automatically map these to snake_case columns via @map directives
     const updateData: {
       footerLogoR2Key: string | null
       footerLogoR2Url: string | null
@@ -86,7 +90,11 @@ export async function PUT(request: NextRequest) {
       footerLogoR2Url: validation.data.footerLogoR2Url ?? null,
     }
 
+    console.log('[PLATFORM SETTINGS PUT] Update data (camelCase for Prisma):', JSON.stringify(updateData, null, 2))
+    console.log('[PLATFORM SETTINGS PUT] Attempting upsert to table: platform_settings, where id="platform-1"')
+
     // Use upsert to ensure settings exist (singleton pattern: id='platform-1')
+    // Prisma maps: footerLogoR2Key -> footer_logo_r2_key, footerLogoR2Url -> footer_logo_r2_url
     const updated = await prisma.platformSettings.upsert({
       where: { id: 'platform-1' },
       update: updateData,
@@ -97,7 +105,7 @@ export async function PUT(request: NextRequest) {
       },
     })
 
-    console.log('[PLATFORM SETTINGS] Updated successfully:', {
+    console.log('[PLATFORM SETTINGS PUT] Upsert successful:', {
       id: updated.id,
       footerLogoR2Key: updated.footerLogoR2Key,
       footerLogoR2Url: updated.footerLogoR2Url,
@@ -116,22 +124,41 @@ export async function PUT(request: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Error updating platform settings:', error)
-    console.error('Full error details:', {
-      message: error?.message,
-      code: error?.code,
-      meta: error?.meta,
-      stack: error?.stack,
-    })
+    // Log the FULL error object including all Prisma/Supabase details
+    console.error('[PLATFORM SETTINGS PUT] Error updating platform settings:')
+    console.error('Error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+    console.error('Error message:', error?.message)
+    console.error('Error code:', error?.code)
+    console.error('Error meta (Prisma):', JSON.stringify(error?.meta, null, 2))
+    console.error('Error stack:', error?.stack)
+    console.error('Error name:', error?.name)
+    console.error('Error cause:', error?.cause)
+    
+    // Check for specific Prisma error codes
     if (error?.code === 'P2021') {
+      console.error('[PLATFORM SETTINGS PUT] P2021: Table or column does not exist')
+      console.error('[PLATFORM SETTINGS PUT] Expected: table "platform_settings" with columns: id, footer_logo_r2_key, footer_logo_r2_url, created_at, updated_at')
       return NextResponse.json({ 
         error: 'Database table or column does not exist. Please run database migrations.',
-        details: error?.meta 
+        code: error?.code,
+        details: error?.meta,
+        expected: {
+          table: 'platform_settings',
+          columns: ['id', 'footer_logo_r2_key', 'footer_logo_r2_url', 'created_at', 'updated_at'],
+          where: { id: 'platform-1' }
+        }
       }, { status: 500 })
     }
+    
+    if (error?.code === 'P2025') {
+      console.error('[PLATFORM SETTINGS PUT] P2025: Record not found (should not happen with upsert)')
+    }
+    
     return NextResponse.json({ 
       error: 'Internal server error',
-      message: error?.message || 'Unknown error occurred'
+      message: error?.message || 'Unknown error occurred',
+      code: error?.code || 'UNKNOWN',
+      details: error?.meta || {}
     }, { status: 500 })
   }
 }
