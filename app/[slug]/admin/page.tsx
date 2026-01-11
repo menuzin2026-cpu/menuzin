@@ -1,14 +1,32 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Menu, MessageSquare, Settings, LogOut, Type, Palette } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import toast from 'react-hot-toast'
+import { isLightColor, normalizeToHex } from '@/lib/color-utils'
 
 export default function AdminDashboard() {
   const router = useRouter()
   const params = useParams()
   const slug = params.slug as string
+  const [isLightBg, setIsLightBg] = useState(false)
+
+  // Check if background is light to adjust card colors
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkBackground = () => {
+        const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--app-bg').trim() || '#400810'
+        const normalizedColor = normalizeToHex(bgColor)
+        setIsLightBg(isLightColor(normalizedColor))
+      }
+      checkBackground()
+      // Listen for theme changes
+      window.addEventListener('theme-updated', checkBackground)
+      return () => window.removeEventListener('theme-updated', checkBackground)
+    }
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -46,80 +64,80 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button
             onClick={() => router.push(`/${slug}/admin/menu-builder`)}
-            className="bg-white/[0.08] backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl hover:scale-[1.02] hover:bg-white/[0.12] transition-all text-left group"
+            className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
             style={{
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+              boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
             }}
           >
             <Menu className="w-8 h-8 text-[#FBBF24] mb-4 group-hover:scale-110 transition-transform" />
-            <h2 className="text-xl font-bold text-white mb-2">
+            <h2 className={`text-xl font-bold mb-2 ${isLightBg ? 'text-white' : 'text-white'}`}>
               Menu Builder
             </h2>
-            <p className="text-white/90">
+            <p className={isLightBg ? 'text-white/90' : 'text-white/90'}>
               Manage sections, categories, and items
             </p>
           </button>
 
           <button
             onClick={() => router.push(`/${slug}/admin/feedback`)}
-            className="bg-white/[0.08] backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl hover:scale-[1.02] hover:bg-white/[0.12] transition-all text-left group"
+            className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
             style={{
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+              boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
             }}
           >
             <MessageSquare className="w-8 h-8 text-[#FBBF24] mb-4 group-hover:scale-110 transition-transform" />
-            <h2 className="text-xl font-bold text-white mb-2">
+            <h2 className={`text-xl font-bold mb-2 ${isLightBg ? 'text-white' : 'text-white'}`}>
               Feedback
             </h2>
-            <p className="text-white/90">
+            <p className={isLightBg ? 'text-white/90' : 'text-white/90'}>
               View customer feedback
             </p>
           </button>
 
           <button
             onClick={() => router.push(`/${slug}/admin/settings`)}
-            className="bg-white/[0.08] backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl hover:scale-[1.02] hover:bg-white/[0.12] transition-all text-left group"
+            className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
             style={{
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+              boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
             }}
           >
             <Settings className="w-8 h-8 text-[#FBBF24] mb-4 group-hover:scale-110 transition-transform" />
-            <h2 className="text-xl font-bold text-white mb-2">
+            <h2 className={`text-xl font-bold mb-2 ${isLightBg ? 'text-white' : 'text-white'}`}>
               Settings
             </h2>
-            <p className="text-white/90">
+            <p className={isLightBg ? 'text-white/90' : 'text-white/90'}>
               Restaurant settings and preferences
             </p>
           </button>
 
           <button
             onClick={() => router.push(`/${slug}/admin/typography`)}
-            className="bg-white/[0.08] backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl hover:scale-[1.02] hover:bg-white/[0.12] transition-all text-left group"
+            className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
             style={{
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+              boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
             }}
           >
             <Type className="w-8 h-8 text-[#FBBF24] mb-4 group-hover:scale-110 transition-transform" />
-            <h2 className="text-xl font-bold text-white mb-2">
+            <h2 className={`text-xl font-bold mb-2 ${isLightBg ? 'text-white' : 'text-white'}`}>
               Typography
             </h2>
-            <p className="text-white/90">
+            <p className={isLightBg ? 'text-white/90' : 'text-white/90'}>
               Customize font sizes and UI appearance
             </p>
           </button>
 
           <button
             onClick={() => router.push(`/${slug}/admin/theme`)}
-            className="bg-white/[0.08] backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl hover:scale-[1.02] hover:bg-white/[0.12] transition-all text-left group"
+            className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
             style={{
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+              boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
             }}
           >
             <Palette className="w-8 h-8 text-[#FBBF24] mb-4 group-hover:scale-110 transition-transform" />
-            <h2 className="text-xl font-bold text-white mb-2">
+            <h2 className={`text-xl font-bold mb-2 ${isLightBg ? 'text-white' : 'text-white'}`}>
               Theme & Colors
             </h2>
-            <p className="text-white/90">
+            <p className={isLightBg ? 'text-white/90' : 'text-white/90'}>
               Customize colors for the entire site
             </p>
           </button>
