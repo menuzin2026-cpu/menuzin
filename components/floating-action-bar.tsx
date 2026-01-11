@@ -18,7 +18,7 @@ export function FloatingActionBar({
   onFeedbackClick,
 }: FloatingActionBarProps) {
   return (
-    <div className="relative px-2 sm:px-4 py-4 w-full overflow-x-hidden" style={{ zIndex: 10 }}>
+    <div className="relative px-2 sm:px-4 py-2 w-full overflow-x-hidden" style={{ zIndex: 10 }}>
       <div className="max-w-7xl mx-auto w-full">
         <div className="relative inline-block w-full max-w-full">
           {/* Buttons - Horizontal layout */}

@@ -12,7 +12,7 @@ const blurDataURL = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9I
 export function MenuHeader({ logoUrl }: MenuHeaderProps) {
   return (
     <header 
-      className="relative z-10 px-2 sm:px-4 py-4 backdrop-blur-xl transition-all duration-300 ease-in-out border-b w-full overflow-x-hidden"
+      className="relative z-10 px-2 sm:px-4 py-2 backdrop-blur-xl transition-all duration-300 ease-in-out border-b w-full overflow-x-hidden"
       style={{
         backgroundColor: 'var(--header-footer-bg-color, var(--auto-surface-bg, rgba(255, 255, 255, 0.1)))',
         borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
