@@ -165,7 +165,6 @@ export default function SuperAdminPage() {
       }
 
       const updateData = await updateResponse.json()
-      console.log('[SUPER ADMIN] Platform settings updated:', updateData)
       
       // Update preview with the URL from response (or use publicUrl as fallback)
       const finalUrl = updateData.platformSettings?.footerLogoR2Url || publicUrl
@@ -182,10 +181,8 @@ export default function SuperAdminPage() {
   }
 
   const handleFooterLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('[SUPER ADMIN] File input changed')
     const file = e.target.files?.[0]
     if (file) {
-      console.log('[SUPER ADMIN] File selected:', file.name)
       setFooterLogoFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -193,20 +190,15 @@ export default function SuperAdminPage() {
       }
       reader.readAsDataURL(file)
       handleFooterLogoUpload(file)
-    } else {
-      console.log('[SUPER ADMIN] No file selected')
     }
   }
 
   const handleFooterLogoButtonClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    console.log('[SUPER ADMIN] Footer logo button clicked, fileInputRef.current:', fileInputRef.current)
     if (fileInputRef.current) {
       fileInputRef.current.click()
-      console.log('[SUPER ADMIN] File input click triggered')
     } else {
-      console.error('[SUPER ADMIN] fileInputRef.current is null')
       toast.error('File input not found. Please refresh the page.')
     }
   }
@@ -416,13 +408,8 @@ export default function SuperAdminPage() {
     }
   }
 
-  const handleLogout = async (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault()
-      e.stopPropagation()
-    }
+  const handleLogout = async () => {
     try {
-      console.log('[SUPER ADMIN] Logout button clicked')
       const response = await fetch('/api/super-admin/logout', { 
         method: 'POST',
         credentials: 'include'
@@ -448,15 +435,7 @@ export default function SuperAdminPage() {
           <h1 className="text-3xl font-bold text-white">Super Admin Portal</h1>
           <button
             type="button"
-            onClick={(e) => {
-              console.log('[SUPER ADMIN] Logout button clicked - event:', e)
-              alert('Logout button clicked!')
-              handleLogout(e)
-            }}
-            onMouseDown={(e) => {
-              console.log('[SUPER ADMIN] Logout button mouse down')
-              e.stopPropagation()
-            }}
+            onClick={handleLogout}
             style={{
               pointerEvents: 'auto',
               cursor: 'pointer',
@@ -498,15 +477,7 @@ export default function SuperAdminPage() {
             />
             <button
               type="button"
-              onClick={(e) => {
-                console.log('[SUPER ADMIN] Footer logo button clicked - event:', e)
-                alert('Footer logo button clicked!')
-                handleFooterLogoButtonClick(e)
-              }}
-              onMouseDown={(e) => {
-                console.log('[SUPER ADMIN] Footer logo button mouse down')
-                e.stopPropagation()
-              }}
+              onClick={handleFooterLogoButtonClick}
               disabled={uploadingFooterLogo}
               style={{
                 pointerEvents: uploadingFooterLogo ? 'none' : 'auto',
