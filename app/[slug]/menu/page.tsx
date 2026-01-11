@@ -1088,7 +1088,7 @@ function MenuPageContent() {
                           <span 
                             className="relative font-semibold whitespace-nowrap"
                             style={{ 
-                              color: theme?.categoryNameColor || 'var(--auto-text-primary, #FFFFFF)',
+                              color: theme?.bottomNavSectionNameColor || 'var(--auto-text-primary, #FFFFFF)',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
