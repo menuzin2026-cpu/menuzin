@@ -1246,7 +1246,6 @@ function MenuPageContent() {
         items={allItems}
         currentLang={currentLang}
         onItemClick={handleItemClick}
-        currency={uiSettings.currency}
       />
 
       <BasketDrawer
