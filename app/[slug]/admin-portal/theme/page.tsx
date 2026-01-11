@@ -643,13 +643,13 @@ export default function ThemePage() {
                 </div>
               </div>
 
-              {/* Header & Footer Background Color */}
+              {/* Header Background Color */}
               <div className="space-y-4 pt-4 border-t border-white/10">
-                <h3 className="text-base font-semibold text-white">Header & Footer</h3>
+                <h3 className="text-base font-semibold text-white">Header</h3>
                 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-white">
-                    Header/Footer Background Color
+                    Header Background Color
                   </label>
                   <div className="flex items-center gap-2">
                     <Input
@@ -676,7 +676,7 @@ export default function ThemePage() {
                       onClick={() => openColorPicker('headerFooterBgColor')}
                       className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
                       style={{ backgroundColor: previewTheme.headerFooterBgColor ? normalizeToHex(previewTheme.headerFooterBgColor) : 'transparent' }}
-                      aria-label="Pick header/footer background color"
+                      aria-label="Pick header background color"
                     />
                   </div>
                   {previewTheme.headerFooterBgColor && (
@@ -695,7 +695,7 @@ export default function ThemePage() {
                       Reset / Clear
                     </Button>
                   )}
-                  <p className="text-xs text-white/50">Applies to both header and footer backgrounds. Leave empty to use default.</p>
+                  <p className="text-xs text-white/50">Applies to header background only. Footer is always transparent.</p>
                 </div>
               </div>
 
@@ -1044,7 +1044,7 @@ export default function ThemePage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-white">
-                    Pick {selectedColor === 'appBg' ? 'Background' : selectedColor === 'itemNameTextColor' ? 'Item Name Text' : selectedColor === 'itemPriceTextColor' ? 'Item Price Text' : selectedColor === 'itemDescriptionTextColor' ? 'Item Description Text' : selectedColor === 'categoryNameColor' ? 'Category Name' : selectedColor === 'bottomNavSectionNameColor' ? 'Bottom Nav Section Name' : selectedColor === 'headerFooterBgColor' ? 'Header/Footer Background' : selectedColor === 'glassTintColor' ? 'Surface Background' : 'Color'} Color
+                    Pick {selectedColor === 'appBg' ? 'Background' : selectedColor === 'itemNameTextColor' ? 'Item Name Text' : selectedColor === 'itemPriceTextColor' ? 'Item Price Text' : selectedColor === 'itemDescriptionTextColor' ? 'Item Description Text' : selectedColor === 'categoryNameColor' ? 'Category Name' : selectedColor === 'bottomNavSectionNameColor' ? 'Bottom Nav Section Name' : selectedColor === 'headerFooterBgColor' ? 'Header Background' : selectedColor === 'glassTintColor' ? 'Surface Background' : 'Color'} Color
                   </h2>
                   <button
                     onClick={closeColorPicker}
