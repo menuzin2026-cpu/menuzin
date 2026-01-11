@@ -281,15 +281,15 @@ function MenuPageContent() {
               if (bootstrapData.restaurant.serviceChargePercent !== undefined) {
                 setServiceChargePercent(bootstrapData.restaurant.serviceChargePercent ?? 0)
               }
+              // Set currency from restaurant object in bootstrap
+              if (bootstrapData.restaurant.currency && (bootstrapData.restaurant.currency === 'IQD' || bootstrapData.restaurant.currency === 'USD')) {
+                setUiSettings(prev => ({ ...prev, currency: bootstrapData.restaurant.currency }))
+              }
             }
             if (bootstrapData.theme) {
               setTheme(bootstrapData.theme)
               // Apply CSS variables immediately using helper
               applyThemeCSS(bootstrapData.theme)
-            }
-            // Set currency from bootstrap if available
-            if (bootstrapData.currency && (bootstrapData.currency === 'IQD' || bootstrapData.currency === 'USD')) {
-              setUiSettings(prev => ({ ...prev, currency: bootstrapData.currency }))
             }
             
             // Set sections structure (without items) to show navigation immediately

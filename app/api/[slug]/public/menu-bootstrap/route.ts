@@ -97,11 +97,23 @@ export async function GET(
       prisma.restaurant.findUnique({
         where: { slug },
         select: { id: true },
-      }).then((r) => {
+      }).then(async (r) => {
         if (!r) return null
-        return prisma.uiSettings.findUnique({
-          where: { restaurantId: r.id },
-        }).then((settings) => settings ? { currency: (settings as any).currency } : null)
+        try {
+          const settings = await prisma.uiSettings.findUnique({
+            where: { restaurantId: r.id },
+          })
+          if (settings) {
+            // Check if currency field exists (handle case where migration hasn't run yet)
+            const currency = (settings as any).currency
+            return { currency: (currency === 'IQD' || currency === 'USD') ? currency : 'IQD' }
+          }
+          return null
+        } catch (error) {
+          // If query fails (e.g., column doesn't exist), return default
+          console.warn('Error fetching currency from uiSettings:', error)
+          return { currency: 'IQD' }
+        }
       }),
     ])
 
