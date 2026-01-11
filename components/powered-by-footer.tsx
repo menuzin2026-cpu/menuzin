@@ -43,20 +43,20 @@ export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
           <Image
             src={footerLogoUrl}
             alt="Menuzin"
-            width={60}
-            height={18}
-            className="h-4 w-auto object-contain"
+            width={120}
+            height={36}
+            className="h-7 w-auto object-contain"
             style={{ 
-              maxHeight: '18px',
+              maxHeight: '36px',
               width: 'auto',
-              height: '18px',
-              aspectRatio: '60/18'
+              height: '36px',
+              aspectRatio: '120/36'
             }}
             priority
             placeholder="blur"
             blurDataURL={blurDataURL}
             unoptimized={true}
-            sizes="60px"
+            sizes="120px"
           />
         )}
       </a>
