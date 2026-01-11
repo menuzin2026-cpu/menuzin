@@ -426,8 +426,9 @@ function MenuPageContent() {
     }
     fetchLogosTogether()
 
-    // Load basket from localStorage
-    const savedBasket = localStorage.getItem('basket')
+    // Load basket from localStorage (slug-scoped to prevent mixing baskets between restaurants)
+    const basketKey = `basket-${slug}`
+    const savedBasket = localStorage.getItem(basketKey)
     if (savedBasket) {
       try {
         setBasket(JSON.parse(savedBasket))
@@ -767,9 +768,10 @@ function MenuPageContent() {
   }, [])
 
   useEffect(() => {
-    // Save basket to localStorage
-    localStorage.setItem('basket', JSON.stringify(basket))
-  }, [basket])
+    // Save basket to localStorage (slug-scoped to prevent mixing baskets between restaurants)
+    const basketKey = `basket-${slug}`
+    localStorage.setItem(basketKey, JSON.stringify(basket))
+  }, [basket, slug])
 
   const handleLanguageChange = (lang: Language) => {
     setCurrentLang(lang)
