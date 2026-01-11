@@ -35,6 +35,25 @@ export function BasketDrawer({
   onQuantityChange,
   serviceChargePercent = 0,
 }: BasketDrawerProps) {
+  const [useSolidBg, setUseSolidBg] = useState(false)
+  const [surfaceBgColor, setSurfaceBgColor] = useState<string | null>(null)
+
+  // Check if surface background color is set (when glassTintColor is set, use solid background)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkSurfaceBg = () => {
+        const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--glass-tint-color').trim()
+        const hasBg = !!bgColor && bgColor !== 'transparent'
+        setUseSolidBg(hasBg)
+        setSurfaceBgColor(hasBg ? bgColor : null)
+      }
+      checkSurfaceBg()
+      // Listen for theme changes
+      window.addEventListener('theme-updated', checkSurfaceBg)
+      return () => window.removeEventListener('theme-updated', checkSurfaceBg)
+    }
+  }, [])
+
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const serviceChargeAmount = subtotal * (serviceChargePercent / 100)
   const total = subtotal + serviceChargeAmount
