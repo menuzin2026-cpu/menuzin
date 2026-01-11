@@ -140,12 +140,12 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
         </div>
 
         {/* Content */}
-        <div className={`p-2 flex-shrink-0 relative z-10 ${useSolidBg ? '' : 'backdrop-blur-sm'}`} style={{
+        <div className={`p-1.5 flex-shrink-0 relative z-10 ${useSolidBg ? '' : 'backdrop-blur-sm'}`} style={{
           backgroundColor: useSolidBg && surfaceBgColor ? surfaceBgColor : 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
           margin: 0,
         }}>
           <h3 
-            className="font-semibold mb-1 line-clamp-1 break-words"
+            className="font-semibold mb-0.5 line-clamp-1 break-words"
             style={{ 
               color: 'var(--item-name-text-color, var(--auto-text-primary, #FFFFFF))',
               fontSize: 'var(--menu-item-name-size)'
@@ -155,7 +155,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
           </h3>
           {item.descriptionEn || item.descriptionKu || item.descriptionAr ? (
             <p 
-              className="text-xs mb-2 line-clamp-2 break-words opacity-80"
+              className="text-xs mb-1 line-clamp-2 break-words opacity-80"
               style={{ 
                 color: 'var(--item-description-text-color, var(--auto-text-secondary, rgba(255, 255, 255, 0.9)))',
                 fontSize: 'var(--menu-item-desc-size)'
@@ -176,7 +176,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
             </span>
             <button
               onClick={handleAddClick}
-              className={`p-1.5 rounded-xl transition-all duration-300 backdrop-blur-sm ${
+              className={`p-1 rounded-xl transition-all duration-300 backdrop-blur-sm ${
                 isAdding ? 'scale-110' : ''
               }`}
               style={{
