@@ -448,7 +448,21 @@ export default function SuperAdminPage() {
           <h1 className="text-3xl font-bold text-white">Super Admin Portal</h1>
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={(e) => {
+              console.log('[SUPER ADMIN] Logout button clicked - event:', e)
+              alert('Logout button clicked!')
+              handleLogout(e)
+            }}
+            onMouseDown={(e) => {
+              console.log('[SUPER ADMIN] Logout button mouse down')
+              e.stopPropagation()
+            }}
+            style={{
+              pointerEvents: 'auto',
+              cursor: 'pointer',
+              zIndex: 9999,
+              position: 'relative'
+            }}
             className="inline-flex items-center justify-center rounded-lg font-medium transition-colors h-9 px-3 text-sm bg-[#222] hover:bg-[#333] border border-[#333] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
           >
             <LogOut className="w-4 h-4 mr-2" />
@@ -484,8 +498,22 @@ export default function SuperAdminPage() {
             />
             <button
               type="button"
-              onClick={handleFooterLogoButtonClick}
+              onClick={(e) => {
+                console.log('[SUPER ADMIN] Footer logo button clicked - event:', e)
+                alert('Footer logo button clicked!')
+                handleFooterLogoButtonClick(e)
+              }}
+              onMouseDown={(e) => {
+                console.log('[SUPER ADMIN] Footer logo button mouse down')
+                e.stopPropagation()
+              }}
               disabled={uploadingFooterLogo}
+              style={{
+                pointerEvents: uploadingFooterLogo ? 'none' : 'auto',
+                cursor: uploadingFooterLogo ? 'not-allowed' : 'pointer',
+                zIndex: 9999,
+                position: 'relative'
+              }}
               className="inline-flex items-center justify-center rounded-lg font-medium transition-colors w-full h-10 px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
             >
               <Upload className="w-4 h-4 mr-2" />
