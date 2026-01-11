@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { X, Plus, Minus } from 'lucide-react'
 import { Language } from '@/lib/i18n'
 import { getLocalizedText } from '@/lib/i18n'
@@ -50,9 +51,9 @@ export function BasketDrawer({
 
       {/* Drawer */}
       <div 
-        className="absolute right-0 top-0 h-full w-full max-w-md backdrop-blur-xl shadow-2xl flex flex-col border-l"
+        className={`absolute right-0 top-0 h-full w-full max-w-md shadow-2xl flex flex-col border-l ${useSolidBg ? '' : 'backdrop-blur-xl'}`}
         style={{
-          backgroundColor: 'var(--app-bg, #400810)',
+          backgroundColor: useSolidBg && surfaceBgColor ? surfaceBgColor : 'var(--app-bg, #400810)',
           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
           boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
         }}
