@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Lock } from 'lucide-react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import toast from 'react-hot-toast'
@@ -13,6 +13,25 @@ export default function AdminLoginPage() {
   const slug = params.slug as string
   const [pin, setPin] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchRestaurantLogo = async () => {
+      try {
+        const res = await fetch(`/data/restaurant?slug=${encodeURIComponent(slug)}`, {
+          cache: 'no-store',
+        })
+        if (res.ok) {
+          const data = await res.json()
+          const logo = data.logoR2Url || (data.logoMediaId ? `/assets/${data.logoMediaId}` : null)
+          setLogoUrl(logo)
+        }
+      } catch (error) {
+        console.error('Error fetching restaurant logo:', error)
+      }
+    }
+    fetchRestaurantLogo()
+  }, [slug])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,14 +82,33 @@ export default function AdminLoginPage() {
         }}
       >
         <div className="text-center mb-8">
-          <div 
-            className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 shadow-lg border border-white/20"
-            style={{
-              backgroundColor: 'var(--app-bg, #400810)',
-            }}
-          >
-            <Lock className="w-8 h-8 text-white" />
-          </div>
+          {logoUrl ? (
+            <div className="flex items-center justify-center mb-4">
+              <Image
+                src={logoUrl}
+                alt="Restaurant Logo"
+                width={120}
+                height={32}
+                className="object-contain"
+                style={{ 
+                  height: 'var(--header-logo-size, 32px)',
+                  width: 'auto',
+                  maxWidth: '100%',
+                  aspectRatio: 'auto'
+                }}
+                priority
+                unoptimized={logoUrl.startsWith('/assets/')}
+                sizes="(max-width: 768px) 120px, 120px"
+              />
+            </div>
+          ) : (
+            <div 
+              className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 shadow-lg border border-white/20"
+              style={{
+                backgroundColor: 'var(--app-bg, #400810)',
+              }}
+            />
+          )}
           <h1 className="text-2xl font-bold text-white mb-2">
             Admin Login
           </h1>
