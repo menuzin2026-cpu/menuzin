@@ -101,7 +101,10 @@ export function BasketDrawer({
             items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-3 p-3 bg-white/10 rounded-xl border border-white/20 shadow-sm"
+                className={`flex items-center gap-3 p-3 rounded-xl border border-white/20 shadow-sm ${useSolidBg ? '' : 'bg-white/10'}`}
+                style={{
+                  backgroundColor: useSolidBg && surfaceBgColor ? surfaceBgColor : undefined,
+                }}
               >
                 {item.imageMediaId ? (
                   <img
