@@ -25,9 +25,10 @@ interface ItemModalProps {
   currentLang: Language
   isOpen: boolean
   onClose: () => void
+  currency?: 'IQD' | 'USD'
 }
 
-export function ItemModal({ item, currentLang, isOpen, onClose }: ItemModalProps) {
+export function ItemModal({ item, currentLang, isOpen, onClose, currency = 'IQD' }: ItemModalProps) {
   if (!isOpen || !item) return null
 
   return (
@@ -103,7 +104,7 @@ export function ItemModal({ item, currentLang, isOpen, onClose }: ItemModalProps
               fontSize: 'var(--menu-item-price-size, 1.25rem)' 
             }}
           >
-            {formatPrice(item.price)}
+            {formatPrice(item.price, currency)}
           </p>
           {getLocalizedDescription(item, currentLang) && (
             <p 

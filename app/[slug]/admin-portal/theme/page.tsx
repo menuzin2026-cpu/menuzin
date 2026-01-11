@@ -86,6 +86,7 @@ export default function ThemePage() {
   const [menuBgPreview, setMenuBgPreview] = useState<string | null>(null)
   const [uploadingMenuBg, setUploadingMenuBg] = useState(false)
   const [restaurantId, setRestaurantId] = useState<string | null>(null)
+  const [currency, setCurrency] = useState<'IQD' | 'USD'>('IQD')
 
   // Apply theme immediately before paint to prevent flash
   useLayoutEffect(() => {
@@ -113,6 +114,24 @@ export default function ThemePage() {
       }
     }
     fetchRestaurantId()
+    
+    // Fetch currency from UI settings
+    const fetchCurrency = async () => {
+      try {
+        const response = await fetch('/api/admin/ui-settings', {
+          credentials: 'include',
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.currency && (data.currency === 'IQD' || data.currency === 'USD')) {
+            setCurrency(data.currency)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching currency:', error)
+      }
+    }
+    fetchCurrency()
   }, [])
 
   const fetchTheme = async () => {
@@ -1010,6 +1029,54 @@ export default function ThemePage() {
                     </Button>
                   )}
                   <p className="text-xs text-white/50">Applies to section labels in bottom navigation</p>
+                </div>
+              </div>
+
+              {/* Currency Settings */}
+              <div className="space-y-4 pt-4 border-t border-white/10">
+                <h3 className="text-base font-semibold text-white">Price Currency</h3>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Currency
+                  </label>
+                  <select
+                    value={currency}
+                    onChange={async (e) => {
+                      const newCurrency = e.target.value as 'IQD' | 'USD'
+                      setCurrency(newCurrency)
+                      // Save immediately
+                      try {
+                        const response = await fetch('/api/admin/ui-settings', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
+                          body: JSON.stringify({ currency: newCurrency }),
+                        })
+                        if (response.ok) {
+                          toast.success('Currency updated successfully!')
+                          // Trigger menu page refresh
+                          if (typeof window !== 'undefined') {
+                            window.localStorage.setItem('typography-updated', Date.now().toString())
+                            window.dispatchEvent(new Event('storage'))
+                            window.dispatchEvent(new Event('typography-updated'))
+                          }
+                        } else {
+                          toast.error('Failed to update currency')
+                        }
+                      } catch (error) {
+                        console.error('Error updating currency:', error)
+                        toast.error('Failed to update currency')
+                      }
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-white/20 bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-[#FBBF24] focus:border-transparent"
+                  >
+                    <option value="IQD">IQD (Iraqi Dinar)</option>
+                    <option value="USD">USD (US Dollar)</option>
+                  </select>
+                  <p className="text-xs text-white/50">
+                    Select the currency to display for all prices in the menu
+                  </p>
                 </div>
               </div>
             </div>

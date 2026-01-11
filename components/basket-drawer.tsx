@@ -25,6 +25,7 @@ interface BasketDrawerProps {
   currentLang: Language
   onQuantityChange: (itemId: string, delta: number) => void
   serviceChargePercent?: number
+  currency?: 'IQD' | 'USD'
 }
 
 export function BasketDrawer({
@@ -34,6 +35,7 @@ export function BasketDrawer({
   currentLang,
   onQuantityChange,
   serviceChargePercent = 0,
+  currency = 'IQD',
 }: BasketDrawerProps) {
   const [useSolidBg, setUseSolidBg] = useState(false)
   const [surfaceBgColor, setSurfaceBgColor] = useState<string | null>(null)
@@ -139,7 +141,7 @@ export function BasketDrawer({
                       fontSize: 'var(--menu-item-price-size)' 
                     }}
                   >
-                    {formatPrice(item.price)} × {item.quantity}
+                    {formatPrice(item.price, currency)} × {item.quantity}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -175,7 +177,7 @@ export function BasketDrawer({
                   Subtotal:
                 </span>
                 <span className="text-sm font-semibold text-white">
-                  {formatPrice(subtotal)}
+                  {formatPrice(subtotal, currency)}
                 </span>
               </div>
               {serviceChargePercent > 0 && (
@@ -184,7 +186,7 @@ export function BasketDrawer({
                     Service Charge ({serviceChargePercent}%):
                   </span>
                   <span className="text-sm font-semibold text-white">
-                    {formatPrice(serviceChargeAmount)}
+                    {formatPrice(serviceChargeAmount, currency)}
                   </span>
                 </div>
               )}
@@ -193,7 +195,7 @@ export function BasketDrawer({
                   Total:
                 </span>
                 <span className="text-xl font-bold text-[var(--price-text)]">
-                  {formatPrice(total)}
+                  {formatPrice(total, currency)}
                 </span>
               </div>
             </div>

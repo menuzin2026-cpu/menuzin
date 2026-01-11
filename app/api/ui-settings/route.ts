@@ -16,6 +16,7 @@ const DEFAULT_UI_SETTINGS = {
   headerLogoSize: 32,
   bottomNavSectionSize: 13,
   bottomNavCategorySize: 13,
+  currency: 'IQD', // Default currency
 }
 
 // Default response values (includes all fields returned to frontend)
@@ -24,6 +25,7 @@ const DEFAULT_RESPONSE = {
   serviceChargePercent: 0,
   headerFooterBgColor: null,
   glassTintColor: null,
+  currency: 'IQD',
 }
 
 const querySchema = z.object({
@@ -149,6 +151,7 @@ export async function GET(request: NextRequest) {
       headerLogoSize: settings.headerLogoSize,
       bottomNavSectionSize: (settings as any).bottomNavSectionSize ?? DEFAULT_UI_SETTINGS.bottomNavSectionSize,
       bottomNavCategorySize: (settings as any).bottomNavCategorySize ?? DEFAULT_UI_SETTINGS.bottomNavCategorySize,
+      currency: (settings as any).currency ?? DEFAULT_UI_SETTINGS.currency,
       serviceChargePercent: restaurant.serviceChargePercent ?? 0,
       headerFooterBgColor: theme?.headerFooterBgColor ?? null,
       glassTintColor: theme?.glassTintColor ?? null,

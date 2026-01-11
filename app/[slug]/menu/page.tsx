@@ -95,6 +95,7 @@ function MenuPageContent() {
     headerLogoSize: 32,
     bottomNavSectionSize: 13,
     bottomNavCategorySize: 13,
+    currency: 'IQD' as 'IQD' | 'USD',
   })
   const [theme, setTheme] = useState<{
     menuBackgroundR2Url?: string | null
@@ -286,6 +287,10 @@ function MenuPageContent() {
               // Apply CSS variables immediately using helper
               applyThemeCSS(bootstrapData.theme)
             }
+            // Set currency from bootstrap if available
+            if (bootstrapData.currency && (bootstrapData.currency === 'IQD' || bootstrapData.currency === 'USD')) {
+              setUiSettings(prev => ({ ...prev, currency: bootstrapData.currency }))
+            }
             
             // Set sections structure (without items) to show navigation immediately
             if (bootstrapData.sections && Array.isArray(bootstrapData.sections)) {
@@ -390,7 +395,17 @@ function MenuPageContent() {
         return res.json()
       })
       .then((data) => {
-        setUiSettings(data)
+        setUiSettings({
+          sectionTitleSize: data.sectionTitleSize ?? 22,
+          categoryTitleSize: data.categoryTitleSize ?? 16,
+          itemNameSize: data.itemNameSize ?? 14,
+          itemDescriptionSize: data.itemDescriptionSize ?? 14,
+          itemPriceSize: data.itemPriceSize ?? 16,
+          headerLogoSize: data.headerLogoSize ?? 32,
+          bottomNavSectionSize: data.bottomNavSectionSize ?? 13,
+          bottomNavCategorySize: data.bottomNavCategorySize ?? 13,
+          currency: (data.currency === 'IQD' || data.currency === 'USD') ? data.currency : 'IQD',
+        })
         // Update service charge from UI settings if available (bootstrap already set it, but UI settings may override)
         if (data.serviceChargePercent !== undefined && data.serviceChargePercent !== null) {
           const serviceCharge = typeof data.serviceChargePercent === 'number' 
@@ -416,6 +431,7 @@ function MenuPageContent() {
           headerLogoSize: 32,
           bottomNavSectionSize: 13,
           bottomNavCategorySize: 13,
+          currency: 'IQD',
         })
       })
 
@@ -531,7 +547,17 @@ function MenuPageContent() {
           return res.json()
         })
         .then((data) => {
-          setUiSettings(data)
+          setUiSettings({
+            sectionTitleSize: data.sectionTitleSize ?? 22,
+            categoryTitleSize: data.categoryTitleSize ?? 16,
+            itemNameSize: data.itemNameSize ?? 14,
+            itemDescriptionSize: data.itemDescriptionSize ?? 14,
+            itemPriceSize: data.itemPriceSize ?? 16,
+            headerLogoSize: data.headerLogoSize ?? 32,
+            bottomNavSectionSize: data.bottomNavSectionSize ?? 13,
+            bottomNavCategorySize: data.bottomNavCategorySize ?? 13,
+            currency: (data.currency === 'IQD' || data.currency === 'USD') ? data.currency : 'IQD',
+          })
           // Update service charge from UI settings if available
           if (data.serviceChargePercent !== undefined && data.serviceChargePercent !== null) {
             const serviceCharge = typeof data.serviceChargePercent === 'number' 
@@ -1193,6 +1219,7 @@ function MenuPageContent() {
                           onAddToBasket={handleAddToBasket}
                           quantity={basketItem?.quantity || 0}
                           priority={isPriority}
+                          currency={uiSettings.currency}
                         />
                       )
                     })}
@@ -1210,6 +1237,7 @@ function MenuPageContent() {
         currentLang={currentLang}
         isOpen={isItemModalOpen}
         onClose={() => setIsItemModalOpen(false)}
+        currency={uiSettings.currency}
       />
 
       <SearchDrawer
@@ -1218,6 +1246,7 @@ function MenuPageContent() {
         items={allItems}
         currentLang={currentLang}
         onItemClick={handleItemClick}
+        currency={uiSettings.currency}
       />
 
       <BasketDrawer
@@ -1227,6 +1256,7 @@ function MenuPageContent() {
         currentLang={currentLang}
         onQuantityChange={handleQuantityChange}
         serviceChargePercent={serviceChargePercent}
+        currency={uiSettings.currency}
       />
 
       {/* Powered By Footer */}

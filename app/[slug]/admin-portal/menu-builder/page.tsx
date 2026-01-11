@@ -105,6 +105,7 @@ export default function MenuBuilderPage() {
   const [activeType, setActiveType] = useState<'section' | 'category' | 'item' | null>(null)
   const [holdingId, setHoldingId] = useState<string | null>(null)
   const [holdingType, setHoldingType] = useState<'section' | 'category' | 'item' | null>(null)
+  const [currency, setCurrency] = useState<'IQD' | 'USD'>('IQD')
   
   // Edit form states
   const [editSectionForm, setEditSectionForm] = useState({ nameKu: '', nameEn: '', nameAr: '' })
@@ -135,7 +136,27 @@ export default function MenuBuilderPage() {
   useEffect(() => {
     fetchRestaurantId()
     fetchMenuData()
+    // Fetch currency from UI settings
+    const fetchCurrency = async () => {
+      try {
+        const response = await fetch('/api/admin/ui-settings', {
+          credentials: 'include',
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.currency && (data.currency === 'IQD' || data.currency === 'USD')) {
+            setCurrency(data.currency)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching currency:', error)
+      }
+    }
+    fetchCurrency()
   }, [])
+  
+  // Create formatPrice wrapper with currency
+  const formatPriceWithCurrency = (price: number) => formatPrice(price, currency)
 
   const fetchRestaurantId = async () => {
     try {
@@ -1130,7 +1151,7 @@ export default function MenuBuilderPage() {
                     onGripTouchStart={onGripTouchStart}
                     onGripTouchEnd={onGripTouchEnd}
                     onShowAddItem={onShowAddItem}
-                    formatPrice={formatPrice}
+                    formatPrice={formatPriceWithCurrency}
                   />
                 ))
               ) : (
@@ -1341,7 +1362,7 @@ export default function MenuBuilderPage() {
           onGripMouseLeave={onGripMouseLeave}
           onGripTouchStart={onGripTouchStart}
           onGripTouchEnd={onGripTouchEnd}
-                      formatPrice={formatPrice}
+                      formatPrice={formatPriceWithCurrency}
                     />
                   ))}
                   {/* Add Item Button */}
@@ -1620,7 +1641,7 @@ export default function MenuBuilderPage() {
               onGripTouchEnd={handleGripTouchEnd}
                   onShowAddCategory={setShowAddCategory}
                   onShowAddItem={setShowAddItem}
-                  formatPrice={formatPrice}
+                  formatPrice={formatPriceWithCurrency}
                 />
               ))}
             </SortableContext>

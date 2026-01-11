@@ -16,7 +16,7 @@ export async function GET(
     }
 
     // Parallel queries for faster response
-    const [restaurant, theme, sectionsWithCategories] = await Promise.all([
+    const [restaurant, theme, sectionsWithCategories, uiSettings] = await Promise.all([
       // Get restaurant basic info
       prisma.restaurant.findUnique({
         where: { slug },
@@ -93,6 +93,19 @@ export async function GET(
           },
         })
       }),
+      // Get UI settings for currency
+      prisma.restaurant.findUnique({
+        where: { slug },
+        select: { id: true },
+      }).then((r) => {
+        if (!r) return null
+        return prisma.uiSettings.findUnique({
+          where: { restaurantId: r.id },
+          select: {
+            currency: true,
+          },
+        })
+      }),
     ])
 
     if (!restaurant) {
@@ -130,6 +143,7 @@ export async function GET(
           categoryNameColor: theme.categoryNameColor,
         } : null,
         sections: sectionsWithCategories || [],
+        currency: (uiSettings as any)?.currency ?? 'IQD',
       },
       {
         headers: {

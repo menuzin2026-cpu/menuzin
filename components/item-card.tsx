@@ -28,9 +28,10 @@ interface ItemCardProps {
   onAddToBasket: (itemId: string) => void
   quantity?: number
   priority?: boolean
+  currency?: 'IQD' | 'USD'
 }
 
-export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quantity = 0, priority = false }: ItemCardProps) {
+export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quantity = 0, priority = false, currency = 'IQD' }: ItemCardProps) {
   const [showPopup, setShowPopup] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const [useSolidBg, setUseSolidBg] = useState(false)
@@ -172,7 +173,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
                 fontSize: 'var(--menu-item-price-size)' 
               }}
             >
-              {formatPrice(item.price)}
+              {formatPrice(item.price, currency)}
             </span>
             <button
               onClick={handleAddClick}

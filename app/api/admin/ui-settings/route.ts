@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS = {
   headerLogoSize: 32,
   bottomNavSectionSize: 13,
   bottomNavCategorySize: 13,
+  currency: 'IQD', // Default currency
 }
 
 export async function GET() {
@@ -52,6 +53,7 @@ export async function GET() {
       headerLogoSize: settings.headerLogoSize,
       bottomNavSectionSize: (settings as any).bottomNavSectionSize ?? DEFAULT_SETTINGS.bottomNavSectionSize,
       bottomNavCategorySize: (settings as any).bottomNavCategorySize ?? DEFAULT_SETTINGS.bottomNavCategorySize,
+      currency: (settings as any).currency ?? DEFAULT_SETTINGS.currency,
     })
   } catch (error) {
     console.error('Error fetching UI settings:', error)
@@ -82,12 +84,23 @@ export async function PUT(request: NextRequest) {
       'headerLogoSize',
       'bottomNavSectionSize',
       'bottomNavCategorySize',
+      'currency',
     ]
 
     for (const field of fields) {
       const value = body[field]
       if (value === undefined) {
         continue // Skip if not provided
+      }
+
+      // Special handling for currency field
+      if (field === 'currency') {
+        if (value !== 'IQD' && value !== 'USD') {
+          errors.push(`${field} must be either 'IQD' or 'USD'`)
+        } else {
+          settings[field] = value
+        }
+        continue
       }
 
       const numValue = parseInt(String(value), 10)
