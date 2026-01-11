@@ -547,11 +547,18 @@ export default function ThemePage() {
                 <div className="flex items-center gap-2">
                   <Input
                     type="text"
+                    inputMode="text"
                     value={previewTheme.appBg}
                     onChange={(e) => {
                       const value = e.target.value
-                      if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl')) {
+                      if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
                         handleColorChange('appBg', value)
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      // Allow backspace, delete, and all navigation keys
+                      if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                        return
                       }
                     }}
                     className="flex-1 text-sm"
@@ -640,11 +647,18 @@ export default function ThemePage() {
                   <div className="flex items-center gap-2">
                     <Input
                       type="text"
+                      inputMode="text"
                       value={previewTheme.headerFooterBgColor || ''}
                       onChange={(e) => {
                         const value = e.target.value
                         if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
                           handleColorChange('headerFooterBgColor', value || null)
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Allow backspace, delete, and all navigation keys
+                        if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                          return
                         }
                       }}
                       className="flex-1 text-sm"
@@ -689,11 +703,18 @@ export default function ThemePage() {
                   <div className="flex items-center gap-2">
                     <Input
                       type="text"
+                      inputMode="text"
                       value={previewTheme.glassTintColor || ''}
                       onChange={(e) => {
                         const value = e.target.value
                         if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
                           handleColorChange('glassTintColor', value || null)
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Allow backspace, delete, and all navigation keys
+                        if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                          return
                         }
                       }}
                       className="flex-1 text-sm"
@@ -737,11 +758,18 @@ export default function ThemePage() {
                   <div className="flex items-center gap-2">
                     <Input
                       type="text"
+                      inputMode="text"
                       value={previewTheme.itemNameTextColor || ''}
                       onChange={(e) => {
                         const value = e.target.value
                         if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
                           handleColorChange('itemNameTextColor', value || null)
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Allow backspace, delete, and all navigation keys
+                        if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                          return
                         }
                       }}
                       className="flex-1 text-sm"
@@ -781,11 +809,18 @@ export default function ThemePage() {
                   <div className="flex items-center gap-2">
                     <Input
                       type="text"
+                      inputMode="text"
                       value={previewTheme.itemPriceTextColor || ''}
                       onChange={(e) => {
                         const value = e.target.value
                         if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
                           handleColorChange('itemPriceTextColor', value || null)
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Allow backspace, delete, and all navigation keys
+                        if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                          return
                         }
                       }}
                       className="flex-1 text-sm"
@@ -825,11 +860,18 @@ export default function ThemePage() {
                   <div className="flex items-center gap-2">
                     <Input
                       type="text"
+                      inputMode="text"
                       value={previewTheme.itemDescriptionTextColor || ''}
                       onChange={(e) => {
                         const value = e.target.value
                         if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
                           handleColorChange('itemDescriptionTextColor', value || null)
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Allow backspace, delete, and all navigation keys
+                        if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                          return
                         }
                       }}
                       className="flex-1 text-sm"
@@ -869,11 +911,18 @@ export default function ThemePage() {
                   <div className="flex items-center gap-2">
                     <Input
                       type="text"
+                      inputMode="text"
                       value={previewTheme.categoryNameColor || ''}
                       onChange={(e) => {
                         const value = e.target.value
                         if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
                           handleColorChange('categoryNameColor', value || null)
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Allow backspace, delete, and all navigation keys
+                        if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                          return
                         }
                       }}
                       className="flex-1 text-sm"
@@ -913,11 +962,18 @@ export default function ThemePage() {
                   <div className="flex items-center gap-2">
                     <Input
                       type="text"
+                      inputMode="text"
                       value={previewTheme.bottomNavSectionNameColor || ''}
                       onChange={(e) => {
                         const value = e.target.value
                         if (isValidHex(value) || value.startsWith('rgba') || value.startsWith('rgb') || value.startsWith('hsl') || value === '') {
                           handleColorChange('bottomNavSectionNameColor', value || null)
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Allow backspace, delete, and all navigation keys
+                        if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) {
+                          return
                         }
                       }}
                       className="flex-1 text-sm"
