@@ -684,7 +684,7 @@ export default function ThemePage() {
                 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-white">
-                    Background Color (Items + Bottom Nav + Categories)
+                    Background Color (Items + Bottom Nav + Categories + Basket)
                   </label>
                   <div className="flex items-center gap-2">
                     <Input
@@ -721,7 +721,7 @@ export default function ThemePage() {
                   >
                     Reset to Default (Liquid Glass)
                   </Button>
-                  <p className="text-xs text-white/50">Applies solid background color to item cards, bottom nav box, and category headers. Reset to restore liquid glass effect.</p>
+                  <p className="text-xs text-white/50">Applies solid background color to item cards, bottom nav box, category headers, and basket drawer. Reset to restore liquid glass effect.</p>
                 </div>
               </div>
 
