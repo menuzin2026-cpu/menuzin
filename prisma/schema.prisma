@@ -159,6 +159,7 @@ model UiSettings {
   headerLogoSize        Int        @default(32)
   bottomNavSectionSize  Int        @default(13)
   bottomNavCategorySize Int        @default(13)
+  currency              String     @default("IQD")
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
   restaurantId          String     @unique

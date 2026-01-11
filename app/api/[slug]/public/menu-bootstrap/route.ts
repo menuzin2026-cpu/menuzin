@@ -101,10 +101,7 @@ export async function GET(
         if (!r) return null
         return prisma.uiSettings.findUnique({
           where: { restaurantId: r.id },
-          select: {
-            currency: true,
-          },
-        })
+        }).then((settings) => settings ? { currency: (settings as any).currency } : null)
       }),
     ])
 
@@ -131,6 +128,7 @@ export async function GET(
           logoR2Url: restaurant.logoR2Url,
           logoMediaId: restaurant.logoMediaId,
           serviceChargePercent: restaurant.serviceChargePercent ?? 0,
+          currency: (uiSettings as any)?.currency ?? 'IQD',
         },
         theme: theme ? {
           menuBackgroundR2Url: theme.menuBackgroundR2Url,
@@ -143,7 +141,6 @@ export async function GET(
           categoryNameColor: theme.categoryNameColor,
         } : null,
         sections: sectionsWithCategories || [],
-        currency: (uiSettings as any)?.currency ?? 'IQD',
       },
       {
         headers: {
