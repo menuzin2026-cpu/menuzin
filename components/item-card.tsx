@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Plus, Check } from 'lucide-react'
 import { Language } from '@/lib/i18n'
@@ -33,6 +33,24 @@ interface ItemCardProps {
 export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quantity = 0, priority = false }: ItemCardProps) {
   const [showPopup, setShowPopup] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
+  const [useSolidBg, setUseSolidBg] = useState(false)
+  const [surfaceBgColor, setSurfaceBgColor] = useState<string | null>(null)
+
+  // Check if surface background color is set (when glassTintColor is set, use solid background)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkSurfaceBg = () => {
+        const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--glass-tint-color').trim()
+        const hasBg = !!bgColor && bgColor !== 'transparent'
+        setUseSolidBg(hasBg)
+        setSurfaceBgColor(hasBg ? bgColor : null)
+      }
+      checkSurfaceBg()
+      // Listen for theme changes
+      window.addEventListener('theme-updated', checkSurfaceBg)
+      return () => window.removeEventListener('theme-updated', checkSurfaceBg)
+    }
+  }, [])
 
   const handleAddClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -68,26 +86,18 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
       )}
 
       <div
-        className="rounded-2xl overflow-hidden border cursor-pointer backdrop-blur-xl h-full flex flex-col relative"
+        className={`rounded-2xl overflow-hidden border cursor-pointer h-full flex flex-col relative ${useSolidBg ? '' : 'backdrop-blur-xl'}`}
         style={{
-          backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+          backgroundColor: useSolidBg ? surfaceBgColor : 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
+          backdropFilter: useSolidBg ? 'none' : 'blur(20px)',
+          WebkitBackdropFilter: useSolidBg ? 'none' : 'blur(20px)',
           boxShadow: 'none',
           margin: 0,
           padding: 0,
         }}
         onClick={() => onItemClick(item.id)}
       >
-        {/* Glass tint overlay - preserves liquid glass effect while adding tint */}
-        <div
-          className="absolute inset-0 rounded-2xl pointer-events-none"
-          style={{
-            backgroundColor: 'var(--glass-tint-color, transparent)',
-            zIndex: 0,
-          }}
-        />
         {/* Image */}
         <div className="aspect-square w-full relative z-10" style={{
           backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',

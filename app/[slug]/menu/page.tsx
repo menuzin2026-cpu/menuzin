@@ -165,29 +165,13 @@ function MenuPageContent() {
             if (data.theme.headerFooterBgColor) {
               document.documentElement.style.setProperty('--header-footer-bg-color', data.theme.headerFooterBgColor)
             }
-            // Apply glass tint color (convert hex to rgba with low alpha for overlay)
+            // Apply surface background color (solid, no liquid glass) or remove for liquid glass effect
             if (data.theme.glassTintColor) {
-              // Convert hex to rgba with 0.2 alpha (20% opacity for subtle tint)
-              // Handles #RRGGBB, #RGB, and already rgba/rgb formats
-              let tintColor = data.theme.glassTintColor
-              if (tintColor.startsWith('#')) {
-                // Normalize hex color (handle both 3 and 6 digit)
-                let hex = tintColor.slice(1)
-                if (hex.length === 3) {
-                  hex = hex.split('').map((c: string) => c + c).join('')
-                }
-                if (hex.length === 6) {
-                  const r = parseInt(hex.slice(0, 2), 16)
-                  const g = parseInt(hex.slice(2, 4), 16)
-                  const b = parseInt(hex.slice(4, 6), 16)
-                  tintColor = `rgba(${r}, ${g}, ${b}, 0.2)`
-                }
-              } else if (!tintColor.startsWith('rgba') && !tintColor.startsWith('rgb')) {
-                // If it's not hex, rgba, or rgb, default to a safe rgba
-                tintColor = `rgba(255, 255, 255, 0.2)`
-              }
-              // If already rgba/rgb, keep it as is (user can set custom alpha)
-              document.documentElement.style.setProperty('--glass-tint-color', tintColor)
+              // Store color as-is for solid background (no conversion to transparent overlay)
+              document.documentElement.style.setProperty('--glass-tint-color', data.theme.glassTintColor)
+            } else {
+              // Remove CSS variable to restore liquid glass effect
+              document.documentElement.style.removeProperty('--glass-tint-color')
             }
           }
         }
@@ -283,6 +267,8 @@ function MenuPageContent() {
                 }
                 if (bootstrapData.theme.glassTintColor) {
                   document.documentElement.style.setProperty('--glass-tint-color', bootstrapData.theme.glassTintColor)
+                } else {
+                  document.documentElement.style.removeProperty('--glass-tint-color')
                 }
               }
             }
@@ -475,7 +461,7 @@ function MenuPageContent() {
       .catch((error) => {
         // Only log if not aborted (component unmounted)
         if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
-          console.error('Error fetching UI settings:', error)
+        console.error('Error fetching UI settings:', error)
         }
         // Set defaults on error
         setUiSettings({
@@ -495,7 +481,7 @@ function MenuPageContent() {
 
     return () => {
       abortController.abort()
-    }
+              }
 
     // Extract service charge from restaurant data (already fetched above)
     // Will be set when restaurant data is fetched
@@ -594,7 +580,7 @@ function MenuPageContent() {
         .catch((error) => {
           // Only log if not aborted
           if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
-            console.error('Error fetching UI settings:', error)
+          console.error('Error fetching UI settings:', error)
           }
         })
     }
@@ -637,7 +623,7 @@ function MenuPageContent() {
     const handleServiceChargeUpdate = () => {
       fetchRestaurantData()
     }
-    
+
     const handleThemeUpdate = () => {
       fetchTheme()
     }
@@ -950,21 +936,13 @@ function MenuPageContent() {
           <div className="relative inline-block w-full max-w-full">
             {/* Triangular background shape with rounded edges */}
             <div 
-              className="relative px-3 sm:px-6 py-3 backdrop-blur-sm rounded-xl border w-full overflow-hidden"
+              className={`relative px-3 sm:px-6 py-3 rounded-xl border w-full overflow-hidden ${theme?.glassTintColor ? '' : 'backdrop-blur-sm'}`}
               style={{
-                backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+                backgroundColor: theme?.glassTintColor || 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
                 borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
                 boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
               }}
             >
-              {/* Glass tint overlay - preserves liquid glass effect while adding tint */}
-              <div
-                className="absolute inset-0 rounded-xl pointer-events-none"
-                style={{
-                  backgroundColor: 'var(--glass-tint-color, transparent)',
-                  zIndex: 0,
-                }}
-              />
               {/* Left triangular accent */}
               <div 
                 className="absolute left-0 top-0 bottom-0 z-10"
@@ -1176,9 +1154,9 @@ function MenuPageContent() {
                     <div className="relative inline-block w-full max-w-full">
                       {/* Triangular background shape with rounded edges */}
                       <div 
-                        className="relative px-3 sm:px-6 py-3 backdrop-blur-sm rounded-xl border w-full overflow-hidden"
+                        className={`relative px-3 sm:px-6 py-3 rounded-xl border w-full overflow-hidden ${theme?.glassTintColor ? '' : 'backdrop-blur-sm'}`}
                         style={{
-                          backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+                          backgroundColor: theme?.glassTintColor || 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
                           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
                           boxShadow: `0 0 20px var(--auto-primary-glow, rgba(128, 0, 32, 0.35)), 0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
                         }}

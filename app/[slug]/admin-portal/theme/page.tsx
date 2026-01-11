@@ -666,13 +666,13 @@ export default function ThemePage() {
                 </div>
               </div>
 
-              {/* Liquid Glass Tint */}
+              {/* Surface Background Color */}
               <div className="space-y-4 pt-4 border-t border-white/10">
-                <h3 className="text-base font-semibold text-white">Liquid Glass</h3>
+                <h3 className="text-base font-semibold text-white">Surface Background</h3>
                 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-white">
-                    Glass Tint (Items + Bottom Nav)
+                    Background Color (Items + Bottom Nav + Categories)
                   </label>
                   <div className="flex items-center gap-2">
                     <Input
@@ -685,33 +685,31 @@ export default function ThemePage() {
                         }
                       }}
                       className="flex-1 text-sm"
-                      placeholder="Default: original liquid glass"
+                      placeholder="Default: liquid glass effect"
                     />
                     <button
                       type="button"
                       onClick={() => openColorPicker('glassTintColor')}
                       className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
                       style={{ backgroundColor: previewTheme.glassTintColor ? normalizeToHex(previewTheme.glassTintColor) : 'transparent' }}
-                      aria-label="Pick glass tint color"
+                      aria-label="Pick surface background color"
                     />
                   </div>
-                  {previewTheme.glassTintColor && (
-                    <Button
-                      type="button"
-                      onClick={async () => {
-                        handleColorChange('glassTintColor', null)
-                        // Save immediately to persist NULL
-                        const updatedTheme = { ...previewTheme, glassTintColor: null }
-                        setPreviewTheme(updatedTheme)
-                        await handleSave(updatedTheme)
-                      }}
-                      variant="outline"
-                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
-                    >
-                      Reset / Clear
-                    </Button>
-                  )}
-                  <p className="text-xs text-white/50">Applies tint overlay to item frames and bottom nav box. Leave empty for original liquid glass look.</p>
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      handleColorChange('glassTintColor', null)
+                      // Save immediately to persist NULL
+                      const updatedTheme = { ...previewTheme, glassTintColor: null }
+                      setPreviewTheme(updatedTheme)
+                      await handleSave(updatedTheme)
+                    }}
+                    variant="outline"
+                    className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                  >
+                    Reset to Default (Liquid Glass)
+                  </Button>
+                  <p className="text-xs text-white/50">Applies solid background color to item cards, bottom nav box, and category headers. Reset to restore liquid glass effect.</p>
                 </div>
               </div>
 
@@ -745,6 +743,21 @@ export default function ThemePage() {
                       aria-label="Pick item name text color"
                     />
                   </div>
+                  {previewTheme.itemNameTextColor && (
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        handleColorChange('itemNameTextColor', null)
+                        const updatedTheme = { ...previewTheme, itemNameTextColor: null }
+                        setPreviewTheme(updatedTheme)
+                        await handleSave(updatedTheme)
+                      }}
+                      variant="outline"
+                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                    >
+                      Reset to Default
+                    </Button>
+                  )}
                   <p className="text-xs text-white/50">Leave empty to use default (white)</p>
                 </div>
 
@@ -774,6 +787,21 @@ export default function ThemePage() {
                       aria-label="Pick item price text color"
                     />
                   </div>
+                  {previewTheme.itemPriceTextColor && (
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        handleColorChange('itemPriceTextColor', null)
+                        const updatedTheme = { ...previewTheme, itemPriceTextColor: null }
+                        setPreviewTheme(updatedTheme)
+                        await handleSave(updatedTheme)
+                      }}
+                      variant="outline"
+                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                    >
+                      Reset to Default
+                    </Button>
+                  )}
                   <p className="text-xs text-white/50">Leave empty to use default (gold)</p>
                 </div>
 
@@ -803,6 +831,21 @@ export default function ThemePage() {
                       aria-label="Pick item description text color"
                     />
                   </div>
+                  {previewTheme.itemDescriptionTextColor && (
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        handleColorChange('itemDescriptionTextColor', null)
+                        const updatedTheme = { ...previewTheme, itemDescriptionTextColor: null }
+                        setPreviewTheme(updatedTheme)
+                        await handleSave(updatedTheme)
+                      }}
+                      variant="outline"
+                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                    >
+                      Reset to Default
+                    </Button>
+                  )}
                   <p className="text-xs text-white/50">Leave empty to use default (light gray)</p>
                 </div>
 
@@ -832,6 +875,21 @@ export default function ThemePage() {
                       aria-label="Pick category name color"
                     />
                   </div>
+                  {previewTheme.categoryNameColor && (
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        handleColorChange('categoryNameColor', null)
+                        const updatedTheme = { ...previewTheme, categoryNameColor: null }
+                        setPreviewTheme(updatedTheme)
+                        await handleSave(updatedTheme)
+                      }}
+                      variant="outline"
+                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                    >
+                      Reset to Default
+                    </Button>
+                  )}
                   <p className="text-xs text-white/50">Applies to category names in menu page and bottom nav</p>
                 </div>
 
@@ -861,6 +919,21 @@ export default function ThemePage() {
                       aria-label="Pick bottom nav section name color"
                     />
                   </div>
+                  {previewTheme.bottomNavSectionNameColor && (
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        handleColorChange('bottomNavSectionNameColor', null)
+                        const updatedTheme = { ...previewTheme, bottomNavSectionNameColor: null }
+                        setPreviewTheme(updatedTheme)
+                        await handleSave(updatedTheme)
+                      }}
+                      variant="outline"
+                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                    >
+                      Reset to Default
+                    </Button>
+                  )}
                   <p className="text-xs text-white/50">Applies to section labels in bottom navigation</p>
                 </div>
               </div>
@@ -896,7 +969,7 @@ export default function ThemePage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-white">
-                    Pick {selectedColor === 'appBg' ? 'Background' : selectedColor === 'itemNameTextColor' ? 'Item Name Text' : selectedColor === 'itemPriceTextColor' ? 'Item Price Text' : selectedColor === 'itemDescriptionTextColor' ? 'Item Description Text' : selectedColor === 'categoryNameColor' ? 'Category Name' : selectedColor === 'bottomNavSectionNameColor' ? 'Bottom Nav Section Name' : selectedColor === 'headerFooterBgColor' ? 'Header/Footer Background' : selectedColor === 'glassTintColor' ? 'Glass Tint' : 'Color'} Color
+                    Pick {selectedColor === 'appBg' ? 'Background' : selectedColor === 'itemNameTextColor' ? 'Item Name Text' : selectedColor === 'itemPriceTextColor' ? 'Item Price Text' : selectedColor === 'itemDescriptionTextColor' ? 'Item Description Text' : selectedColor === 'categoryNameColor' ? 'Category Name' : selectedColor === 'bottomNavSectionNameColor' ? 'Bottom Nav Section Name' : selectedColor === 'headerFooterBgColor' ? 'Header/Footer Background' : selectedColor === 'glassTintColor' ? 'Surface Background' : 'Color'} Color
                   </h2>
                   <button
                     onClick={closeColorPicker}
