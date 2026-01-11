@@ -815,6 +815,8 @@ function MenuPageContent() {
           nameAr: item.nameAr,
           price: item.price,
           imageMediaId: item.imageMediaId,
+          imageR2Url: item.imageR2Url,
+          imageR2Key: item.imageR2Key,
           quantity: 1,
         },
       ]
