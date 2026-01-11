@@ -182,8 +182,10 @@ export default function SuperAdminPage() {
   }
 
   const handleFooterLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[SUPER ADMIN] File input changed')
     const file = e.target.files?.[0]
     if (file) {
+      console.log('[SUPER ADMIN] File selected:', file.name)
       setFooterLogoFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -191,6 +193,21 @@ export default function SuperAdminPage() {
       }
       reader.readAsDataURL(file)
       handleFooterLogoUpload(file)
+    } else {
+      console.log('[SUPER ADMIN] No file selected')
+    }
+  }
+
+  const handleFooterLogoButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log('[SUPER ADMIN] Footer logo button clicked, fileInputRef.current:', fileInputRef.current)
+    if (fileInputRef.current) {
+      fileInputRef.current.click()
+      console.log('[SUPER ADMIN] File input click triggered')
+    } else {
+      console.error('[SUPER ADMIN] fileInputRef.current is null')
+      toast.error('File input not found. Please refresh the page.')
     }
   }
 
@@ -399,9 +416,20 @@ export default function SuperAdminPage() {
     }
   }
 
-  const handleLogout = async () => {
+  const handleLogout = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     try {
-      await fetch('/api/super-admin/logout', { method: 'POST' })
+      console.log('[SUPER ADMIN] Logout button clicked')
+      const response = await fetch('/api/super-admin/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      })
+      if (!response.ok) {
+        throw new Error('Logout request failed')
+      }
       toast.success('Logged out successfully')
       router.push('/super-admin/login')
       router.refresh()
@@ -418,19 +446,14 @@ export default function SuperAdminPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8 bg-[#0b0b0b] rounded-2xl p-4 border border-[#222]">
           <h1 className="text-3xl font-bold text-white">Super Admin Portal</h1>
-          <Button 
+          <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              handleLogout()
-            }}
-            className="bg-[#222] hover:bg-[#333] border border-[#333] text-white"
-            size="sm"
+            onClick={handleLogout}
+            className="inline-flex items-center justify-center rounded-lg font-medium transition-colors h-9 px-3 text-sm bg-[#222] hover:bg-[#333] border border-[#333] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
           >
             <LogOut className="w-4 h-4 mr-2" />
             Logout
-          </Button>
+          </button>
         </div>
 
         {/* Footer Logo Upload Section */}
@@ -459,17 +482,11 @@ export default function SuperAdminPage() {
               disabled={uploadingFooterLogo}
               className="hidden"
             />
-            <Button
+            <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                if (fileInputRef.current) {
-                  fileInputRef.current.click()
-                }
-              }}
+              onClick={handleFooterLogoButtonClick}
               disabled={uploadingFooterLogo}
-              className="w-full bg-[#222] hover:bg-[#333] border border-[#333] text-white"
+              className="inline-flex items-center justify-center rounded-lg font-medium transition-colors w-full h-10 px-4 py-2 bg-[#222] hover:bg-[#333] border border-[#333] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
             >
               <Upload className="w-4 h-4 mr-2" />
               {uploadingFooterLogo
@@ -477,7 +494,7 @@ export default function SuperAdminPage() {
                 : footerLogoPreview
                 ? 'Change Footer Logo'
                 : 'Upload Footer Logo'}
-            </Button>
+            </button>
             <p className="text-sm text-gray-400 text-center">
               Supported formats: JPEG, PNG, WebP (max 10MB)
             </p>
