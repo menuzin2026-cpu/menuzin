@@ -101,7 +101,9 @@ export default function ThemePage() {
     // Fetch restaurant ID for menu background upload
     const fetchRestaurantId = async () => {
       try {
-        const response = await fetch('/api/admin/settings')
+        const response = await fetch('/api/admin/settings', {
+          credentials: 'include',
+        })
         if (response.ok) {
           const data = await response.json()
           if (data.id) {
@@ -110,6 +112,7 @@ export default function ThemePage() {
         }
       } catch (error) {
         console.error('Error fetching restaurant ID:', error)
+        // Error will be handled by lazy fetch in handleMenuBackgroundUpload
       }
     }
     fetchRestaurantId()
@@ -234,8 +237,27 @@ export default function ThemePage() {
   }
 
   const handleMenuBackgroundUpload = async (file: File) => {
-    if (!restaurantId) {
-      toast.error('Restaurant ID not found')
+    // Fetch restaurant ID if not already loaded (lazy fetch for mobile)
+    let currentRestaurantId = restaurantId
+    if (!currentRestaurantId) {
+      try {
+        const response = await fetch('/api/admin/settings', {
+          credentials: 'include',
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.id) {
+            currentRestaurantId = data.id
+            setRestaurantId(data.id)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching restaurant ID:', error)
+      }
+    }
+    
+    if (!currentRestaurantId) {
+      toast.error('Restaurant ID not found. Please refresh the page and try again.')
       return
     }
 
@@ -260,7 +282,7 @@ export default function ThemePage() {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('scope', 'menuBg')
-      formData.append('restaurantId', restaurantId)
+      formData.append('restaurantId', currentRestaurantId)
 
       const uploadResponse = await fetch('/api/r2/upload', {
         method: 'POST',
