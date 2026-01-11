@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { MenuHeader } from '@/components/menu-header'
 import { FloatingActionBar } from '@/components/floating-action-bar'
@@ -107,6 +107,11 @@ function MenuPageContent() {
     glassTintColor?: string | null
   } | null>(null)
   const [serviceChargePercent, setServiceChargePercent] = useState<number>(0)
+  // Cache items by categoryId for instant switching
+  const [categoryItemsCache, setCategoryItemsCache] = useState<Map<string, Item[]>>(new Map())
+  const [loadingCategoryId, setLoadingCategoryId] = useState<string | null>(null)
+  // Track which categories are being fetched to avoid duplicate requests
+  const fetchingCategoriesRef = useRef<Set<string>>(new Set())
   
   // Refs for bottom navigation auto-scroll
   const categoryNavContainerRef = useRef<HTMLDivElement>(null)
@@ -114,7 +119,87 @@ function MenuPageContent() {
   const isUserScrollingNav = useRef(false)
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Fetch theme data for menu background and text colors (shared function)
+  // Apply theme CSS variables (helper function)
+  const applyThemeCSS = useCallback((themeData: typeof theme) => {
+    if (typeof document === 'undefined' || !themeData) return
+    
+    // Clear all theme-related CSS variables first (prevents color mixing between restaurants)
+    document.documentElement.style.removeProperty('--item-name-text-color')
+    document.documentElement.style.removeProperty('--item-price-text-color')
+    document.documentElement.style.removeProperty('--item-description-text-color')
+    document.documentElement.style.removeProperty('--bottom-nav-section-name-color')
+    document.documentElement.style.removeProperty('--category-name-color')
+    document.documentElement.style.removeProperty('--header-footer-bg-color')
+    document.documentElement.style.removeProperty('--glass-tint-color')
+    
+    // Now set only the current restaurant's theme colors (if they exist)
+    if (themeData.itemNameTextColor) {
+      document.documentElement.style.setProperty('--item-name-text-color', themeData.itemNameTextColor)
+    }
+    if (themeData.itemPriceTextColor) {
+      document.documentElement.style.setProperty('--item-price-text-color', themeData.itemPriceTextColor)
+    }
+    if (themeData.itemDescriptionTextColor) {
+      document.documentElement.style.setProperty('--item-description-text-color', themeData.itemDescriptionTextColor)
+    }
+    if (themeData.bottomNavSectionNameColor) {
+      document.documentElement.style.setProperty('--bottom-nav-section-name-color', themeData.bottomNavSectionNameColor)
+    }
+    if (themeData.categoryNameColor) {
+      document.documentElement.style.setProperty('--category-name-color', themeData.categoryNameColor)
+    }
+    if (themeData.headerFooterBgColor) {
+      document.documentElement.style.setProperty('--header-footer-bg-color', themeData.headerFooterBgColor)
+    }
+    if (themeData.glassTintColor) {
+      document.documentElement.style.setProperty('--glass-tint-color', themeData.glassTintColor)
+    } else {
+      document.documentElement.style.removeProperty('--glass-tint-color')
+    }
+  }, [])
+
+  // Fetch items for a specific category
+  const fetchCategoryItems = useCallback(async (categoryId: string) => {
+    if (!slug || !categoryId) return
+    
+    // Check if already cached or being fetched
+    if (categoryItemsCache.has(categoryId) || fetchingCategoriesRef.current.has(categoryId)) {
+      return
+    }
+    
+    fetchingCategoriesRef.current.add(categoryId)
+    setLoadingCategoryId(categoryId)
+    try {
+      const res = await fetch(`/api/${slug}/public/menu-items?categoryId=${encodeURIComponent(categoryId)}`)
+      if (res.ok) {
+        const data = await res.json()
+        const items = Array.isArray(data?.items) ? data.items.filter((item: Item) => item?.isActive) : []
+        
+        // Update cache
+        setCategoryItemsCache(prev => {
+          // Final check - another request might have cached it
+          if (prev.has(categoryId)) return prev
+          const newCache = new Map(prev)
+          newCache.set(categoryId, items)
+          return newCache
+        })
+        
+        // Update allItems for search functionality
+        setAllItems(prev => {
+          const existingIds = new Set(prev.map(i => i.id))
+          const newItems = items.filter((item: Item) => !existingIds.has(item.id))
+          return [...prev, ...newItems]
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching category items:', error)
+    } finally {
+      fetchingCategoriesRef.current.delete(categoryId)
+      setLoadingCategoryId(null)
+    }
+  }, [slug, categoryItemsCache])
+
+  // Fetch theme data (for admin updates)
   const fetchTheme = useCallback(async () => {
     if (!slug) return
     try {
@@ -134,54 +219,13 @@ function MenuPageContent() {
             headerFooterBgColor: data.theme.headerFooterBgColor || null,
             glassTintColor: data.theme.glassTintColor || null,
           })
-          
-          // Apply text colors and new theme colors as CSS variables
-          // IMPORTANT: Always clear previous restaurant's colors first to prevent mixing
-          if (typeof document !== 'undefined') {
-            // Clear all theme-related CSS variables first (prevents color mixing between restaurants)
-            document.documentElement.style.removeProperty('--item-name-text-color')
-            document.documentElement.style.removeProperty('--item-price-text-color')
-            document.documentElement.style.removeProperty('--item-description-text-color')
-            document.documentElement.style.removeProperty('--bottom-nav-section-name-color')
-            document.documentElement.style.removeProperty('--category-name-color')
-            document.documentElement.style.removeProperty('--header-footer-bg-color')
-            document.documentElement.style.removeProperty('--glass-tint-color')
-            
-            // Now set only the current restaurant's theme colors (if they exist)
-            if (data.theme.itemNameTextColor) {
-              document.documentElement.style.setProperty('--item-name-text-color', data.theme.itemNameTextColor)
-            }
-            if (data.theme.itemPriceTextColor) {
-              document.documentElement.style.setProperty('--item-price-text-color', data.theme.itemPriceTextColor)
-            }
-            if (data.theme.itemDescriptionTextColor) {
-              document.documentElement.style.setProperty('--item-description-text-color', data.theme.itemDescriptionTextColor)
-            }
-            if (data.theme.bottomNavSectionNameColor) {
-              document.documentElement.style.setProperty('--bottom-nav-section-name-color', data.theme.bottomNavSectionNameColor)
-            }
-            if (data.theme.categoryNameColor) {
-              document.documentElement.style.setProperty('--category-name-color', data.theme.categoryNameColor)
-            }
-            // Apply header/footer background color
-            if (data.theme.headerFooterBgColor) {
-              document.documentElement.style.setProperty('--header-footer-bg-color', data.theme.headerFooterBgColor)
-            }
-            // Apply surface background color (solid, no liquid glass) or remove for liquid glass effect
-            if (data.theme.glassTintColor) {
-              // Store color as-is for solid background (no conversion to transparent overlay)
-              document.documentElement.style.setProperty('--glass-tint-color', data.theme.glassTintColor)
-            } else {
-              // Remove CSS variable to restore liquid glass effect
-              document.documentElement.style.removeProperty('--glass-tint-color')
-            }
-          }
+          applyThemeCSS(data.theme)
         }
       }
     } catch (error) {
       console.error('Error fetching theme:', error)
     }
-  }, [slug])
+  }, [slug, applyThemeCSS])
 
   // Memoized fetch function for restaurant data (including service charge)
   const fetchRestaurantData = useCallback(async () => {
@@ -239,40 +283,8 @@ function MenuPageContent() {
             }
             if (bootstrapData.theme) {
               setTheme(bootstrapData.theme)
-              // Apply CSS variables immediately
-              if (typeof document !== 'undefined' && bootstrapData.theme) {
-                document.documentElement.style.removeProperty('--item-name-text-color')
-                document.documentElement.style.removeProperty('--item-price-text-color')
-                document.documentElement.style.removeProperty('--item-description-text-color')
-                document.documentElement.style.removeProperty('--bottom-nav-section-name-color')
-                document.documentElement.style.removeProperty('--category-name-color')
-                document.documentElement.style.removeProperty('--header-footer-bg-color')
-                document.documentElement.style.removeProperty('--glass-tint-color')
-                
-                if (bootstrapData.theme.itemNameTextColor) {
-                  document.documentElement.style.setProperty('--item-name-text-color', bootstrapData.theme.itemNameTextColor)
-                }
-                if (bootstrapData.theme.itemPriceTextColor) {
-                  document.documentElement.style.setProperty('--item-price-text-color', bootstrapData.theme.itemPriceTextColor)
-                }
-                if (bootstrapData.theme.itemDescriptionTextColor) {
-                  document.documentElement.style.setProperty('--item-description-text-color', bootstrapData.theme.itemDescriptionTextColor)
-                }
-                if (bootstrapData.theme.bottomNavSectionNameColor) {
-                  document.documentElement.style.setProperty('--bottom-nav-section-name-color', bootstrapData.theme.bottomNavSectionNameColor)
-                }
-                if (bootstrapData.theme.categoryNameColor) {
-                  document.documentElement.style.setProperty('--category-name-color', bootstrapData.theme.categoryNameColor)
-                }
-                if (bootstrapData.theme.headerFooterBgColor) {
-                  document.documentElement.style.setProperty('--header-footer-bg-color', bootstrapData.theme.headerFooterBgColor)
-                }
-                if (bootstrapData.theme.glassTintColor) {
-                  document.documentElement.style.setProperty('--glass-tint-color', bootstrapData.theme.glassTintColor)
-                } else {
-                  document.documentElement.style.removeProperty('--glass-tint-color')
-                }
-              }
+              // Apply CSS variables immediately using helper
+              applyThemeCSS(bootstrapData.theme)
             }
             
             // Set sections structure (without items) to show navigation immediately
@@ -293,6 +305,13 @@ function MenuPageContent() {
                 
                 if (savedSection) {
                   setActiveSectionId(savedSection.id)
+                  // Auto-select first category in saved section
+                  const sortedCategories = savedSection.categories
+                    .filter((c: Category) => c.isActive)
+                    .sort((a: Category, b: Category) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                  if (sortedCategories.length > 0) {
+                    setActiveCategoryId(sortedCategories[0].id)
+                  }
                 } else {
                   const sortedSections = sectionsWithoutItems
                     .filter((s: Section) => s.isActive)
@@ -300,72 +319,30 @@ function MenuPageContent() {
                   if (sortedSections.length > 0) {
                     setActiveSectionId(sortedSections[0].id)
                     localStorage.setItem(storageKey, sortedSections[0].id)
+                    // Auto-select first category in first section
+                    const sortedCategories = sortedSections[0].categories
+                      .filter((c: Category) => c.isActive)
+                      .sort((a: Category, b: Category) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                    if (sortedCategories.length > 0) {
+                      setActiveCategoryId(sortedCategories[0].id)
+                    }
                   }
                 }
-                setActiveCategoryId(null)
               }
             }
+            
+            // Show UI immediately after bootstrap (don't wait for items)
+            setIsLoadingMenu(false)
           }
         } catch (bootstrapError) {
-          // Bootstrap failed, continue with full menu fetch
+          // Bootstrap failed
           if (process.env.NODE_ENV === 'development') {
-            console.warn('Bootstrap fetch failed, falling back to full menu:', bootstrapError)
+            console.warn('Bootstrap fetch failed:', bootstrapError)
           }
+          setSections([])
+          setAllItems([])
+          setIsLoadingMenu(false)
         }
-        
-        // Now fetch full menu data (with items) - this can be slower but is cached
-        const res = await fetch(`/data/menu?slug=${encodeURIComponent(slug)}`)
-        if (!res.ok) {
-          if (res.status === 404) {
-            console.error('Restaurant not found for slug:', slug)
-            setSections([])
-            setAllItems([])
-            setIsLoadingMenu(false)
-            return
-          }
-          throw new Error(`Failed to fetch menu: ${res.status} ${res.statusText}`)
-        }
-        const data = await res.json()
-        const sectionsData = Array.isArray(data?.sections) ? data.sections : []
-        
-        // Update sections with full data (including items)
-        setSections(sectionsData)
-        
-        // Auto-select section if not already selected
-        if (sectionsData.length > 0 && !activeSectionId) {
-          const storageKey = `menu-section-${slug}-${lang}`
-          const savedSectionId = localStorage.getItem(storageKey)
-          const savedSection = savedSectionId 
-            ? sectionsData.find((s: Section) => s.id === savedSectionId && s.isActive)
-            : null
-          
-          if (savedSection) {
-            setActiveSectionId(savedSection.id)
-          } else {
-            const sortedSections = sectionsData
-              .filter((s: Section) => s.isActive)
-              .sort((a: Section, b: Section) => (a.sortOrder || 0) - (b.sortOrder || 0))
-            if (sortedSections.length > 0) {
-              setActiveSectionId(sortedSections[0].id)
-              localStorage.setItem(storageKey, sortedSections[0].id)
-            }
-          }
-          setActiveCategoryId(null)
-        }
-        
-        // Flatten all items for search
-        const items: Item[] = []
-        sectionsData.forEach((section: Section) => {
-          if (section?.categories && Array.isArray(section.categories)) {
-            section.categories.forEach((category: Category) => {
-              if (category?.items && Array.isArray(category.items)) {
-                items.push(...category.items.filter((item) => item?.isActive))
-              }
-            })
-          }
-        })
-        setAllItems(items)
-        setIsLoadingMenu(false)
       } catch (error) {
         console.error('Error fetching menu:', error)
         if (retryCount < 1) {
@@ -377,54 +354,17 @@ function MenuPageContent() {
         setIsLoadingMenu(false)
       }
     }
-    fetchMenu()
-    
-    // Fetch both header logo (restaurant data) and footer logo together to sync loading
-    const fetchLogosTogether = async () => {
-      try {
-        // Fetch both in parallel (restaurant data already fetched in bootstrap, but fetch footer logo)
-        const [restaurantRes, footerLogoRes] = await Promise.all([
-          // Only fetch if not already set from bootstrap
-          restaurant ? Promise.resolve({ ok: true, json: async () => restaurant } as Response) : fetch(`/data/restaurant?slug=${encodeURIComponent(slug)}`),
-          fetch(`/api/platform-settings`)
-        ])
-
-        // Process restaurant data (header logo + service charge)
-        if (restaurantRes.ok) {
-          const restaurantData = await restaurantRes.json()
-          setRestaurant(restaurantData)
-          // Set service charge from restaurant data
-          if (restaurantData.serviceChargePercent !== undefined && restaurantData.serviceChargePercent !== null) {
-            const serviceCharge = typeof restaurantData.serviceChargePercent === 'number' 
-              ? restaurantData.serviceChargePercent 
-              : parseFloat(String(restaurantData.serviceChargePercent))
-            setServiceChargePercent(isNaN(serviceCharge) ? 0 : serviceCharge)
-          } else {
-            setServiceChargePercent(0)
-          }
-        } else {
-          console.error('Error fetching restaurant data:', restaurantRes.status, restaurantRes.statusText)
-          setServiceChargePercent(0)
-        }
-
-        // Process footer logo
-        if (footerLogoRes.ok) {
-          const footerLogoData = await footerLogoRes.json()
-          if (footerLogoData.footerLogoR2Url) {
-            setFooterLogoUrl(footerLogoData.footerLogoR2Url)
-          } else {
-            setFooterLogoUrl(null)
-          }
+    // Fetch bootstrap and footer logo in parallel
+    Promise.all([
+      fetchMenu(),
+      fetch(`/api/platform-settings`).then(res => res.ok ? res.json() : null).then(data => {
+        if (data?.footerLogoR2Url) {
+          setFooterLogoUrl(data.footerLogoR2Url)
         } else {
           setFooterLogoUrl(null)
         }
-      } catch (error) {
-        console.error('Error fetching logos:', error)
-        setServiceChargePercent(0)
-        setFooterLogoUrl(null)
-      }
-    }
-    fetchLogosTogether()
+      }).catch(() => setFooterLogoUrl(null))
+    ])
 
     // Load basket from localStorage (slug-scoped to prevent mixing baskets between restaurants)
     const basketKey = `basket-${slug}`
@@ -437,7 +377,7 @@ function MenuPageContent() {
       }
     }
 
-    // Fetch UI settings for this restaurant (only once per slug)
+    // Fetch UI settings for this restaurant (only once per slug) - in parallel with bootstrap
     const abortController = new AbortController()
     fetch(`/api/ui-settings?slug=${encodeURIComponent(slug)}`, {
       cache: 'no-store',
@@ -451,7 +391,7 @@ function MenuPageContent() {
       })
       .then((data) => {
         setUiSettings(data)
-        // Update service charge from UI settings if available
+        // Update service charge from UI settings if available (bootstrap already set it, but UI settings may override)
         if (data.serviceChargePercent !== undefined && data.serviceChargePercent !== null) {
           const serviceCharge = typeof data.serviceChargePercent === 'number' 
             ? data.serviceChargePercent 
@@ -479,12 +419,9 @@ function MenuPageContent() {
         })
       })
 
-    // Fetch theme on mount
-    fetchTheme()
-
     return () => {
       abortController.abort()
-              }
+    }
 
     // Extract service charge from restaurant data (already fetched above)
     // Will be set when restaurant data is fetched
@@ -495,7 +432,7 @@ function MenuPageContent() {
         detectOverflow()
       }, 500)
     }
-  }, [searchParams, slug, fetchTheme])
+  }, [searchParams, slug, applyThemeCSS])
 
   // Auto-select section when sections are loaded and no section is selected (fallback safety)
   useEffect(() => {
@@ -515,13 +452,38 @@ function MenuPageContent() {
       
       if (savedSection) {
         setActiveSectionId(savedSection.id)
+        // Auto-select first category
+        const sortedCategories = savedSection.categories
+          .filter((c: Category) => c.isActive)
+          .sort((a: Category, b: Category) => (a.sortOrder || 0) - (b.sortOrder || 0))
+        if (sortedCategories.length > 0) {
+          setActiveCategoryId(sortedCategories[0].id)
+        }
       } else {
         setActiveSectionId(sortedSections[0].id)
         localStorage.setItem(storageKey, sortedSections[0].id)
+        // Auto-select first category
+        const sortedCategories = sortedSections[0].categories
+          .filter((c: Category) => c.isActive)
+          .sort((a: Category, b: Category) => (a.sortOrder || 0) - (b.sortOrder || 0))
+        if (sortedCategories.length > 0) {
+          setActiveCategoryId(sortedCategories[0].id)
+        }
       }
-      setActiveCategoryId(null)
     }
   }, [sections.length, activeSectionId, slug, currentLang])
+
+  // Fetch items when active category changes
+  useEffect(() => {
+    if (activeCategoryId) {
+      // Check cache and fetching status before fetching
+      const isCached = categoryItemsCache.has(activeCategoryId)
+      const isFetching = fetchingCategoriesRef.current.has(activeCategoryId)
+      if (!isCached && !isFetching) {
+        fetchCategoryItems(activeCategoryId)
+      }
+    }
+  }, [activeCategoryId, fetchCategoryItems]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // End loading state when we have sections AND (a section is selected OR sections are empty)
   useEffect(() => {
@@ -855,25 +817,33 @@ function MenuPageContent() {
         .sort((a, b) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
     : []
   
-  // Group items by category
-  const itemsByCategory = activeSection && Array.isArray(activeSection.categories)
-    ? activeSection.categories
-        .filter((c) => c?.isActive !== false) // Show all categories, not just active ones
-        .sort((a, b) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
-        .map((category) => ({
+  // Group items by category - use cached items from categoryItemsCache
+  const itemsByCategory = useMemo(() => {
+    if (!activeSection || !Array.isArray(activeSection.categories)) return []
+    
+    return activeSection.categories
+      .filter((c) => c?.isActive !== false)
+      .sort((a, b) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
+      .map((category) => {
+        // Get items from cache if available, otherwise empty array
+        const cachedItems = categoryItemsCache.get(category.id) || []
+        return {
           category,
-          items: Array.isArray(category.items) 
-            ? category.items
-                .filter((i) => i?.isActive !== false) // Show all items, not just active ones
-                .sort((a, b) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
-            : [],
-        }))
-        .filter((group) => group.items.length > 0)
-    : []
+          items: cachedItems
+            .filter((i) => i?.isActive !== false)
+            .sort((a, b) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
+        }
+      })
+      .filter((group) => group.items.length > 0)
+  }, [activeSection, categoryItemsCache])
 
 
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategoryId(categoryId)
+    // Fetch items if not cached
+    if (!categoryItemsCache.has(categoryId)) {
+      fetchCategoryItems(categoryId)
+    }
     const element = document.getElementById(`category-${categoryId}`)
     if (element) {
       // Account for header (~73px) and fixed section/categories box (~107px) = ~180px
@@ -1144,9 +1114,17 @@ function MenuPageContent() {
           <div className="flex items-center justify-center min-h-[50vh] px-4">
             <p className="text-white/70 text-center">No section selected. Please select a section from the navigation below.</p>
           </div>
-        ) : itemsByCategory.length === 0 ? (
+        ) : itemsByCategory.length === 0 && !loadingCategoryId ? (
           <div className="flex items-center justify-center min-h-[50vh] px-4">
             <p className="text-white/70 text-center">No items found in this section.</p>
+          </div>
+        ) : itemsByCategory.length === 0 && loadingCategoryId ? (
+          // Show skeleton while loading category items
+          <div className="px-2 sm:px-4 space-y-8 pt-2 w-full max-w-full">
+            <div className="space-y-4">
+              <SectionHeaderSkeleton />
+              <CategorySectionSkeleton />
+            </div>
           </div>
         ) : (
           <div className="px-2 sm:px-4 space-y-8 pt-2 w-full max-w-full">
