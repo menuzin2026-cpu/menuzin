@@ -140,8 +140,8 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
         </div>
 
         {/* Content */}
-        <div className="p-2 backdrop-blur-sm flex-shrink-0 relative z-10" style={{
-          backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+        <div className={`p-2 flex-shrink-0 relative z-10 ${useSolidBg ? '' : 'backdrop-blur-sm'}`} style={{
+          backgroundColor: useSolidBg && surfaceBgColor ? surfaceBgColor : 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
           margin: 0,
         }}>
           <h3 
