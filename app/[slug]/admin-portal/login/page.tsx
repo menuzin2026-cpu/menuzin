@@ -75,28 +75,66 @@ export default function AdminLoginPage() {
         <div className="text-center mb-8">
           {logoUrl ? (
             <div className="flex items-center justify-center mb-4">
-              <Image
-                src={logoUrl}
-                alt="Restaurant Logo"
-                width={120}
-                height={32}
-                className="object-contain"
-                style={{ 
-                  height: 'var(--header-logo-size, 32px)',
-                  width: 'auto',
-                  maxWidth: '100%',
-                  aspectRatio: 'auto'
+              <div
+                className="rounded-full p-4 flex items-center justify-center"
+                style={{
+                  backgroundColor: 'var(--app-bg, #400810)',
+                  boxShadow: `
+                    0 0 4px var(--auto-primary-glow-strong, rgba(64, 8, 16, 1)),
+                    0 0 8px var(--auto-primary-glow-strong, rgba(64, 8, 16, 0.9)),
+                    0 0 12px var(--auto-primary-glow, rgba(64, 8, 16, 0.8)),
+                    0 0 16px var(--auto-primary-glow, rgba(64, 8, 16, 0.7)),
+                    0 0 20px var(--auto-primary-glow, rgba(64, 8, 16, 0.6)),
+                    0 0 24px var(--auto-primary-glow-subtle, rgba(64, 8, 16, 0.6)),
+                    0 0 32px var(--auto-primary-glow-subtle, rgba(64, 8, 16, 0.5)),
+                    0 0 40px var(--auto-edge-accent, rgba(64, 8, 16, 0.5)),
+                    0 0 50px var(--auto-edge-accent, rgba(64, 8, 16, 0.4)),
+                    0 0 60px var(--auto-edge-accent, rgba(64, 8, 16, 0.3)),
+                    0 2px 4px var(--auto-shadow-color, rgba(0, 0, 0, 0.5))
+                  `,
+                  width: '100px',
+                  height: '100px',
+                  minWidth: '100px',
+                  minHeight: '100px',
                 }}
-                priority
-                unoptimized={logoUrl.startsWith('/assets/')}
-                sizes="(max-width: 768px) 120px, 120px"
-              />
+              >
+                <Image
+                  src={logoUrl}
+                  alt="Restaurant Logo"
+                  width={80}
+                  height={24}
+                  className="object-contain"
+                  style={{ 
+                    height: 'var(--header-logo-size, 24px)',
+                    width: 'auto',
+                    maxWidth: '70px',
+                    maxHeight: '70px',
+                    aspectRatio: 'auto'
+                  }}
+                  priority
+                  unoptimized={logoUrl.startsWith('/assets/')}
+                  sizes="(max-width: 768px) 80px, 80px"
+                />
+              </div>
             </div>
           ) : (
             <div 
-              className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 shadow-lg border border-white/20"
+              className="inline-flex items-center justify-center w-[100px] h-[100px] rounded-full mb-4"
               style={{
                 backgroundColor: 'var(--app-bg, #400810)',
+                boxShadow: `
+                  0 0 4px var(--auto-primary-glow-strong, rgba(64, 8, 16, 1)),
+                  0 0 8px var(--auto-primary-glow-strong, rgba(64, 8, 16, 0.9)),
+                  0 0 12px var(--auto-primary-glow, rgba(64, 8, 16, 0.8)),
+                  0 0 16px var(--auto-primary-glow, rgba(64, 8, 16, 0.7)),
+                  0 0 20px var(--auto-primary-glow, rgba(64, 8, 16, 0.6)),
+                  0 0 24px var(--auto-primary-glow-subtle, rgba(64, 8, 16, 0.6)),
+                  0 0 32px var(--auto-primary-glow-subtle, rgba(64, 8, 16, 0.5)),
+                  0 0 40px var(--auto-edge-accent, rgba(64, 8, 16, 0.5)),
+                  0 0 50px var(--auto-edge-accent, rgba(64, 8, 16, 0.4)),
+                  0 0 60px var(--auto-edge-accent, rgba(64, 8, 16, 0.3)),
+                  0 2px 4px var(--auto-shadow-color, rgba(0, 0, 0, 0.5))
+                `,
               }}
             />
           )}
