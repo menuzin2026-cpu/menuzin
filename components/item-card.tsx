@@ -88,7 +88,7 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
       <div
         className={`rounded-2xl overflow-hidden border cursor-pointer h-full flex flex-col relative ${useSolidBg ? '' : 'backdrop-blur-xl'}`}
         style={{
-          backgroundColor: useSolidBg ? surfaceBgColor : 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
+          backgroundColor: useSolidBg && surfaceBgColor ? surfaceBgColor : 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
           backdropFilter: useSolidBg ? 'none' : 'blur(20px)',
           WebkitBackdropFilter: useSolidBg ? 'none' : 'blur(20px)',
