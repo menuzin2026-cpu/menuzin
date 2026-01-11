@@ -1122,7 +1122,7 @@ function MenuPageContent() {
         {/* Items Grid - Grouped by Category */}
         {isLoadingMenu ? (
           // Show skeleton UI immediately while loading
-          <div className="px-2 sm:px-4 space-y-8 pt-4 w-full max-w-full">
+          <div className="px-2 sm:px-4 space-y-8 pt-2 w-full max-w-full">
             {/* Show skeleton for first section/category */}
             <div className="space-y-4">
               <SectionHeaderSkeleton />
@@ -1147,7 +1147,7 @@ function MenuPageContent() {
             <p className="text-white/70 text-center">No items found in this section.</p>
           </div>
         ) : (
-          <div className="px-2 sm:px-4 space-y-8 pt-4 w-full max-w-full">
+          <div className="px-2 sm:px-4 space-y-8 pt-2 w-full max-w-full">
             {itemsByCategory.map(({ category, items }, index) => {
               return (
                 <div key={category.id} id={`category-${category.id}`} className="scroll-mt-4">
