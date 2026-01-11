@@ -419,7 +419,12 @@ export default function SuperAdminPage() {
         <div className="flex items-center justify-between mb-8 bg-[#0b0b0b] rounded-2xl p-4 border border-[#222]">
           <h1 className="text-3xl font-bold text-white">Super Admin Portal</h1>
           <Button 
-            onClick={handleLogout} 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handleLogout()
+            }}
             className="bg-[#222] hover:bg-[#333] border border-[#333] text-white"
             size="sm"
           >
@@ -456,7 +461,13 @@ export default function SuperAdminPage() {
             />
             <Button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                if (fileInputRef.current) {
+                  fileInputRef.current.click()
+                }
+              }}
               disabled={uploadingFooterLogo}
               className="w-full bg-[#222] hover:bg-[#333] border border-[#333] text-white"
             >
