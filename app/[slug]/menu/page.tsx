@@ -1158,7 +1158,7 @@ function MenuPageContent() {
                     <div className="relative inline-block w-full max-w-full">
                       {/* Triangular background shape with rounded edges */}
                       <div 
-                        className={`relative px-3 sm:px-6 py-3 rounded-xl border w-full overflow-hidden ${theme?.glassTintColor ? '' : 'backdrop-blur-sm'}`}
+                        className={`relative px-2 sm:px-3 py-1.5 rounded-xl border w-full overflow-hidden flex items-center justify-center ${theme?.glassTintColor ? '' : 'backdrop-blur-sm'}`}
                         style={{
                           backgroundColor: theme?.glassTintColor || 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
                           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
@@ -1186,7 +1186,7 @@ function MenuPageContent() {
                           }}
                         ></div>
                         <h2 
-                          className="relative font-bold transition-all duration-300"
+                          className="relative font-bold transition-all duration-300 text-center"
                           style={{ 
                             fontSize: 'var(--menu-category-size)',
                             color: theme?.categoryNameColor || 'var(--auto-text-primary, #FFFFFF)',
