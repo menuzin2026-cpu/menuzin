@@ -106,9 +106,9 @@ export function BasketDrawer({
                   backgroundColor: useSolidBg && surfaceBgColor ? surfaceBgColor : undefined,
                 }}
               >
-                {item.imageMediaId ? (
+                {(item.imageR2Url || item.imageMediaId) ? (
                   <img
-                    src={item.imageR2Url || `/assets/${item.imageMediaId}`}
+                    src={item.imageR2Url || (item.imageMediaId ? `/assets/${item.imageMediaId}` : '')}
                     alt={getLocalizedText(item, currentLang)}
                     className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
                     loading="lazy"
