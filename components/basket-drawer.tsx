@@ -115,7 +115,12 @@ export function BasketDrawer({
                     decoding="async"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-xl bg-white/10 flex-shrink-0" />
+                  <div 
+                    className={`w-16 h-16 rounded-xl flex-shrink-0 ${useSolidBg ? '' : 'bg-white/10'}`}
+                    style={{
+                      backgroundColor: useSolidBg && surfaceBgColor ? surfaceBgColor : undefined,
+                    }}
+                  />
                 )}
                 <div className="flex-1 min-w-0">
                   <h3 
