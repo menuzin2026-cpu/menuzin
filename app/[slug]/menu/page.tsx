@@ -61,6 +61,8 @@ interface BasketItem {
   nameAr: string
   price: number
   imageMediaId: string | null
+  imageR2Key?: string | null
+  imageR2Url?: string | null
   quantity: number
 }
 
