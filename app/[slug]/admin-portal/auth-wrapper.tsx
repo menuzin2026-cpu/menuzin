@@ -51,10 +51,10 @@ export function AdminAuthWrapper({
           }
           // Only log unexpected errors (not 401) in development
           if (process.env.NODE_ENV === 'development' && response.status !== 401) {
-            console.error('Auth check failed with status:', response.status)
+          console.error('Auth check failed with status:', response.status)
           }
           if (response.status !== 401) {
-            router.push(`/${slug}/admin-portal/login`)
+          router.push(`/${slug}/admin-portal/login`)
           }
           return
         }

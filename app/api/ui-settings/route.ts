@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       restaurant = await prisma.restaurant.findUnique({
         where: { slug: query.slug! },
         select: { id: true, serviceChargePercent: true },
-      })
+    })
     }
 
     // Return 404 if restaurant doesn't exist
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     // Only log errors in development to reduce noise
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error fetching UI settings:', error)
+    console.error('Error fetching UI settings:', error)
     }
     
     // Return defaults on error
