@@ -940,7 +940,7 @@ function MenuPageContent() {
           <div className="relative inline-block w-full max-w-full">
             {/* Triangular background shape with rounded edges */}
             <div 
-              className={`relative px-3 sm:px-6 py-3 rounded-xl border w-full overflow-hidden ${theme?.glassTintColor ? '' : 'backdrop-blur-sm'}`}
+              className={`relative px-2 sm:px-3 py-1.5 rounded-xl border w-full overflow-hidden ${theme?.glassTintColor ? '' : 'backdrop-blur-sm'}`}
               style={{
                 backgroundColor: theme?.glassTintColor || 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
                 borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
@@ -969,7 +969,7 @@ function MenuPageContent() {
               ></div>
               
               {/* Sections - Fixed, no scroll */}
-              <div className="flex gap-1.5 sm:gap-2 items-center justify-center mb-2 w-full overflow-hidden relative z-10">
+              <div className="flex gap-1.5 sm:gap-2 items-center justify-center mb-1 w-full overflow-hidden relative z-10">
                 {sections.filter((s) => s.isActive).map((section) => {
                   const isActive = activeSectionId === section.id
                   return (
@@ -996,7 +996,7 @@ function MenuPageContent() {
                             : 'var(--auto-border, rgba(255, 255, 255, 0.2))',
                           boxShadow: 'none',
                           fontSize: 'var(--bottom-nav-section-size)',
-                          padding: '0.25em 0.8em',
+                          padding: '0.2em 0.6em',
                           lineHeight: '1.1',
                         }}
                         onMouseEnter={(e) => {
@@ -1066,7 +1066,7 @@ function MenuPageContent() {
                               : 'var(--auto-border, rgba(255, 255, 255, 0.2))',
                             boxShadow: 'none',
                             fontSize: 'var(--bottom-nav-category-size)',
-                            padding: '0.25em 0.8em',
+                            padding: '0.2em 0.6em',
                             lineHeight: '1.1',
                           }}
                           onMouseEnter={(e) => {
