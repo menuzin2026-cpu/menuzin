@@ -38,8 +38,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 5) ALLOW: Super admin route (no slug)
+  // 5) ALLOW: Super admin route (no slug only)
   if (pathname === '/super-admin' || pathname.startsWith('/super-admin/')) {
+    // Block if there's a slug before super-admin (e.g., /[slug]/super-admin)
+    const pathSegments = pathname.split('/').filter(Boolean)
+    // If path has more than 2 segments and second segment is 'super-admin', it means there's a slug
+    // Example: /legends-restaurant/super-admin -> ['legends-restaurant', 'super-admin']
+    if (pathSegments.length >= 2 && pathSegments[1] === 'super-admin') {
+      return new NextResponse(null, { status: 404 })
+    }
     return NextResponse.next()
   }
 
