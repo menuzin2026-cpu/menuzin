@@ -110,9 +110,17 @@ function MenuPageContent() {
   const [serviceChargePercent, setServiceChargePercent] = useState<number>(0)
   // Cache items by categoryId for instant switching
   const [categoryItemsCache, setCategoryItemsCache] = useState<Map<string, Item[]>>(new Map())
+  const categoryItemsCacheRef = useRef<Map<string, Item[]>>(new Map())
   const [loadingCategoryId, setLoadingCategoryId] = useState<string | null>(null)
   // Track which categories are being fetched to avoid duplicate requests
   const fetchingCategoriesRef = useRef<Set<string>>(new Set())
+  // Track current background prefetch runId for cancellation
+  const prefetchRunIdRef = useRef<number>(0)
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    categoryItemsCacheRef.current = categoryItemsCache
+  }, [categoryItemsCache])
   
   // Refs for bottom navigation auto-scroll
   const categoryNavContainerRef = useRef<HTMLDivElement>(null)
@@ -160,7 +168,7 @@ function MenuPageContent() {
   }, [])
 
   // Fetch items for a specific category
-  const fetchCategoryItems = useCallback(async (categoryId: string) => {
+  const fetchCategoryItems = useCallback(async (categoryId: string, isBackgroundPrefetch = false) => {
     if (!slug || !categoryId) return
     
     // Check if already cached or being fetched
@@ -169,7 +177,10 @@ function MenuPageContent() {
     }
     
     fetchingCategoriesRef.current.add(categoryId)
-    setLoadingCategoryId(categoryId)
+    // Only show loading indicator for non-background fetches
+    if (!isBackgroundPrefetch) {
+      setLoadingCategoryId(categoryId)
+    }
     try {
       const res = await fetch(`/api/${slug}/public/menu-items?categoryId=${encodeURIComponent(categoryId)}`)
       if (res.ok) {
@@ -196,9 +207,67 @@ function MenuPageContent() {
       console.error('Error fetching category items:', error)
     } finally {
       fetchingCategoriesRef.current.delete(categoryId)
-      setLoadingCategoryId(null)
+      if (!isBackgroundPrefetch) {
+        setLoadingCategoryId(null)
+      }
     }
   }, [slug, categoryItemsCache])
+
+  // Background prefetch queue for remaining categories
+  const startBackgroundPrefetch = useCallback((sectionId: string, firstCategoryId: string) => {
+    if (!slug || !sectionId) return
+    
+    // Increment runId to cancel any previous prefetch
+    prefetchRunIdRef.current += 1
+    const currentRunId = prefetchRunIdRef.current
+    
+    // Get active section and its categories
+    const activeSection = sections.find(s => s.id === sectionId)
+    if (!activeSection) return
+    
+    // Get sorted active categories, excluding the first one
+    const sortedCategories = activeSection.categories
+      .filter(c => c.isActive && c.id !== firstCategoryId)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+    
+    if (sortedCategories.length === 0) return
+    
+    // Start prefetching categories one-by-one with delay
+    const prefetchNext = async (index: number) => {
+      // Check if this run was cancelled
+      if (prefetchRunIdRef.current !== currentRunId) {
+        return
+      }
+      
+      if (index >= sortedCategories.length) {
+        return
+      }
+      
+      const category = sortedCategories[index]
+      
+      // Skip if already cached or being fetched (use ref for latest cache state)
+      if (categoryItemsCacheRef.current.has(category.id) || fetchingCategoriesRef.current.has(category.id)) {
+        // Continue to next category immediately
+        setTimeout(() => prefetchNext(index + 1), 50)
+        return
+      }
+      
+      // Fetch this category
+      await fetchCategoryItems(category.id, true)
+      
+      // Check again if run was cancelled
+      if (prefetchRunIdRef.current !== currentRunId) {
+        return
+      }
+      
+      // Wait before fetching next category (150-300ms delay)
+      const delay = 200 + Math.random() * 100 // Random delay between 200-300ms
+      setTimeout(() => prefetchNext(index + 1), delay)
+    }
+    
+    // Start prefetching after a short delay
+    setTimeout(() => prefetchNext(0), 100)
+  }, [slug, sections, fetchCategoryItems])
 
   // Fetch theme data (for admin updates)
   const fetchTheme = useCallback(async () => {
@@ -491,15 +560,29 @@ function MenuPageContent() {
 
   // Fetch items when active category changes
   useEffect(() => {
-    if (activeCategoryId) {
+    if (activeCategoryId && activeSectionId) {
       // Check cache and fetching status before fetching
       const isCached = categoryItemsCache.has(activeCategoryId)
       const isFetching = fetchingCategoriesRef.current.has(activeCategoryId)
       if (!isCached && !isFetching) {
-        fetchCategoryItems(activeCategoryId)
+        fetchCategoryItems(activeCategoryId, false).then(() => {
+          // After first category loads successfully, start background prefetch
+          if (activeSectionId) {
+            startBackgroundPrefetch(activeSectionId, activeCategoryId)
+          }
+        })
+      } else if (isCached && activeSectionId) {
+        // If already cached, still start background prefetch for remaining categories
+        startBackgroundPrefetch(activeSectionId, activeCategoryId)
       }
     }
-  }, [activeCategoryId, fetchCategoryItems]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeCategoryId, activeSectionId, fetchCategoryItems, startBackgroundPrefetch]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cancel background prefetch when section changes
+  useEffect(() => {
+    // Cancel any ongoing prefetch when section changes
+    prefetchRunIdRef.current += 1
+  }, [activeSectionId])
 
   // End loading state when we have sections AND (a section is selected OR sections are empty)
   useEffect(() => {
@@ -645,18 +728,18 @@ function MenuPageContent() {
     if (sections.length === 0 || !activeSectionId) return
 
     const observerOptions = {
-      root: null,
-      rootMargin: '-200px 0px -60% 0px', // Account for header (~73px) and bottom nav (~107px) = ~180px, plus some margin
-      threshold: [0, 0.1, 0.3, 0.5, 0.7, 1.0], // Multiple thresholds for better detection
+      root: null, // Use viewport as root
+      rootMargin: '-20% 0px -70% 0px', // Natural switching threshold: category is "active" when it's in the top 20% of viewport
+      threshold: 0, // Trigger as soon as any part intersects
     }
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      // Find all visible entries
-      const visibleEntries = entries.filter(entry => entry.isIntersecting)
+      // Find all intersecting entries
+      const intersectingEntries = entries.filter(entry => entry.isIntersecting)
       
-      if (visibleEntries.length > 0) {
-        // Sort by intersection ratio to get the most visible one
-        const mostVisible = visibleEntries.reduce((prev, current) => 
+      if (intersectingEntries.length > 0) {
+        // Get the entry with the highest intersection ratio (most visible)
+        const mostVisible = intersectingEntries.reduce((prev, current) => 
           current.intersectionRatio > prev.intersectionRatio ? current : prev
         )
         
@@ -666,8 +749,10 @@ function MenuPageContent() {
           // Verify this category belongs to the active section
           const activeSection = sections.find(s => s.id === activeSectionId)
           if (activeSection?.categories && Array.isArray(activeSection.categories)) {
-            if (activeSection.categories.some(c => c.id === categoryId && c.isActive)) {
-              setActiveCategoryId(categoryId)
+            const category = activeSection.categories.find(c => c.id === categoryId && c.isActive)
+            if (category) {
+              // Only update if different to avoid unnecessary re-renders
+              setActiveCategoryId(prev => prev !== categoryId ? categoryId : prev)
             }
           }
         }
@@ -676,32 +761,59 @@ function MenuPageContent() {
 
     const observer = new IntersectionObserver(observerCallback, observerOptions)
 
-    // Observe all category elements after DOM is ready
+    // Observe all category elements for the active section
     const observeCategories = () => {
       // Disconnect previous observations
       observer.disconnect()
       
-      // Find all category elements for the active section
+      // Find all category section wrappers (they have id="category-{id}")
       const categoryElements = document.querySelectorAll('[id^="category-"]')
       if (categoryElements.length > 0) {
-        categoryElements.forEach((el) => observer.observe(el))
+        categoryElements.forEach((el) => {
+          // Verify this category belongs to active section before observing
+          const categoryId = el.id.replace('category-', '')
+          const activeSection = sections.find(s => s.id === activeSectionId)
+          if (activeSection?.categories?.some(c => c.id === categoryId && c.isActive)) {
+            observer.observe(el)
+          }
+        })
       }
     }
 
-    // Wait a bit for DOM to be ready, then observe
-    // Use a longer delay to ensure categories are rendered
-    const timeoutId = setTimeout(observeCategories, 500)
-    
-    // Also observe after a longer delay in case of slow rendering
-    const timeoutId2 = setTimeout(observeCategories, 1000)
+    // Observe immediately and also after delays to catch progressively loaded categories
+    observeCategories()
+    const timeoutId = setTimeout(observeCategories, 300)
+    const timeoutId2 = setTimeout(observeCategories, 800)
+    const timeoutId3 = setTimeout(observeCategories, 1500)
 
-    // Cleanup observer on unmount or when sections change
+    // Re-observe when categoryItemsCache changes (new categories loaded)
+    const handleCacheUpdate = () => {
+      observeCategories()
+    }
+    
+    // Use MutationObserver to detect when new category sections are added to DOM
+    const mutationObserver = new MutationObserver(() => {
+      observeCategories()
+    })
+    
+    // Observe the main content container for new category sections
+    const contentContainer = document.querySelector('[class*="pb-20"]')
+    if (contentContainer) {
+      mutationObserver.observe(contentContainer, {
+        childList: true,
+        subtree: true,
+      })
+    }
+
+    // Cleanup observer on unmount or when sections/section changes
     return () => {
       clearTimeout(timeoutId)
       clearTimeout(timeoutId2)
+      clearTimeout(timeoutId3)
       observer.disconnect()
+      mutationObserver.disconnect()
     }
-  }, [sections, activeSectionId])
+  }, [sections, activeSectionId, categoryItemsCache])
 
   // Auto-scroll bottom navigation when active category changes
   useEffect(() => {
