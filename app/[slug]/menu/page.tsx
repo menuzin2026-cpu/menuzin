@@ -108,10 +108,6 @@ function MenuPageContent() {
     glassTintColor?: string | null
   } | null>(null)
   const [serviceChargePercent, setServiceChargePercent] = useState<number>(0)
-  // Track if device is mobile for background attachment optimization
-  const [isMobile, setIsMobile] = useState<boolean>(false)
-  // Lock background style to prevent recalculation when sections load
-  const backgroundStyleRef = useRef<React.CSSProperties | null>(null)
   // Cache items by categoryId for instant switching
   const [categoryItemsCache, setCategoryItemsCache] = useState<Map<string, Item[]>>(new Map())
   const categoryItemsCacheRef = useRef<Map<string, Item[]>>(new Map())
@@ -851,6 +847,39 @@ function MenuPageContent() {
     localStorage.setItem(basketKey, JSON.stringify(basket))
   }, [basket, slug])
 
+  // Lock body scroll when item modal is open
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+
+    if (isItemModalOpen) {
+      // Save current scroll position
+      const scrollY = window.scrollY
+      // Lock body scroll
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+      document.body.style.overflow = 'hidden'
+    } else {
+      // Restore scroll position
+      const scrollY = document.body.style.top
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      document.body.style.overflow = ''
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      document.body.style.overflow = ''
+    }
+  }, [isItemModalOpen])
+
   const handleLanguageChange = (lang: Language) => {
     setCurrentLang(lang)
     localStorage.setItem('language', lang)
@@ -986,19 +1015,6 @@ function MenuPageContent() {
     }
   }
 
-  // Detect mobile device for background attachment optimization
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
-    }
-    
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
   // Preload background image for better perceived performance
   useEffect(() => {
     if (theme?.menuBackgroundR2Url && typeof window !== 'undefined') {
@@ -1008,40 +1024,18 @@ function MenuPageContent() {
     }
   }, [theme?.menuBackgroundR2Url])
 
-  // Memoize background style and lock it after initial load to prevent zoom when sections load
-  const backgroundStyle: React.CSSProperties = useMemo(() => {
-    // If we already have a locked style, return it (prevents recalculation when sections load)
-    if (backgroundStyleRef.current && theme?.menuBackgroundR2Url) {
-      return backgroundStyleRef.current
-    }
-    
-    const style: React.CSSProperties = {
-      backgroundColor: 'var(--app-bg, #400810)',
-    }
-    
-    if (theme?.menuBackgroundR2Url) {
-      style.backgroundImage = `url(${theme.menuBackgroundR2Url})`
-      // Use cover to fill screen, but ensure it's centered and doesn't zoom
-      style.backgroundSize = 'cover'
-      style.backgroundPosition = 'center center'
-      style.backgroundRepeat = 'no-repeat'
-      // Always use 'scroll' to prevent recalculation/zoom when content loads
-      // 'fixed' causes background to recalculate when page height changes
-      style.backgroundAttachment = 'scroll'
-      
-      // Lock the style after first calculation
-      backgroundStyleRef.current = style
-    }
-    
-    return style
-  }, [theme?.menuBackgroundR2Url])
+  // Calculate background style with image overlay if exists (same as commit 8b8e346)
+  const backgroundStyle: React.CSSProperties = {
+    backgroundColor: 'var(--app-bg, #400810)',
+  }
   
-  // Reset background style ref if theme URL changes
-  useEffect(() => {
-    if (!theme?.menuBackgroundR2Url) {
-      backgroundStyleRef.current = null
-    }
-  }, [theme?.menuBackgroundR2Url])
+  if (theme?.menuBackgroundR2Url) {
+    backgroundStyle.backgroundImage = `url(${theme.menuBackgroundR2Url})`
+    backgroundStyle.backgroundSize = 'cover'
+    backgroundStyle.backgroundPosition = 'center'
+    backgroundStyle.backgroundRepeat = 'no-repeat'
+    backgroundStyle.backgroundAttachment = 'fixed'
+  }
 
   return (
     <div 
