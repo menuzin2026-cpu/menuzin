@@ -1,13 +1,8 @@
 'use client'
 
-import Image from 'next/image'
-
 interface MenuHeaderProps {
   logoUrl?: string
 }
-
-// Low-quality base64 placeholder for blur effect
-const blurDataURL = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjMyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMzIiIGZpbGw9IiM0MDA4MTAiLz48L3N2Zz4='
 
 export function MenuHeader({ logoUrl }: MenuHeaderProps) {
   return (
@@ -22,11 +17,9 @@ export function MenuHeader({ logoUrl }: MenuHeaderProps) {
       <div className="flex items-center justify-center max-w-7xl mx-auto w-full">
         {/* Centered Logo */}
         {logoUrl ? (
-          <Image
+          <img
             src={logoUrl}
             alt="Restaurant Logo"
-            width={120}
-            height={32}
             className="object-contain"
             style={{ 
               height: 'var(--header-logo-size, 32px)',
@@ -34,11 +27,8 @@ export function MenuHeader({ logoUrl }: MenuHeaderProps) {
               maxWidth: '100%',
               aspectRatio: 'auto'
             }}
-            priority
-            placeholder="blur"
-            blurDataURL={blurDataURL}
-            unoptimized={logoUrl.startsWith('/assets/')}
-            sizes="(max-width: 768px) 120px, 120px"
+            loading="eager"
+            decoding="async"
           />
         ) : (
           <div 

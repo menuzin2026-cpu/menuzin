@@ -1,15 +1,10 @@
 'use client'
 
-import Image from 'next/image'
-
 interface PoweredByFooterProps {
   footerLogoUrl?: string | null
 }
 
 const PLATFORM_URL = 'https://www.menuzin.com'
-
-// Low-quality base64 placeholder for blur effect
-const blurDataURL = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjE4IiBmaWxsPSIjNDAwODEwIi8+PC9zdmc+'
 
 export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
   // Don't render if no logo is provided
@@ -40,11 +35,9 @@ export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
       >
         <span className="text-sm font-medium">Powered by</span>
         {footerLogoUrl && (
-          <Image
+          <img
             src={footerLogoUrl}
             alt="Menuzin"
-            width={60}
-            height={18}
             className="h-4 w-auto object-contain"
             style={{ 
               maxHeight: '18px',
@@ -52,11 +45,8 @@ export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
               height: '18px',
               aspectRatio: '60/18'
             }}
-            priority
-            placeholder="blur"
-            blurDataURL={blurDataURL}
-            unoptimized={true}
-            sizes="60px"
+            loading="eager"
+            decoding="async"
           />
         )}
       </a>
