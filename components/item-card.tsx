@@ -146,7 +146,7 @@ function ItemCardComponent({ item, currentLang, onItemClick, onAddToBasket, quan
           margin: 0,
         }}>
           <h3 
-            className="font-semibold mb-0.5 line-clamp-1 break-words"
+            className="font-semibold mb-1 line-clamp-1 break-words"
             style={{ 
               color: 'var(--item-name-text-color, var(--auto-text-primary, #FFFFFF))',
               fontSize: 'var(--menu-item-name-size)'
@@ -154,17 +154,7 @@ function ItemCardComponent({ item, currentLang, onItemClick, onAddToBasket, quan
           >
             {getLocalizedText(item, currentLang)}
           </h3>
-          {item.descriptionEn || item.descriptionKu || item.descriptionAr ? (
-            <p 
-              className="text-xs mb-1 line-clamp-2 break-words opacity-80"
-              style={{ 
-                color: 'var(--item-description-text-color, var(--auto-text-secondary, rgba(255, 255, 255, 0.9)))',
-                fontSize: 'var(--menu-item-desc-size)'
-              }}
-            >
-              {currentLang === 'en' ? item.descriptionEn : currentLang === 'ku' ? item.descriptionKu : item.descriptionAr}
-            </p>
-          ) : null}
+          {/* Description removed from card - only shown in modal when item is clicked */}
           <div className="flex items-center justify-between">
             <span 
               className="font-bold"
