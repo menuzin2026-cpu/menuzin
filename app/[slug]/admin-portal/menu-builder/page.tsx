@@ -1038,7 +1038,7 @@ export default function MenuBuilderPage() {
           ...style,
         }}
       >
-        {/* Drag Handle - Left Side (6 dots vertical) */}
+        {/* Drag Handle - Left Side (3 dots vertical) */}
         <div
           {...attributes}
           {...listeners}
@@ -1061,9 +1061,6 @@ export default function MenuBuilderPage() {
           }}
         >
           <div className="flex flex-col gap-0.5 sm:gap-1">
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
@@ -1238,7 +1235,7 @@ export default function MenuBuilderPage() {
           ...style,
         }}
       >
-        {/* Drag Handle - Left Side (6 dots vertical) */}
+        {/* Drag Handle - Left Side (3 dots vertical) */}
         <div
           {...attributes}
           {...listeners}
@@ -1257,9 +1254,6 @@ export default function MenuBuilderPage() {
           }}
         >
           <div className="flex flex-col gap-0.5 sm:gap-1">
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
@@ -1427,7 +1421,7 @@ export default function MenuBuilderPage() {
           ...style,
         }}
       >
-        {/* Grip Icon - Left Side (6 dots vertical) */}
+        {/* Grip Icon - Left Side (3 dots vertical) */}
         <div
           {...attributes}
           {...listeners}
@@ -1446,9 +1440,6 @@ export default function MenuBuilderPage() {
           }}
         >
           <div className="flex flex-col gap-0.5 sm:gap-1">
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
-            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
