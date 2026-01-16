@@ -771,48 +771,48 @@ export default function MenuBuilderPage() {
       if (imageToUpload && newItem.id) {
         // Upload in background - don't await, let it complete automatically
         ;(async () => {
-          try {
-            // Upload via server-side proxy (avoids CORS issues)
-            const formData = new FormData()
+        try {
+          // Upload via server-side proxy (avoids CORS issues)
+          const formData = new FormData()
             formData.append('file', imageToUpload)
-            formData.append('scope', 'itemImage')
-            formData.append('restaurantId', restaurantId)
-            formData.append('itemId', newItem.id)
+          formData.append('scope', 'itemImage')
+          formData.append('restaurantId', restaurantId)
+          formData.append('itemId', newItem.id)
 
-            const uploadResponse = await fetch('/api/r2/upload', {
-              method: 'POST',
-              body: formData,
-            })
+          const uploadResponse = await fetch('/api/r2/upload', {
+            method: 'POST',
+            body: formData,
+          })
 
-            if (!uploadResponse.ok) {
-              const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
-              console.error('[R2 UPLOAD] Upload failed:', errorData)
-              throw new Error(errorData.error || 'Failed to upload image')
-            }
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+            console.error('[R2 UPLOAD] Upload failed:', errorData)
+            throw new Error(errorData.error || 'Failed to upload image')
+          }
 
-            const { key, publicUrl } = await uploadResponse.json()
+          const { key, publicUrl } = await uploadResponse.json()
 
-            // Update item with R2 key/URL
-            const updateResponse = await fetch(`/api/admin/items/${newItem.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ imageR2Key: key, imageR2Url: publicUrl }),
-            })
+          // Update item with R2 key/URL
+          const updateResponse = await fetch(`/api/admin/items/${newItem.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageR2Key: key, imageR2Url: publicUrl }),
+          })
 
-            if (!updateResponse.ok) {
-              const errorData = await updateResponse.json().catch(() => ({ error: 'Unknown error' }))
-              console.error('[R2 UPLOAD] Database update failed:', errorData)
-              throw new Error(errorData.error || 'Failed to save image URL to database')
-            }
+          if (!updateResponse.ok) {
+            const errorData = await updateResponse.json().catch(() => ({ error: 'Unknown error' }))
+            console.error('[R2 UPLOAD] Database update failed:', errorData)
+            throw new Error(errorData.error || 'Failed to save image URL to database')
+          }
 
-            console.log('[R2 UPLOAD] ✅ Image uploaded successfully:', { key, publicUrl })
+          console.log('[R2 UPLOAD] ✅ Image uploaded successfully:', { key, publicUrl })
             // Refresh menu data to show the uploaded image
             fetchMenuData()
-          } catch (uploadError: any) {
-            console.error('[R2 UPLOAD] ❌ Error uploading image:', uploadError)
+        } catch (uploadError: any) {
+          console.error('[R2 UPLOAD] ❌ Error uploading image:', uploadError)
             // Show error toast but don't block the UI
             toast.error(`Image upload failed: ${uploadError.message || 'Unknown error'}`)
-          }
+        }
         })()
       }
     } catch (error: any) {
@@ -1068,58 +1068,58 @@ export default function MenuBuilderPage() {
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
-          </div>
-        </div>
+            </div>
+            </div>
         {/* Equals Sign */}
         <div className="text-white/50 flex-shrink-0">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
           </svg>
-        </div>
+          </div>
         {/* Chevron and Name - Click to toggle expand/collapse */}
         <div 
           className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 cursor-pointer"
           onClick={() => onToggleSection(section.id)}
         >
-          <div className="p-1 rounded transition-colors flex-shrink-0">
-            {expandedSections.has(section.id) ? (
-              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            ) : (
-              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
+            <div className="p-1 rounded transition-colors flex-shrink-0">
+              {expandedSections.has(section.id) ? (
+                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              ) : (
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
             <div 
               className="font-medium truncate text-sm sm:text-base"
-              style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
-            >
-              {section.nameEn}
+                  style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+                >
+                  {section.nameEn}
+              </div>
             </div>
           </div>
-        </div>
         {/* Toggle and Menu */}
         <div className="flex items-center gap-2 flex-shrink-0 relative">
           <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={section.isActive}
-              onChange={(e) => {
-                e.stopPropagation()
-                onToggleActive('section', section.id, section.isActive)
-              }}
+              <input
+                type="checkbox"
+                checked={section.isActive}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  onToggleActive('section', section.id, section.isActive)
+                }}
               onClick={(e) => e.stopPropagation()}
-              className="sr-only peer"
-            />
-            <div 
-              className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
-              style={{
-                backgroundColor: section.isActive 
-                  ? 'var(--app-bg, #400810)' 
-                  : 'var(--auto-danger, #EF4444)',
-                borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-              }}
-            ></div>
-          </label>
+                className="sr-only peer"
+              />
+              <div 
+                className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
+                style={{
+                  backgroundColor: section.isActive 
+                    ? 'var(--app-bg, #400810)' 
+                    : 'var(--auto-danger, #EF4444)',
+                  borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                }}
+              ></div>
+            </label>
           {/* 3 Dots Menu */}
           <div className="relative">
             <Button
@@ -1210,6 +1210,10 @@ export default function MenuBuilderPage() {
                     onGripTouchEnd={onGripTouchEnd}
                     onShowAddItem={onShowAddItem}
                     formatPrice={formatPriceWithCurrency}
+                    openMenuId={openMenuId}
+                    openMenuType={openMenuType}
+                    setOpenMenuId={setOpenMenuId}
+                    setOpenMenuType={setOpenMenuType}
                   />
                 ))
               ) : (
@@ -1322,33 +1326,33 @@ export default function MenuBuilderPage() {
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
-          </div>
-        </div>
+            </div>
+            </div>
         {/* Equals Sign */}
         <div className="text-white/50 flex-shrink-0">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
           </svg>
-        </div>
+          </div>
         {/* Chevron and Name - Click to toggle expand/collapse */}
         <div 
           className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 cursor-pointer"
           onClick={() => onToggleCategory(category.id)}
         >
           <div className="p-1 rounded transition-colors flex-shrink-0">
-            {expandedCategories.has(category.id) ? (
-              <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-            ) : (
-              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
+              {expandedCategories.has(category.id) ? (
+                <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+              ) : (
+                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
             <div 
               className="font-medium truncate text-sm sm:text-base"
-              style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
-            >
-              {category.nameEn}
-            </div>
+                  style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+                >
+                  {category.nameEn}
+              </div>
             <div className="text-xs truncate" style={{ color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))' }}>
               {category.items?.length || 0} Items
             </div>
@@ -1357,26 +1361,26 @@ export default function MenuBuilderPage() {
         {/* Toggle and Menu */}
         <div className="flex items-center gap-2 flex-shrink-0 relative">
           <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={category.isActive}
-              onChange={(e) => {
-                e.stopPropagation()
-                onToggleActive('category', category.id, category.isActive)
-              }}
+              <input
+                type="checkbox"
+                checked={category.isActive}
+                onChange={(e) => {
+                  e.stopPropagation()
+                  onToggleActive('category', category.id, category.isActive)
+                }}
               onClick={(e) => e.stopPropagation()}
-              className="sr-only peer"
-            />
-            <div 
-              className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
-              style={{
-                backgroundColor: category.isActive 
-                  ? 'var(--app-bg, #400810)' 
-                  : 'var(--auto-danger, #EF4444)',
-                borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-              }}
-            ></div>
-          </label>
+                className="sr-only peer"
+              />
+              <div 
+                className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
+                style={{
+                  backgroundColor: category.isActive 
+                    ? 'var(--app-bg, #400810)' 
+                    : 'var(--auto-danger, #EF4444)',
+                  borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                }}
+              ></div>
+            </label>
           {/* 3 Dots Menu */}
           <div className="relative">
             <Button
@@ -1587,14 +1591,14 @@ export default function MenuBuilderPage() {
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
             <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
-          </div>
-        </div>
+            </div>
+            </div>
         {/* Equals Sign */}
         <div className="text-white/50 flex-shrink-0">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
           </svg>
-        </div>
+          </div>
         {/* Image Thumbnail */}
         <div 
           className="w-12 h-12 sm:w-16 sm:h-16 rounded bg-gray-700 overflow-hidden flex-shrink-0 cursor-pointer"
