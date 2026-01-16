@@ -269,12 +269,18 @@ function MenuPageContent() {
     setTimeout(() => prefetchNext(0), 100)
   }, [slug, sections, fetchCategoryItems])
 
-  // Fetch theme data (for admin updates)
+  // Fetch theme data (for admin updates) - instant updates
   const fetchTheme = useCallback(async () => {
     if (!slug) return
     try {
-      const res = await fetch(`/data/theme?slug=${encodeURIComponent(slug)}`, {
+      // Add timestamp to bypass cache and ensure instant update
+      const res = await fetch(`/data/theme?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
         cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
       })
       if (res.ok) {
         const data = await res.json()
@@ -297,11 +303,16 @@ function MenuPageContent() {
     }
   }, [slug, applyThemeCSS])
 
-  // Memoized fetch function for restaurant data (including service charge)
+  // Memoized fetch function for restaurant data (including service charge) - instant updates
   const fetchRestaurantData = useCallback(async () => {
     try {
       const res = await fetch(`/data/restaurant?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
         cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
       })
       if (res.ok) {
         const data = await res.json()
@@ -589,12 +600,14 @@ function MenuPageContent() {
     const abortController = new AbortController()
     
     const fetchUiSettings = () => {
-      fetch(`/api/ui-settings?slug=${encodeURIComponent(slug)}`, {
+      // Add timestamp to bypass any cache and ensure instant update
+      fetch(`/api/ui-settings?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
         cache: 'no-store',
         signal: abortController.signal,
         headers: {
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
+          'Expires': '0',
         },
       })
         .then((res) => {
@@ -663,16 +676,19 @@ function MenuPageContent() {
       }
     }
 
-    // Listen for custom events (when admin saves settings in same tab)
+    // Listen for custom events (when admin saves settings in same tab) - instant updates
     const handleTypographyUpdate = () => {
+      // Immediate fetch - no delay
       fetchUiSettings()
     }
     
     const handleServiceChargeUpdate = () => {
+      // Immediate fetch - no delay
       fetchRestaurantData()
     }
 
     const handleThemeUpdate = () => {
+      // Immediate fetch - no delay, also update background image
       fetchTheme()
     }
 
@@ -847,11 +863,13 @@ function MenuPageContent() {
     localStorage.setItem(basketKey, JSON.stringify(basket))
   }, [basket, slug])
 
-  // Lock body scroll when item modal is open
+  // Lock body scroll when item modal or basket drawer is open
   useEffect(() => {
     if (typeof document === 'undefined') return
 
-    if (isItemModalOpen) {
+    const isAnyModalOpen = isItemModalOpen || isBasketOpen
+
+    if (isAnyModalOpen) {
       // Save current scroll position
       const scrollY = window.scrollY
       // Lock body scroll
@@ -878,7 +896,7 @@ function MenuPageContent() {
       document.body.style.width = ''
       document.body.style.overflow = ''
     }
-  }, [isItemModalOpen])
+  }, [isItemModalOpen, isBasketOpen])
 
   const handleLanguageChange = (lang: Language) => {
     setCurrentLang(lang)
@@ -1023,6 +1041,7 @@ function MenuPageContent() {
       {/* Background Image - using img element like welcome page for fast loading */}
       {theme?.menuBackgroundR2Url && (
         <img
+          key={theme.menuBackgroundR2Url} // Force reload when URL changes for instant updates
           src={theme.menuBackgroundR2Url}
           alt="Menu Background"
           className="fixed inset-0 w-full h-full object-cover pointer-events-none"
@@ -1079,7 +1098,7 @@ function MenuPageContent() {
               style={{
                 backgroundColor: theme?.glassTintColor || 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
                 borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-                boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+                boxShadow: 'none',
               }}
             >
               {/* Left triangular accent */}
@@ -1305,7 +1324,7 @@ function MenuPageContent() {
                         style={{
                           backgroundColor: theme?.glassTintColor || 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
                           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-                          boxShadow: `0 0 20px var(--auto-primary-glow, rgba(128, 0, 32, 0.35)), 0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+                          boxShadow: 'none',
                         }}
                       >
                         {/* Left triangular accent */}
