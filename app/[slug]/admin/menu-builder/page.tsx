@@ -251,8 +251,7 @@ export default function MenuBuilderPage() {
       }))
       
       setSections(normalizedSections)
-      // Expand all sections by default
-      setExpandedSections(new Set(normalizedSections.map((s: Section) => s.id)))
+      // Sections start collapsed - user clicks to expand
     } catch (error) {
       console.error('Error fetching menu:', error)
       toast.error('Failed to load menu data')
