@@ -1464,6 +1464,8 @@ export default function MenuBuilderPage() {
                 src={imageUrl}
                 alt={item.nameEn}
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
                 onError={(e) => {
                   // Fallback if image fails to load
                   e.currentTarget.style.display = 'none'
