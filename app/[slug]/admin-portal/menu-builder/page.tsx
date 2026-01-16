@@ -1722,9 +1722,16 @@ export default function MenuBuilderPage() {
 
       {/* Add Section Modal */}
       {showAddSection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
+          onClick={() => {
+            setShowAddSection(false)
+            setSectionForm({ nameKu: '', nameEn: '', nameAr: '' })
+          }}
+        >
           <div 
             className="backdrop-blur-xl rounded-3xl border p-4 sm:p-6 w-full max-w-md mx-2 sm:mx-auto"
+            onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
               borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
@@ -1803,9 +1810,16 @@ export default function MenuBuilderPage() {
 
       {/* Add Category Modal */}
       {showAddCategory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
+          onClick={() => {
+            setShowAddCategory(null)
+            setCategoryForm({ nameKu: '', nameEn: '', nameAr: '' })
+          }}
+        >
           <div 
             className="backdrop-blur-xl rounded-3xl border p-4 sm:p-6 w-full max-w-md mx-2 sm:mx-auto"
+            onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
               borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
@@ -1884,9 +1898,18 @@ export default function MenuBuilderPage() {
 
       {/* Add Item Modal */}
       {showAddItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => {
+            setShowAddItem(null)
+            setItemForm({ nameKu: '', nameEn: '', nameAr: '', descriptionKu: '', descriptionEn: '', descriptionAr: '', price: '' })
+            setItemImage(null)
+            setItemImagePreview(null)
+          }}
+        >
           <div 
             className="backdrop-blur-xl rounded-2xl sm:rounded-3xl border p-3 sm:p-6 w-full max-w-[37.41%] sm:max-w-[11rem] mx-2 sm:mx-auto my-4 sm:my-8 max-h-[70vh] overflow-y-auto scrollbar-hide"
+            onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
               borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
@@ -2078,9 +2101,13 @@ export default function MenuBuilderPage() {
 
       {/* Edit Section Modal */}
       {editingSection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
+          onClick={() => setEditingSection(null)}
+        >
           <div 
             className="backdrop-blur-xl rounded-3xl border p-4 sm:p-6 w-full max-w-md mx-2 sm:mx-auto"
+            onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
               borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
@@ -2153,9 +2180,13 @@ export default function MenuBuilderPage() {
 
       {/* Edit Category Modal */}
       {editingCategory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
+          onClick={() => setEditingCategory(null)}
+        >
           <div 
             className="backdrop-blur-xl rounded-3xl border p-4 sm:p-6 w-full max-w-md mx-2 sm:mx-auto"
+            onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
               borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
@@ -2228,9 +2259,17 @@ export default function MenuBuilderPage() {
 
       {/* Edit Item Modal */}
       {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm"
+          onClick={() => {
+            setEditingItem(null)
+            setItemImage(null)
+            setItemImagePreview(null)
+          }}
+        >
           <div 
             className="backdrop-blur-xl rounded-2xl sm:rounded-3xl border p-3 sm:p-6 w-full max-w-[37.41%] sm:max-w-[11rem] mx-2 sm:mx-auto my-4 sm:my-8 max-h-[70vh] overflow-y-auto scrollbar-hide"
+            onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
               borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
