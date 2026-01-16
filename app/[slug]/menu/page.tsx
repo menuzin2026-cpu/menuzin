@@ -1014,8 +1014,9 @@ function MenuPageContent() {
     
     if (theme?.menuBackgroundR2Url) {
       style.backgroundImage = `url(${theme.menuBackgroundR2Url})`
-      style.backgroundSize = 'contain' // Fit image without zooming/cropping
-      style.backgroundPosition = 'center'
+      // Use cover to fill screen, but ensure it's centered and doesn't zoom too much
+      style.backgroundSize = 'cover'
+      style.backgroundPosition = 'center center'
       style.backgroundRepeat = 'no-repeat'
       // Use 'scroll' on mobile for better performance, 'fixed' on desktop
       style.backgroundAttachment = isMobile ? 'scroll' : 'fixed'
