@@ -1380,82 +1380,6 @@ export default function MenuBuilderPage() {
             )}
           </div>
         </div>
-
-        {/* Items */}
-        {expandedCategories.has(category.id) && (
-          <div className="pl-4 sm:pl-8 pr-2 sm:pr-3 pb-2 sm:pb-3 space-y-2">
-            <SortableContext items={category.items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-              {category.items && category.items.length > 0 ? (
-                <>
-                  {category.items.map((item) => (
-                    <SortableItem
-                      key={item.id}
-                      item={item}
-                      activeId={activeId}
-                      holdingId={holdingId}
-                      holdingType={holdingType}
-                      onEditItem={onEditItem}
-                      onDeleteItem={onDeleteItem}
-                      onToggleActive={onToggleActive}
-          onGripMouseDown={onGripMouseDown}
-          onGripMouseUp={onGripMouseUp}
-          onGripMouseLeave={onGripMouseLeave}
-          onGripTouchStart={onGripTouchStart}
-          onGripTouchEnd={onGripTouchEnd}
-                      formatPrice={formatPriceWithCurrency}
-                    />
-                  ))}
-                  {/* Add Item Button */}
-                  <Button
-                    onClick={() => onShowAddItem(category.id)}
-                    className="w-full mt-3 text-sm sm:text-base border"
-                    style={{
-                      backgroundColor: 'var(--app-bg, #400810)',
-                      color: 'var(--auto-text-primary, #FFFFFF)',
-                      borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
-                    }}
-                    variant="default"
-                  >
-                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                    Add Item
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div className="px-4 py-4 text-center text-white/70 text-sm">
-                    No items in this category
-                  </div>
-                  {/* Add Item Button */}
-                  <Button
-                    onClick={() => onShowAddItem(category.id)}
-                    className="w-full mt-3 text-sm sm:text-base border"
-                    style={{
-                      backgroundColor: 'var(--app-bg, #400810)',
-                      color: 'var(--auto-text-primary, #FFFFFF)',
-                      borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
-                    }}
-                    variant="default"
-                  >
-                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                    Add Item
-                  </Button>
-                </>
-              )}
-            </SortableContext>
-          </div>
-        )}
       </div>
     )
   }
@@ -1701,32 +1625,108 @@ export default function MenuBuilderPage() {
                       <SortableContext items={section.categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
                         {section.categories && section.categories.length > 0 ? (
                           section.categories.map((category) => (
-                            <SortableCategory
-                              key={category.id}
-                              category={category}
-                              sectionId={section.id}
-                              expandedCategories={expandedCategories}
-                              activeId={activeId}
-                              holdingId={holdingId}
-                              holdingType={holdingType}
-                              onToggleCategory={toggleCategory}
-                              onEditCategory={handleEditCategory}
-                              onDeleteCategory={handleDelete}
-                              onEditItem={handleEditItem}
-                              onDeleteItem={handleDelete}
-                              onToggleActive={toggleActive}
-                              onGripMouseDown={handleGripMouseDown}
-                              onGripMouseUp={handleGripMouseUp}
-                              onGripMouseLeave={handleGripMouseLeave}
-                              onGripTouchStart={handleGripTouchStart}
-                              onGripTouchEnd={handleGripTouchEnd}
-                              onShowAddItem={setShowAddItem}
-                              formatPrice={formatPriceWithCurrency}
-                              openMenuId={openMenuId}
-                              openMenuType={openMenuType}
-                              setOpenMenuId={setOpenMenuId}
-                              setOpenMenuType={setOpenMenuType}
-                            />
+                            <div key={category.id} className="space-y-2">
+                              <SortableCategory
+                                category={category}
+                                sectionId={section.id}
+                                expandedCategories={expandedCategories}
+                                activeId={activeId}
+                                holdingId={holdingId}
+                                holdingType={holdingType}
+                                onToggleCategory={toggleCategory}
+                                onEditCategory={handleEditCategory}
+                                onDeleteCategory={handleDelete}
+                                onEditItem={handleEditItem}
+                                onDeleteItem={handleDelete}
+                                onToggleActive={toggleActive}
+                                onGripMouseDown={handleGripMouseDown}
+                                onGripMouseUp={handleGripMouseUp}
+                                onGripMouseLeave={handleGripMouseLeave}
+                                onGripTouchStart={handleGripTouchStart}
+                                onGripTouchEnd={handleGripTouchEnd}
+                                onShowAddItem={setShowAddItem}
+                                formatPrice={formatPriceWithCurrency}
+                                openMenuId={openMenuId}
+                                openMenuType={openMenuType}
+                                setOpenMenuId={setOpenMenuId}
+                                setOpenMenuType={setOpenMenuType}
+                              />
+                              {/* Items - rendered outside category frame, directly under category name */}
+                              {expandedCategories.has(category.id) && (
+                                <div className="space-y-2">
+                                  <SortableContext items={category.items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                                    {category.items && category.items.length > 0 ? (
+                                      <>
+                                        {category.items.map((item) => (
+                                          <SortableItem
+                                            key={item.id}
+                                            item={item}
+                                            activeId={activeId}
+                                            holdingId={holdingId}
+                                            holdingType={holdingType}
+                                            onEditItem={handleEditItem}
+                                            onDeleteItem={handleDelete}
+                                            onToggleActive={toggleActive}
+                                            onGripMouseDown={handleGripMouseDown}
+                                            onGripMouseUp={handleGripMouseUp}
+                                            onGripMouseLeave={handleGripMouseLeave}
+                                            onGripTouchStart={handleGripTouchStart}
+                                            onGripTouchEnd={handleGripTouchEnd}
+                                            formatPrice={formatPriceWithCurrency}
+                                          />
+                                        ))}
+                                        {/* Add Item Button */}
+                                        <Button
+                                          onClick={() => setShowAddItem(category.id)}
+                                          className="w-full mt-3 text-sm sm:text-base border"
+                                          style={{
+                                            backgroundColor: 'var(--app-bg, #400810)',
+                                            color: 'var(--auto-text-primary, #FFFFFF)',
+                                            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
+                                          }}
+                                          variant="default"
+                                        >
+                                          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                                          Add Item
+                                        </Button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="px-4 py-4 text-center text-white/70 text-sm">
+                                          No items in this category
+                                        </div>
+                                        {/* Add Item Button */}
+                                        <Button
+                                          onClick={() => setShowAddItem(category.id)}
+                                          className="w-full mt-3 text-sm sm:text-base border"
+                                          style={{
+                                            backgroundColor: 'var(--app-bg, #400810)',
+                                            color: 'var(--auto-text-primary, #FFFFFF)',
+                                            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
+                                          }}
+                                          variant="default"
+                                        >
+                                          <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                                          Add Item
+                                        </Button>
+                                      </>
+                                    )}
+                                  </SortableContext>
+                                </div>
+                              )}
+                            </div>
                           ))
                         ) : (
                           <div className="px-4 py-4 text-center text-white/70 text-sm">
