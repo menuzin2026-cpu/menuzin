@@ -120,11 +120,11 @@ export default function MenuBuilderPage() {
     price: '' 
   })
 
-  // Drag and drop sensors with 1.5 second delay for touch
+  // Drag and drop sensors with 0.3 second delay for touch
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        delay: 1500,
+        delay: 300,
         tolerance: 5,
       },
     }),
@@ -732,50 +732,7 @@ export default function MenuBuilderPage() {
 
       const newItem = await response.json()
 
-      // Upload image to R2 if provided (using server-side proxy to avoid CORS)
-      if (itemImage && newItem.id) {
-        try {
-          // Upload via server-side proxy (avoids CORS issues)
-          const formData = new FormData()
-          formData.append('file', itemImage)
-          formData.append('scope', 'itemImage')
-          formData.append('restaurantId', restaurantId)
-          formData.append('itemId', newItem.id)
-
-          const uploadResponse = await fetch('/api/r2/upload', {
-            method: 'POST',
-            body: formData,
-          })
-
-          if (!uploadResponse.ok) {
-            const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
-            console.error('[R2 UPLOAD] Upload failed:', errorData)
-            throw new Error(errorData.error || 'Failed to upload image')
-          }
-
-          const { key, publicUrl } = await uploadResponse.json()
-
-          // Update item with R2 key/URL
-          const updateResponse = await fetch(`/api/admin/items/${newItem.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageR2Key: key, imageR2Url: publicUrl }),
-          })
-
-          if (!updateResponse.ok) {
-            const errorData = await updateResponse.json().catch(() => ({ error: 'Unknown error' }))
-            console.error('[R2 UPLOAD] Database update failed:', errorData)
-            throw new Error(errorData.error || 'Failed to save image URL to database')
-          }
-
-          console.log('[R2 UPLOAD] ✅ Image uploaded successfully:', { key, publicUrl })
-        } catch (uploadError: any) {
-          console.error('[R2 UPLOAD] ❌ Error uploading image:', uploadError)
-          // Don't fail the whole operation if image upload fails
-          toast.error(`Item created but image upload failed: ${uploadError.message || 'Unknown error'}`)
-        }
-      }
-
+      // Close modal and show success immediately (don't wait for image upload)
       toast.success('Item created successfully')
       setShowAddItem(null)
       setItemForm({ 
@@ -787,9 +744,59 @@ export default function MenuBuilderPage() {
         descriptionAr: '', 
         price: '' 
       })
+      const imageToUpload = itemImage // Store image before clearing state
       setItemImage(null)
       setItemImagePreview(null)
       fetchMenuData()
+
+      // Upload image in background (non-blocking, automatic)
+      if (imageToUpload && newItem.id) {
+        // Upload in background - don't await, let it complete automatically
+        ;(async () => {
+          try {
+            // Upload via server-side proxy (avoids CORS issues)
+            const formData = new FormData()
+            formData.append('file', imageToUpload)
+            formData.append('scope', 'itemImage')
+            formData.append('restaurantId', restaurantId)
+            formData.append('itemId', newItem.id)
+
+            const uploadResponse = await fetch('/api/r2/upload', {
+              method: 'POST',
+              body: formData,
+            })
+
+            if (!uploadResponse.ok) {
+              const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+              console.error('[R2 UPLOAD] Upload failed:', errorData)
+              throw new Error(errorData.error || 'Failed to upload image')
+            }
+
+            const { key, publicUrl } = await uploadResponse.json()
+
+            // Update item with R2 key/URL
+            const updateResponse = await fetch(`/api/admin/items/${newItem.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageR2Key: key, imageR2Url: publicUrl }),
+            })
+
+            if (!updateResponse.ok) {
+              const errorData = await updateResponse.json().catch(() => ({ error: 'Unknown error' }))
+              console.error('[R2 UPLOAD] Database update failed:', errorData)
+              throw new Error(errorData.error || 'Failed to save image URL to database')
+            }
+
+            console.log('[R2 UPLOAD] ✅ Image uploaded successfully:', { key, publicUrl })
+            // Refresh menu data to show the uploaded image
+            fetchMenuData()
+          } catch (uploadError: any) {
+            console.error('[R2 UPLOAD] ❌ Error uploading image:', uploadError)
+            // Show error toast but don't block the UI
+            toast.error(`Image upload failed: ${uploadError.message || 'Unknown error'}`)
+          }
+        })()
+      }
     } catch (error: any) {
       console.error('Error creating item:', error)
       toast.error(error.message || 'Failed to create item')
@@ -1051,11 +1058,13 @@ export default function MenuBuilderPage() {
         </div>
         {/* Section Header */}
         <div 
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 p-3 sm:p-4 pt-6 sm:pt-6 cursor-pointer"
-          onClick={() => onToggleSection(section.id)}
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 p-3 sm:p-4 pt-6 sm:pt-6"
         >
-          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 w-full sm:w-auto">
-            <div className="p-1 rounded transition-colors flex-shrink-0">
+          <div 
+            className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 w-full sm:w-auto cursor-pointer"
+            onClick={() => onEditSection(section)}
+          >
+            <div className="p-1 rounded transition-colors flex-shrink-0" onClick={(e) => { e.stopPropagation(); onToggleSection(section.id); }}>
               {expandedSections.has(section.id) ? (
                 <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               ) : (
@@ -1079,18 +1088,7 @@ export default function MenuBuilderPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 self-end sm:self-auto" onClick={(e) => e.stopPropagation()}>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation()
-                onEditSection(section)
-              }}
-              className="h-10 w-10 p-0 sm:h-12 sm:w-12"
-            >
-              <Edit2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--auto-text-primary, #FFFFFF)' }} />
-            </Button>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <Button
               size="sm"
               variant="ghost"
@@ -1102,7 +1100,7 @@ export default function MenuBuilderPage() {
             >
               <Trash2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--auto-danger, #EF4444)' }} />
             </Button>
-            <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => e.stopPropagation()}>
+            <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={section.isActive}
@@ -1267,11 +1265,13 @@ export default function MenuBuilderPage() {
           </div>
         </div>
         <div 
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 p-2 sm:p-3 pt-5 sm:pt-5 cursor-pointer"
-          onClick={() => onToggleCategory(category.id)}
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 p-2 sm:p-3 pt-5 sm:pt-5"
         >
-          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 w-full sm:w-auto">
-            <div className="p-1 rounded transition-colors cursor-pointer flex-shrink-0">
+          <div 
+            className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 w-full sm:w-auto cursor-pointer"
+            onClick={() => onEditCategory(category)}
+          >
+            <div className="p-1 rounded transition-colors cursor-pointer flex-shrink-0" onClick={(e) => { e.stopPropagation(); onToggleCategory(category.id); }}>
               {expandedCategories.has(category.id) ? (
                 <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
               ) : (
@@ -1279,7 +1279,7 @@ export default function MenuBuilderPage() {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+              <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 items-baseline">
                 <span 
                   className="font-medium text-sm sm:text-base truncate"
                   style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
@@ -1290,23 +1290,12 @@ export default function MenuBuilderPage() {
                   className="text-xs truncate"
                   style={{ color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))' }}
                 >
-                  ({category.nameKu} / {category.nameAr})
+                  {category.items?.length || 0} Items
                 </span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 self-end sm:self-auto" onClick={(e) => e.stopPropagation()}>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={(e) => {
-                e.stopPropagation()
-                onEditCategory(category)
-              }}
-              className="h-10 w-10 p-0 sm:h-12 sm:w-12"
-            >
-              <Edit2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--auto-text-primary, #FFFFFF)' }} />
-            </Button>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <Button
               size="sm"
               variant="ghost"
@@ -1318,7 +1307,7 @@ export default function MenuBuilderPage() {
             >
               <Trash2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--auto-danger, #EF4444)' }} />
             </Button>
-            <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => e.stopPropagation()}>
+            <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={category.isActive}
@@ -1456,14 +1445,14 @@ export default function MenuBuilderPage() {
     return (
       <div
         ref={setNodeRef}
-        className={`flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-2 pt-5 sm:pt-2 rounded border relative ${isHolding ? 'scale-105 shadow-lg' : ''}`}
+        className={`flex items-center gap-2 sm:gap-3 p-2 rounded border relative ${isHolding ? 'scale-105 shadow-lg' : ''}`}
         style={{
           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
           backgroundColor: 'rgba(0, 0, 0, 0.2)',
           ...style,
         }}
       >
-        {/* Grip Icon - Top Center */}
+        {/* Grip Icon - Left Side (6 dots vertical) */}
         <div
           {...attributes}
           {...listeners}
@@ -1472,7 +1461,8 @@ export default function MenuBuilderPage() {
           onMouseLeave={handleGripMouseLeave}
           onTouchStart={(e) => onGripTouchStart(e, item.id, 'item')}
           onTouchEnd={onGripTouchEnd}
-          className="absolute top-1 left-1/2 transform -translate-x-1/2 p-1 rounded transition-colors cursor-grab active:cursor-grabbing z-10"
+          onClick={(e) => e.stopPropagation()}
+          className="p-1 rounded transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
           style={{ 
             color: 'var(--auto-text-primary, #FFFFFF)',
             touchAction: 'none',
@@ -1481,19 +1471,25 @@ export default function MenuBuilderPage() {
           }}
         >
           <div className="flex flex-col gap-0.5 sm:gap-1">
-            <div className="flex gap-0.5 sm:gap-1">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-            </div>
-            <div className="flex gap-0.5 sm:gap-1">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-            </div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
           </div>
         </div>
-        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded bg-gray-700 overflow-hidden flex-shrink-0">
+        {/* Equals Sign */}
+        <div className="text-white/50 flex-shrink-0">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+          </svg>
+        </div>
+        {/* Image Thumbnail */}
+        <div 
+          className="w-12 h-12 sm:w-16 sm:h-16 rounded bg-gray-700 overflow-hidden flex-shrink-0 cursor-pointer"
+          onClick={() => onEditItem(item)}
+        >
           {(() => {
             // Check R2 URL first, then fall back to old media ID
             const imageUrl = item.imageR2Url || (item.imageMediaId ? `/assets/${item.imageMediaId}` : null)
@@ -1525,7 +1521,11 @@ export default function MenuBuilderPage() {
             )
           })()}
         </div>
-        <div className="flex-1 min-w-0 w-full sm:w-auto">
+        {/* Name and Price */}
+        <div 
+          className="flex-1 min-w-0 cursor-pointer"
+          onClick={() => onEditItem(item)}
+        >
           <div 
             className="font-medium truncate text-sm sm:text-base"
             style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
@@ -1536,28 +1536,17 @@ export default function MenuBuilderPage() {
             {formatPrice(item.price)}
           </div>
         </div>
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onEditItem(item)}
-            className="h-10 w-10 p-0 sm:h-12 sm:w-12"
-          >
-            <Edit2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--auto-text-primary, #FFFFFF)' }} />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onDeleteItem('item', item.id, item.nameEn)}
-            className="h-10 w-10 p-0 sm:h-12 sm:w-12"
-          >
-            <Trash2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--auto-danger, #EF4444)' }} />
-          </Button>
+        {/* Toggle and Delete */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
               checked={item.isActive}
-              onChange={() => onToggleActive('item', item.id, item.isActive)}
+              onChange={(e) => {
+                e.stopPropagation()
+                onToggleActive('item', item.id, item.isActive)
+              }}
+              onClick={(e) => e.stopPropagation()}
               className="sr-only peer"
             />
             <div 
@@ -1570,6 +1559,17 @@ export default function MenuBuilderPage() {
               }}
             ></div>
           </label>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDeleteItem('item', item.id, item.nameEn)
+            }}
+            className="h-10 w-10 p-0 sm:h-12 sm:w-12"
+          >
+            <Trash2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--auto-danger, #EF4444)' }} />
+          </Button>
         </div>
       </div>
     )
