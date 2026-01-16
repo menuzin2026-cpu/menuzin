@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ChevronDown, ChevronRight, Plus, Edit2, Trash2, Upload, X, GripVertical } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Edit2, Trash2, Upload, X, GripVertical, MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import toast from 'react-hot-toast'
@@ -107,6 +107,10 @@ export default function MenuBuilderPage() {
   const [holdingType, setHoldingType] = useState<'section' | 'category' | 'item' | null>(null)
   const [currency, setCurrency] = useState<'IQD' | 'USD'>('IQD')
   
+  // Menu dropdown states
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [openMenuType, setOpenMenuType] = useState<'section' | 'category' | null>(null)
+  
   // Edit form states
   const [editSectionForm, setEditSectionForm] = useState({ nameKu: '', nameEn: '', nameAr: '' })
   const [editCategoryForm, setEditCategoryForm] = useState({ nameKu: '', nameEn: '', nameAr: '' })
@@ -132,6 +136,20 @@ export default function MenuBuilderPage() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (openMenuId) {
+        setOpenMenuId(null)
+        setOpenMenuType(null)
+      }
+    }
+    if (openMenuId) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [openMenuId])
 
   useEffect(() => {
     fetchRestaurantId()
@@ -1014,14 +1032,14 @@ export default function MenuBuilderPage() {
     return (
       <div
         ref={setNodeRef}
-        className={`border rounded-xl backdrop-blur-sm relative ${isHolding ? 'scale-105 shadow-lg' : ''}`}
+        className={`flex items-center gap-2 sm:gap-3 p-2 rounded border relative ${isHolding ? 'scale-105 shadow-lg' : ''}`}
         style={{
           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-          backgroundColor: 'var(--auto-surface-bg-2, rgba(255, 255, 255, 0.05))',
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
           ...style,
         }}
       >
-        {/* Grip Icon - Top Center */}
+        {/* Drag Handle - Left Side (6 dots vertical) */}
         <div
           {...attributes}
           {...listeners}
@@ -1035,7 +1053,7 @@ export default function MenuBuilderPage() {
           }}
           onTouchEnd={onGripTouchEnd}
           onClick={(e) => e.stopPropagation()}
-          className="absolute top-2 left-1/2 transform -translate-x-1/2 p-1 rounded transition-colors cursor-grab active:cursor-grabbing z-10"
+          className="p-1 rounded transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
           style={{ 
             color: 'var(--auto-text-primary, #FFFFFF)',
             touchAction: 'none',
@@ -1044,82 +1062,124 @@ export default function MenuBuilderPage() {
           }}
         >
           <div className="flex flex-col gap-0.5 sm:gap-1">
-            <div className="flex gap-0.5 sm:gap-1">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-            </div>
-            <div className="flex gap-0.5 sm:gap-1">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+          </div>
+        </div>
+        {/* Equals Sign */}
+        <div className="text-white/50 flex-shrink-0">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+          </svg>
+        </div>
+        {/* Chevron and Name - Click to toggle expand/collapse */}
+        <div 
+          className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 cursor-pointer"
+          onClick={() => onToggleSection(section.id)}
+        >
+          <div className="p-1 rounded transition-colors flex-shrink-0">
+            {expandedSections.has(section.id) ? (
+              <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            ) : (
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div 
+              className="font-medium truncate text-sm sm:text-base"
+              style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+            >
+              {section.nameEn}
             </div>
           </div>
         </div>
-        {/* Section Header */}
-        <div 
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 p-3 sm:p-4 pt-6 sm:pt-6"
-        >
-          <div 
-            className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 w-full sm:w-auto cursor-pointer"
-            onClick={() => onEditSection(section)}
-          >
-            <div className="p-1 rounded transition-colors flex-shrink-0" onClick={(e) => { e.stopPropagation(); onToggleSection(section.id); }}>
-              {expandedSections.has(section.id) ? (
-                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              ) : (
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
-                <span 
-                  className="font-semibold text-sm sm:text-base truncate"
-                  style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
-                >
-                  {section.nameEn}
-                </span>
-                <span 
-                  className="text-xs sm:text-sm truncate"
-                  style={{ color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))' }}
-                >
-                  ({section.nameKu} / {section.nameAr})
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+        {/* Toggle and Menu */}
+        <div className="flex items-center gap-2 flex-shrink-0 relative">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={section.isActive}
+              onChange={(e) => {
+                e.stopPropagation()
+                onToggleActive('section', section.id, section.isActive)
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="sr-only peer"
+            />
+            <div 
+              className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
+              style={{
+                backgroundColor: section.isActive 
+                  ? 'var(--app-bg, #400810)' 
+                  : 'var(--auto-danger, #EF4444)',
+                borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+              }}
+            ></div>
+          </label>
+          {/* 3 Dots Menu */}
+          <div className="relative">
             <Button
               size="sm"
               variant="ghost"
               onClick={(e) => {
                 e.stopPropagation()
-                onDeleteSection('section', section.id, section.nameEn)
+                if (openMenuId === section.id && openMenuType === 'section') {
+                  setOpenMenuId(null)
+                  setOpenMenuType(null)
+                } else {
+                  setOpenMenuId(section.id)
+                  setOpenMenuType('section')
+                }
               }}
               className="h-10 w-10 p-0 sm:h-12 sm:w-12"
             >
-              <Trash2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--auto-danger, #EF4444)' }} />
+              <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'var(--auto-text-primary, #FFFFFF)' }} />
             </Button>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={section.isActive}
-                onChange={(e) => {
-                  e.stopPropagation()
-                  onToggleActive('section', section.id, section.isActive)
-                }}
-                className="sr-only peer"
-              />
+            {/* Dropdown Menu */}
+            {openMenuId === section.id && openMenuType === 'section' && (
               <div 
-                className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
+                className="absolute right-0 top-full mt-1 z-50 rounded-lg border shadow-lg"
                 style={{
-                  backgroundColor: section.isActive 
-                    ? 'var(--app-bg, #400810)' 
-                    : 'var(--auto-danger, #EF4444)',
+                  backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
                   borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                  backdropFilter: 'blur(10px)',
                 }}
-              ></div>
-            </label>
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="py-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpenMenuId(null)
+                      setOpenMenuType(null)
+                      onEditSection(section)
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2"
+                    style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpenMenuId(null)
+                      setOpenMenuType(null)
+                      onDeleteSection('section', section.id, section.nameEn)
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2"
+                    style={{ color: 'var(--auto-danger, #EF4444)' }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1150,6 +1210,10 @@ export default function MenuBuilderPage() {
                     onGripTouchEnd={onGripTouchEnd}
                     onShowAddItem={onShowAddItem}
                     formatPrice={formatPriceWithCurrency}
+                    openMenuId={openMenuId}
+                    openMenuType={openMenuType}
+                    setOpenMenuId={setOpenMenuId}
+                    setOpenMenuType={setOpenMenuType}
                   />
                 ))
               ) : (
@@ -1185,7 +1249,7 @@ export default function MenuBuilderPage() {
   }
 
   // Sortable Category Component
-  function SortableCategory({ category, sectionId, expandedCategories, activeId, holdingId, holdingType, onToggleCategory, onEditCategory, onDeleteCategory, onEditItem, onDeleteItem, onToggleActive, onGripMouseDown, onGripMouseUp, onGripMouseLeave, onGripTouchStart, onGripTouchEnd, onShowAddItem, formatPrice }: {
+  function SortableCategory({ category, sectionId, expandedCategories, activeId, holdingId, holdingType, onToggleCategory, onEditCategory, onDeleteCategory, onEditItem, onDeleteItem, onToggleActive, onGripMouseDown, onGripMouseUp, onGripMouseLeave, onGripTouchStart, onGripTouchEnd, onShowAddItem, formatPrice, openMenuId, openMenuType, setOpenMenuId, setOpenMenuType }: {
     category: Category
     sectionId: string
     expandedCategories: Set<string>
@@ -1205,6 +1269,10 @@ export default function MenuBuilderPage() {
     onGripTouchEnd: (e: React.TouchEvent) => void
     onShowAddItem: (id: string) => void
     formatPrice: (price: number) => string
+    openMenuId: string | null
+    openMenuType: 'section' | 'category' | null
+    setOpenMenuId: (id: string | null) => void
+    setOpenMenuType: (type: 'section' | 'category' | null) => void
   }) {
     const {
       attributes,
@@ -1226,14 +1294,14 @@ export default function MenuBuilderPage() {
     return (
       <div
         ref={setNodeRef}
-        className={`border rounded-lg relative ${isHolding ? 'scale-105 shadow-lg' : ''}`}
+        className={`flex items-center gap-2 sm:gap-3 p-2 rounded border relative ${isHolding ? 'scale-105 shadow-lg' : ''}`}
         style={{
           borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-          backgroundColor: 'rgba(0, 0, 0, 0.1)',
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
           ...style,
         }}
       >
-        {/* Grip Icon - Top Center */}
+        {/* Drag Handle - Left Side (6 dots vertical) */}
         <div
           {...attributes}
           {...listeners}
@@ -1243,7 +1311,7 @@ export default function MenuBuilderPage() {
           onTouchStart={(e) => onGripTouchStart(e, category.id, 'category')}
           onTouchEnd={onGripTouchEnd}
           onClick={(e) => e.stopPropagation()}
-          className="absolute top-1 left-1/2 transform -translate-x-1/2 p-1 rounded transition-colors cursor-grab active:cursor-grabbing z-10"
+          className="p-1 rounded transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
           style={{ 
             color: 'var(--auto-text-primary, #FFFFFF)',
             touchAction: 'none',
@@ -1252,81 +1320,127 @@ export default function MenuBuilderPage() {
           }}
         >
           <div className="flex flex-col gap-0.5 sm:gap-1">
-            <div className="flex gap-0.5 sm:gap-1">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-current"></div>
+          </div>
+        </div>
+        {/* Equals Sign */}
+        <div className="text-white/50 flex-shrink-0">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
+          </svg>
+        </div>
+        {/* Chevron and Name - Click to toggle expand/collapse */}
+        <div 
+          className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 cursor-pointer"
+          onClick={() => onToggleCategory(category.id)}
+        >
+          <div className="p-1 rounded transition-colors flex-shrink-0">
+            {expandedCategories.has(category.id) ? (
+              <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+            ) : (
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div 
+              className="font-medium truncate text-sm sm:text-base"
+              style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+            >
+              {category.nameEn}
             </div>
-            <div className="flex gap-0.5 sm:gap-1">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current"></div>
+            <div className="text-xs truncate" style={{ color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))' }}>
+              {category.items?.length || 0} Items
             </div>
           </div>
         </div>
-        <div 
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 p-2 sm:p-3 pt-5 sm:pt-5"
-        >
-          <div 
-            className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 w-full sm:w-auto cursor-pointer"
-            onClick={() => onEditCategory(category)}
-          >
-            <div className="p-1 rounded transition-colors cursor-pointer flex-shrink-0" onClick={(e) => { e.stopPropagation(); onToggleCategory(category.id); }}>
-              {expandedCategories.has(category.id) ? (
-                <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-              ) : (
-                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 items-baseline">
-                <span 
-                  className="font-medium text-sm sm:text-base truncate"
-                  style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
-                >
-                  {category.nameEn}
-                </span>
-                <span 
-                  className="text-xs truncate"
-                  style={{ color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))' }}
-                >
-                  {category.items?.length || 0} Items
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+        {/* Toggle and Menu */}
+        <div className="flex items-center gap-2 flex-shrink-0 relative">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={category.isActive}
+              onChange={(e) => {
+                e.stopPropagation()
+                onToggleActive('category', category.id, category.isActive)
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="sr-only peer"
+            />
+            <div 
+              className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
+              style={{
+                backgroundColor: category.isActive 
+                  ? 'var(--app-bg, #400810)' 
+                  : 'var(--auto-danger, #EF4444)',
+                borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+              }}
+            ></div>
+          </label>
+          {/* 3 Dots Menu */}
+          <div className="relative">
             <Button
               size="sm"
               variant="ghost"
               onClick={(e) => {
                 e.stopPropagation()
-                onDeleteCategory('category', category.id, category.nameEn)
+                if (openMenuId === category.id && openMenuType === 'category') {
+                  setOpenMenuId(null)
+                  setOpenMenuType(null)
+                } else {
+                  setOpenMenuId(category.id)
+                  setOpenMenuType('category')
+                }
               }}
               className="h-10 w-10 p-0 sm:h-12 sm:w-12"
             >
-              <Trash2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--auto-danger, #EF4444)' }} />
+              <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'var(--auto-text-primary, #FFFFFF)' }} />
             </Button>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={category.isActive}
-                onChange={(e) => {
-                  e.stopPropagation()
-                  onToggleActive('category', category.id, category.isActive)
-                }}
-                className="sr-only peer"
-              />
+            {/* Dropdown Menu */}
+            {openMenuId === category.id && openMenuType === 'category' && (
               <div 
-                className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
+                className="absolute right-0 top-full mt-1 z-50 rounded-lg border shadow-lg"
                 style={{
-                  backgroundColor: category.isActive 
-                    ? 'var(--app-bg, #400810)' 
-                    : 'var(--auto-danger, #EF4444)',
+                  backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
                   borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                  backdropFilter: 'blur(10px)',
                 }}
-              ></div>
-            </label>
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="py-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpenMenuId(null)
+                      setOpenMenuType(null)
+                      onEditCategory(category)
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2"
+                    style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setOpenMenuId(null)
+                      setOpenMenuType(null)
+                      onDeleteCategory('category', category.id, category.nameEn)
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2"
+                    style={{ color: 'var(--auto-danger, #EF4444)' }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
