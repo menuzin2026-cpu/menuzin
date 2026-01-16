@@ -1101,27 +1101,6 @@ function MenuPageContent() {
                 boxShadow: 'none',
               }}
             >
-              {/* Left triangular accent */}
-              <div 
-                className="absolute left-0 top-0 bottom-0 z-10"
-                style={{
-                  width: '1.125rem',
-                  background: `linear-gradient(to right, var(--auto-edge-accent, rgba(64, 8, 16, 0.4)), transparent)`,
-                  clipPath: 'polygon(0 0, 100% 0, 0 100%)',
-                  borderRadius: '0.75rem 0 0 0.75rem'
-                }}
-              ></div>
-              {/* Right triangular accent */}
-              <div 
-                className="absolute right-0 top-0 bottom-0 z-10"
-                style={{
-                  width: '1.125rem',
-                  background: `linear-gradient(to left, var(--auto-edge-accent, rgba(64, 8, 16, 0.4)), transparent)`,
-                  clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
-                  borderRadius: '0 0.75rem 0.75rem 0'
-                }}
-              ></div>
-              
               {/* Sections - Fixed, no scroll */}
               <div className="flex gap-1.5 sm:gap-2 items-center justify-center mb-1 w-full overflow-hidden relative z-10">
                 {sections.filter((s) => s.isActive).map((section) => {
@@ -1327,26 +1306,6 @@ function MenuPageContent() {
                           boxShadow: 'none',
                         }}
                       >
-                        {/* Left triangular accent */}
-                        <div 
-                          className="absolute left-0 top-0 bottom-0"
-                          style={{
-                            width: '1.125rem',
-                            background: `linear-gradient(to right, var(--auto-edge-accent, rgba(64, 8, 16, 0.4)), transparent)`,
-                            clipPath: 'polygon(0 0, 100% 0, 0 100%)',
-                            borderRadius: '0.75rem 0 0 0.75rem'
-                          }}
-                        ></div>
-                        {/* Right triangular accent */}
-                        <div 
-                          className="absolute right-0 top-0 bottom-0"
-                          style={{
-                            width: '1.125rem',
-                            background: `linear-gradient(to left, var(--auto-edge-accent, rgba(64, 8, 16, 0.4)), transparent)`,
-                            clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
-                            borderRadius: '0 0.75rem 0.75rem 0'
-                          }}
-                        ></div>
                         <h2 
                           className="relative font-bold transition-all duration-300 text-center"
                           style={{ 
