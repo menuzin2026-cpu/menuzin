@@ -1181,68 +1181,6 @@ export default function MenuBuilderPage() {
             )}
           </div>
         </div>
-
-        {/* Categories */}
-        {expandedSections.has(section.id) && (
-          <div className="pl-4 sm:pl-8 pr-2 sm:pr-4 pb-3 sm:pb-4 space-y-2">
-            <SortableContext items={section.categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
-              {section.categories && section.categories.length > 0 ? (
-                section.categories.map((category) => (
-                  <SortableCategory
-                    key={category.id}
-                    category={category}
-                    sectionId={section.id}
-                    expandedCategories={expandedCategories}
-                    activeId={activeId}
-                    holdingId={holdingId}
-                    holdingType={holdingType}
-                    onToggleCategory={onToggleCategory}
-                    onEditCategory={onEditCategory}
-                    onDeleteCategory={onDeleteCategory}
-                    onEditItem={onEditItem}
-                    onDeleteItem={onDeleteItem}
-                    onToggleActive={onToggleActive}
-                    onGripMouseDown={onGripMouseDown}
-                    onGripMouseUp={onGripMouseUp}
-                    onGripMouseLeave={onGripMouseLeave}
-                    onGripTouchStart={onGripTouchStart}
-                    onGripTouchEnd={onGripTouchEnd}
-                    onShowAddItem={onShowAddItem}
-                    formatPrice={formatPriceWithCurrency}
-                    openMenuId={openMenuId}
-                    openMenuType={openMenuType}
-                    setOpenMenuId={setOpenMenuId}
-                    setOpenMenuType={setOpenMenuType}
-                  />
-                ))
-              ) : (
-                <div className="px-4 py-4 text-center text-white/70 text-sm">
-                  No categories in this section
-                </div>
-              )}
-            </SortableContext>
-            {/* Add Category Button */}
-            <Button
-              onClick={() => onShowAddCategory(section.id)}
-              className="w-full mt-3 text-sm sm:text-base border"
-              style={{
-                backgroundColor: 'var(--app-bg, #400810)',
-                color: 'var(--auto-text-primary, #FFFFFF)',
-                borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
-              }}
-              variant="default"
-            >
-              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-              Add Category
-            </Button>
-          </div>
-        )}
       </div>
     )
   }
@@ -1731,32 +1669,94 @@ export default function MenuBuilderPage() {
             {/* Always show sections with expand/collapse - sections start collapsed */}
             <SortableContext items={sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
               {sections.map((section) => (
-                <SortableSection
-                  key={section.id}
-                  section={section}
-                  expandedSections={expandedSections}
-                  expandedCategories={expandedCategories}
-                  activeId={activeId}
-                  holdingId={holdingId}
-                  holdingType={holdingType}
-                  onToggleSection={toggleSection}
-                  onToggleCategory={toggleCategory}
-                  onEditSection={handleEditSection}
-                  onDeleteSection={handleDelete}
-                  onEditCategory={handleEditCategory}
-                  onDeleteCategory={handleDelete}
-                  onEditItem={handleEditItem}
-                  onDeleteItem={handleDelete}
-                  onToggleActive={toggleActive}
-                  onGripMouseDown={handleGripMouseDown}
-                  onGripMouseUp={handleGripMouseUp}
-                  onGripMouseLeave={handleGripMouseLeave}
-                  onGripTouchStart={handleGripTouchStart}
-                  onGripTouchEnd={handleGripTouchEnd}
-                  onShowAddCategory={setShowAddCategory}
-                  onShowAddItem={setShowAddItem}
-                  formatPrice={formatPriceWithCurrency}
-                />
+                <div key={section.id} className="space-y-2">
+                  <SortableSection
+                    section={section}
+                    expandedSections={expandedSections}
+                    expandedCategories={expandedCategories}
+                    activeId={activeId}
+                    holdingId={holdingId}
+                    holdingType={holdingType}
+                    onToggleSection={toggleSection}
+                    onToggleCategory={toggleCategory}
+                    onEditSection={handleEditSection}
+                    onDeleteSection={handleDelete}
+                    onEditCategory={handleEditCategory}
+                    onDeleteCategory={handleDelete}
+                    onEditItem={handleEditItem}
+                    onDeleteItem={handleDelete}
+                    onToggleActive={toggleActive}
+                    onGripMouseDown={handleGripMouseDown}
+                    onGripMouseUp={handleGripMouseUp}
+                    onGripMouseLeave={handleGripMouseLeave}
+                    onGripTouchStart={handleGripTouchStart}
+                    onGripTouchEnd={handleGripTouchEnd}
+                    onShowAddCategory={setShowAddCategory}
+                    onShowAddItem={setShowAddItem}
+                    formatPrice={formatPriceWithCurrency}
+                  />
+                  {/* Categories - rendered outside section frame, directly under section name */}
+                  {expandedSections.has(section.id) && (
+                    <div className="space-y-2">
+                      <SortableContext items={section.categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                        {section.categories && section.categories.length > 0 ? (
+                          section.categories.map((category) => (
+                            <SortableCategory
+                              key={category.id}
+                              category={category}
+                              sectionId={section.id}
+                              expandedCategories={expandedCategories}
+                              activeId={activeId}
+                              holdingId={holdingId}
+                              holdingType={holdingType}
+                              onToggleCategory={toggleCategory}
+                              onEditCategory={handleEditCategory}
+                              onDeleteCategory={handleDelete}
+                              onEditItem={handleEditItem}
+                              onDeleteItem={handleDelete}
+                              onToggleActive={toggleActive}
+                              onGripMouseDown={handleGripMouseDown}
+                              onGripMouseUp={handleGripMouseUp}
+                              onGripMouseLeave={handleGripMouseLeave}
+                              onGripTouchStart={handleGripTouchStart}
+                              onGripTouchEnd={handleGripTouchEnd}
+                              onShowAddItem={setShowAddItem}
+                              formatPrice={formatPriceWithCurrency}
+                              openMenuId={openMenuId}
+                              openMenuType={openMenuType}
+                              setOpenMenuId={setOpenMenuId}
+                              setOpenMenuType={setOpenMenuType}
+                            />
+                          ))
+                        ) : (
+                          <div className="px-4 py-4 text-center text-white/70 text-sm">
+                            No categories in this section
+                          </div>
+                        )}
+                      </SortableContext>
+                      {/* Add Category Button */}
+                      <Button
+                        onClick={() => setShowAddCategory(section.id)}
+                        className="w-full mt-3 text-sm sm:text-base border"
+                        style={{
+                          backgroundColor: 'var(--app-bg, #400810)',
+                          color: 'var(--auto-text-primary, #FFFFFF)',
+                          borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
+                        }}
+                        variant="default"
+                      >
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                        Add Category
+                      </Button>
+                    </div>
+                  )}
+                </div>
               ))}
             </SortableContext>
           </div>
