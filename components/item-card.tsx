@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import Image from 'next/image'
 import { Plus, Check } from 'lucide-react'
 import { Language } from '@/lib/i18n'
@@ -31,7 +31,7 @@ interface ItemCardProps {
   currency?: 'IQD' | 'USD'
 }
 
-export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quantity = 0, priority = false, currency = 'IQD' }: ItemCardProps) {
+function ItemCardComponent({ item, currentLang, onItemClick, onAddToBasket, quantity = 0, priority = false, currency = 'IQD' }: ItemCardProps) {
   const [showPopup, setShowPopup] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
   const [useSolidBg, setUseSolidBg] = useState(false)
@@ -198,3 +198,21 @@ export function ItemCard({ item, currentLang, onItemClick, onAddToBasket, quanti
   )
 }
 
+// Memoize ItemCard to prevent unnecessary re-renders
+// Only re-render if props actually change (item.id, item.price, quantity, currency, etc.)
+export const ItemCard = memo(ItemCardComponent, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.item.price === nextProps.item.price &&
+    prevProps.item.nameEn === nextProps.item.nameEn &&
+    prevProps.item.nameKu === nextProps.item.nameKu &&
+    prevProps.item.nameAr === nextProps.item.nameAr &&
+    prevProps.item.imageR2Url === nextProps.item.imageR2Url &&
+    prevProps.item.imageMediaId === nextProps.item.imageMediaId &&
+    prevProps.quantity === nextProps.quantity &&
+    prevProps.currency === nextProps.currency &&
+    prevProps.currentLang === nextProps.currentLang &&
+    prevProps.priority === nextProps.priority
+  )
+})

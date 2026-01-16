@@ -108,6 +108,8 @@ function MenuPageContent() {
     glassTintColor?: string | null
   } | null>(null)
   const [serviceChargePercent, setServiceChargePercent] = useState<number>(0)
+  // Track if device is mobile for background attachment optimization
+  const [isMobile, setIsMobile] = useState<boolean>(false)
   // Cache items by categoryId for instant switching
   const [categoryItemsCache, setCategoryItemsCache] = useState<Map<string, Item[]>>(new Map())
   const categoryItemsCacheRef = useRef<Map<string, Item[]>>(new Map())
@@ -344,32 +346,17 @@ function MenuPageContent() {
           if (bootstrapRes.ok) {
             const bootstrapData = await bootstrapRes.json()
             
-            // Set restaurant info and theme immediately if available
-            if (bootstrapData.restaurant) {
-              setRestaurant(bootstrapData.restaurant)
-              if (bootstrapData.restaurant.serviceChargePercent !== undefined) {
-                setServiceChargePercent(bootstrapData.restaurant.serviceChargePercent ?? 0)
-              }
-              // Set currency from restaurant object in bootstrap
-              if (bootstrapData.restaurant.currency && (bootstrapData.restaurant.currency === 'IQD' || bootstrapData.restaurant.currency === 'USD')) {
-                setUiSettings(prev => ({ ...prev, currency: bootstrapData.restaurant.currency }))
-              }
-            }
-            if (bootstrapData.theme) {
-              setTheme(bootstrapData.theme)
-              // Apply CSS variables immediately using helper
-              applyThemeCSS(bootstrapData.theme)
-            }
+            // Batch all bootstrap state updates to reduce re-renders
+            // Calculate default selections first
+            let defaultSectionId: string | null = null
+            let defaultCategoryId: string | null = null
             
-            // Set sections structure (without items) to show navigation immediately
             if (bootstrapData.sections && Array.isArray(bootstrapData.sections)) {
               const sectionsWithoutItems = bootstrapData.sections.map((s: any) => ({
                 ...s,
                 categories: s.categories.map((c: any) => ({ ...c, items: [] })),
               }))
-              setSections(sectionsWithoutItems)
               
-              // Auto-select section if structure is available
               if (sectionsWithoutItems.length > 0) {
                 const storageKey = `menu-section-${slug}-${lang}`
                 const savedSectionId = localStorage.getItem(storageKey)
@@ -378,31 +365,74 @@ function MenuPageContent() {
                   : null
                 
                 if (savedSection) {
-                  setActiveSectionId(savedSection.id)
-                  // Auto-select first category in saved section
+                  defaultSectionId = savedSection.id
                   const sortedCategories = savedSection.categories
                     .filter((c: Category) => c.isActive)
                     .sort((a: Category, b: Category) => (a.sortOrder || 0) - (b.sortOrder || 0))
                   if (sortedCategories.length > 0) {
-                    setActiveCategoryId(sortedCategories[0].id)
+                    defaultCategoryId = sortedCategories[0].id
                   }
                 } else {
                   const sortedSections = sectionsWithoutItems
                     .filter((s: Section) => s.isActive)
                     .sort((a: Section, b: Section) => (a.sortOrder || 0) - (b.sortOrder || 0))
                   if (sortedSections.length > 0) {
-                    setActiveSectionId(sortedSections[0].id)
+                    defaultSectionId = sortedSections[0].id
                     localStorage.setItem(storageKey, sortedSections[0].id)
-                    // Auto-select first category in first section
                     const sortedCategories = sortedSections[0].categories
                       .filter((c: Category) => c.isActive)
                       .sort((a: Category, b: Category) => (a.sortOrder || 0) - (b.sortOrder || 0))
                     if (sortedCategories.length > 0) {
-                      setActiveCategoryId(sortedCategories[0].id)
+                      defaultCategoryId = sortedCategories[0].id
                     }
                   }
                 }
               }
+            }
+            
+            // Batch state updates: restaurant, theme, sections, uiSettings, serviceCharge, selections, loading
+            if (bootstrapData.restaurant) {
+              setRestaurant(bootstrapData.restaurant)
+              setServiceChargePercent(bootstrapData.restaurant.serviceChargePercent ?? 0)
+            }
+            
+            if (bootstrapData.theme) {
+              setTheme(bootstrapData.theme)
+              // Apply CSS variables immediately using helper
+              applyThemeCSS(bootstrapData.theme)
+            }
+            
+            if (bootstrapData.sections && Array.isArray(bootstrapData.sections)) {
+              const sectionsWithoutItems = bootstrapData.sections.map((s: any) => ({
+                ...s,
+                categories: s.categories.map((c: any) => ({ ...c, items: [] })),
+              }))
+              setSections(sectionsWithoutItems)
+            }
+            
+            // Set UI settings from bootstrap (includes all typography sizes and currency)
+            if (bootstrapData.uiSettings) {
+              setUiSettings({
+                sectionTitleSize: bootstrapData.uiSettings.sectionTitleSize ?? 22,
+                categoryTitleSize: bootstrapData.uiSettings.categoryTitleSize ?? 16,
+                itemNameSize: bootstrapData.uiSettings.itemNameSize ?? 14,
+                itemDescriptionSize: bootstrapData.uiSettings.itemDescriptionSize ?? 14,
+                itemPriceSize: bootstrapData.uiSettings.itemPriceSize ?? 16,
+                headerLogoSize: bootstrapData.uiSettings.headerLogoSize ?? 32,
+                bottomNavSectionSize: bootstrapData.uiSettings.bottomNavSectionSize ?? 13,
+                bottomNavCategorySize: bootstrapData.uiSettings.bottomNavCategorySize ?? 13,
+                currency: (bootstrapData.uiSettings.currency === 'IQD' || bootstrapData.uiSettings.currency === 'USD') 
+                  ? bootstrapData.uiSettings.currency 
+                  : 'IQD',
+              })
+            }
+            
+            // Set default selections in single update
+            if (defaultSectionId) {
+              setActiveSectionId(defaultSectionId)
+            }
+            if (defaultCategoryId) {
+              setActiveCategoryId(defaultCategoryId)
             }
             
             // Show UI immediately after bootstrap (don't wait for items)
@@ -451,62 +481,8 @@ function MenuPageContent() {
       }
     }
 
-    // Fetch UI settings for this restaurant (only once per slug) - in parallel with bootstrap
-    const abortController = new AbortController()
-    fetch(`/api/ui-settings?slug=${encodeURIComponent(slug)}`, {
-      cache: 'no-store',
-      signal: abortController.signal,
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Failed to fetch UI settings: ${res.status}`)
-        }
-        return res.json()
-      })
-      .then((data) => {
-        setUiSettings({
-          sectionTitleSize: data.sectionTitleSize ?? 22,
-          categoryTitleSize: data.categoryTitleSize ?? 16,
-          itemNameSize: data.itemNameSize ?? 14,
-          itemDescriptionSize: data.itemDescriptionSize ?? 14,
-          itemPriceSize: data.itemPriceSize ?? 16,
-          headerLogoSize: data.headerLogoSize ?? 32,
-          bottomNavSectionSize: data.bottomNavSectionSize ?? 13,
-          bottomNavCategorySize: data.bottomNavCategorySize ?? 13,
-          currency: (data.currency === 'IQD' || data.currency === 'USD') ? data.currency : 'IQD',
-        })
-        // Update service charge from UI settings if available (bootstrap already set it, but UI settings may override)
-        if (data.serviceChargePercent !== undefined && data.serviceChargePercent !== null) {
-          const serviceCharge = typeof data.serviceChargePercent === 'number' 
-            ? data.serviceChargePercent 
-            : parseFloat(String(data.serviceChargePercent))
-          if (!isNaN(serviceCharge)) {
-            setServiceChargePercent(serviceCharge)
-          }
-        }
-      })
-      .catch((error) => {
-        // Only log if not aborted (component unmounted)
-        if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
-        console.error('Error fetching UI settings:', error)
-        }
-        // Set defaults on error
-        setUiSettings({
-          sectionTitleSize: 22,
-          categoryTitleSize: 16,
-          itemNameSize: 14,
-          itemDescriptionSize: 14,
-          itemPriceSize: 16,
-          headerLogoSize: 32,
-          bottomNavSectionSize: 13,
-          bottomNavCategorySize: 13,
-          currency: 'IQD',
-        })
-      })
-
-    return () => {
-      abortController.abort()
-    }
+    // UI settings are now included in bootstrap - no need to fetch separately on mount
+    // Event-based refetches (visibility/focus/storage) will still update UI settings when needed
 
     // Extract service charge from restaurant data (already fetched above)
     // Will be set when restaurant data is fetched
@@ -878,16 +854,17 @@ function MenuPageContent() {
     localStorage.setItem('language', lang)
   }
 
-  const handleItemClick = (itemId: string) => {
+  // Memoize handlers to prevent ItemCard re-renders
+  const handleItemClick = useCallback((itemId: string) => {
     if (!Array.isArray(allItems)) return
     const item = allItems.find((i) => i?.id === itemId)
     if (item) {
       setSelectedItem(item)
       setIsItemModalOpen(true)
     }
-  }
+  }, [allItems])
 
-  const handleAddToBasket = (itemId: string) => {
+  const handleAddToBasket = useCallback((itemId: string) => {
     if (!Array.isArray(allItems)) return
     const item = allItems.find((i) => i?.id === itemId)
     if (!item) return
@@ -925,14 +902,14 @@ function MenuPageContent() {
         },
       ]
     })
-  }
+  }, [allItems])
 
-  const handleBasketAnimationComplete = () => {
+  const handleBasketAnimationComplete = useCallback(() => {
     setShouldAnimateBasket(false)
     setIsFirstAdd(false)
-  }
+  }, [])
 
-  const handleQuantityChange = (itemId: string, delta: number) => {
+  const handleQuantityChange = useCallback((itemId: string, delta: number) => {
     setBasket((prev) => {
       const item = prev.find((i) => i.id === itemId)
       if (!item) return prev
@@ -946,7 +923,7 @@ function MenuPageContent() {
         i.id === itemId ? { ...i, quantity: newQuantity } : i
       )
     })
-  }
+  }, [])
 
   const activeSection = Array.isArray(sections) ? sections.find((s) => s?.id === activeSectionId) : null
   const activeCategories = activeSection && Array.isArray(activeSection.categories)
@@ -955,6 +932,17 @@ function MenuPageContent() {
         .sort((a, b) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
     : []
   
+  // Memoize quantity map to prevent ItemCard re-renders
+  const quantityByItemId = useMemo(() => {
+    const map = new Map<string, number>()
+    if (Array.isArray(basket)) {
+      basket.forEach((item) => {
+        map.set(item.id, item.quantity)
+      })
+    }
+    return map
+  }, [basket])
+
   // Group items by category - use cached items from categoryItemsCache
   const itemsByCategory = useMemo(() => {
     if (!activeSection || !Array.isArray(activeSection.categories)) return []
@@ -996,18 +984,45 @@ function MenuPageContent() {
     }
   }
 
-  // Calculate background style with image overlay if exists
-  const backgroundStyle: React.CSSProperties = {
-    backgroundColor: 'var(--app-bg, #400810)',
-  }
-  
-  if (theme?.menuBackgroundR2Url) {
-    backgroundStyle.backgroundImage = `url(${theme.menuBackgroundR2Url})`
-    backgroundStyle.backgroundSize = 'cover'
-    backgroundStyle.backgroundPosition = 'center'
-    backgroundStyle.backgroundRepeat = 'no-repeat'
-    backgroundStyle.backgroundAttachment = 'fixed'
-  }
+  // Detect mobile device for background attachment optimization
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Preload background image for better perceived performance
+  useEffect(() => {
+    if (theme?.menuBackgroundR2Url && typeof window !== 'undefined') {
+      const img = new Image()
+      img.src = theme.menuBackgroundR2Url
+      // Image will be cached by browser, improving load time when CSS applies it
+    }
+  }, [theme?.menuBackgroundR2Url])
+
+  // Memoize background style to prevent unnecessary recalculations
+  const backgroundStyle: React.CSSProperties = useMemo(() => {
+    const style: React.CSSProperties = {
+      backgroundColor: 'var(--app-bg, #400810)',
+    }
+    
+    if (theme?.menuBackgroundR2Url) {
+      style.backgroundImage = `url(${theme.menuBackgroundR2Url})`
+      style.backgroundSize = 'cover'
+      style.backgroundPosition = 'center'
+      style.backgroundRepeat = 'no-repeat'
+      // Use 'scroll' on mobile for better performance, 'fixed' on desktop
+      style.backgroundAttachment = isMobile ? 'scroll' : 'fixed'
+    }
+    
+    return style
+  }, [theme?.menuBackgroundR2Url, isMobile])
 
   return (
     <div 
@@ -1319,7 +1334,6 @@ function MenuPageContent() {
                   {/* Items Grid */}
                   <div className="grid grid-cols-2 gap-1.5 sm:gap-3 pb-6 w-full items-stretch">
                     {items.map((item, index) => {
-                      const basketItem = Array.isArray(basket) ? basket.find((bi) => bi?.id === item?.id) : null
                       // Only prioritize first 2 items for faster initial load
                       const isPriority = index < 2
                       return (
@@ -1329,7 +1343,7 @@ function MenuPageContent() {
                           currentLang={currentLang}
                           onItemClick={handleItemClick}
                           onAddToBasket={handleAddToBasket}
-                          quantity={basketItem?.quantity || 0}
+                          quantity={quantityByItemId.get(item.id) || 0}
                           priority={isPriority}
                           currency={uiSettings.currency}
                         />

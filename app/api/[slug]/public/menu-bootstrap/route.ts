@@ -93,7 +93,7 @@ export async function GET(
           },
         })
       }),
-      // Get UI settings for currency
+      // Get UI settings (typography sizes and currency)
       prisma.restaurant.findUnique({
         where: { slug },
         select: { id: true },
@@ -104,15 +104,46 @@ export async function GET(
             where: { restaurantId: r.id },
           })
           if (settings) {
-            // Check if currency field exists (handle case where migration hasn't run yet)
-            const currency = (settings as any).currency
-            return { currency: (currency === 'IQD' || currency === 'USD') ? currency : 'IQD' }
+            return {
+              sectionTitleSize: settings.sectionTitleSize ?? 22,
+              categoryTitleSize: settings.categoryTitleSize ?? 16,
+              itemNameSize: settings.itemNameSize ?? 14,
+              itemDescriptionSize: settings.itemDescriptionSize ?? 14,
+              itemPriceSize: settings.itemPriceSize ?? 16,
+              headerLogoSize: settings.headerLogoSize ?? 32,
+              bottomNavSectionSize: (settings as any).bottomNavSectionSize ?? 13,
+              bottomNavCategorySize: (settings as any).bottomNavCategorySize ?? 13,
+              currency: ((settings as any).currency === 'IQD' || (settings as any).currency === 'USD') 
+                ? (settings as any).currency 
+                : 'IQD',
+            }
           }
-          return null
+          // Return defaults if no settings found
+          return {
+            sectionTitleSize: 22,
+            categoryTitleSize: 16,
+            itemNameSize: 14,
+            itemDescriptionSize: 14,
+            itemPriceSize: 16,
+            headerLogoSize: 32,
+            bottomNavSectionSize: 13,
+            bottomNavCategorySize: 13,
+            currency: 'IQD',
+          }
         } catch (error) {
-          // If query fails (e.g., column doesn't exist), return default
-          console.warn('Error fetching currency from uiSettings:', error)
-          return { currency: 'IQD' }
+          // If query fails (e.g., column doesn't exist), return defaults
+          console.warn('Error fetching UI settings from bootstrap:', error)
+          return {
+            sectionTitleSize: 22,
+            categoryTitleSize: 16,
+            itemNameSize: 14,
+            itemDescriptionSize: 14,
+            itemPriceSize: 16,
+            headerLogoSize: 32,
+            bottomNavSectionSize: 13,
+            bottomNavCategorySize: 13,
+            currency: 'IQD',
+          }
         }
       }),
     ])
@@ -140,7 +171,6 @@ export async function GET(
           logoR2Url: restaurant.logoR2Url,
           logoMediaId: restaurant.logoMediaId,
           serviceChargePercent: restaurant.serviceChargePercent ?? 0,
-          currency: (uiSettings as any)?.currency ?? 'IQD',
         },
         theme: theme ? {
           menuBackgroundR2Url: theme.menuBackgroundR2Url,
@@ -153,6 +183,17 @@ export async function GET(
           categoryNameColor: theme.categoryNameColor,
         } : null,
         sections: sectionsWithCategories || [],
+        uiSettings: uiSettings || {
+          sectionTitleSize: 22,
+          categoryTitleSize: 16,
+          itemNameSize: 14,
+          itemDescriptionSize: 14,
+          itemPriceSize: 16,
+          headerLogoSize: 32,
+          bottomNavSectionSize: 13,
+          bottomNavCategorySize: 13,
+          currency: 'IQD',
+        },
       },
       {
         headers: {
@@ -168,6 +209,17 @@ export async function GET(
         restaurant: null,
         theme: null,
         sections: [],
+        uiSettings: {
+          sectionTitleSize: 22,
+          categoryTitleSize: 16,
+          itemNameSize: 14,
+          itemDescriptionSize: 14,
+          itemPriceSize: 16,
+          headerLogoSize: 32,
+          bottomNavSectionSize: 13,
+          bottomNavCategorySize: 13,
+          currency: 'IQD',
+        },
       },
       {
         status: 200,
