@@ -1015,33 +1015,30 @@ function MenuPageContent() {
     }
   }
 
-  // Preload background image for better perceived performance
-  useEffect(() => {
-    if (theme?.menuBackgroundR2Url && typeof window !== 'undefined') {
-      const img = new Image()
-      img.src = theme.menuBackgroundR2Url
-      // Image will be cached by browser, improving load time when CSS applies it
-    }
-  }, [theme?.menuBackgroundR2Url])
-
-  // Calculate background style with image overlay if exists (same as commit 8b8e346)
-  const backgroundStyle: React.CSSProperties = {
-    backgroundColor: 'var(--app-bg, #400810)',
-  }
-  
-  if (theme?.menuBackgroundR2Url) {
-    backgroundStyle.backgroundImage = `url(${theme.menuBackgroundR2Url})`
-    backgroundStyle.backgroundSize = 'cover'
-    backgroundStyle.backgroundPosition = 'center'
-    backgroundStyle.backgroundRepeat = 'no-repeat'
-    backgroundStyle.backgroundAttachment = 'fixed'
-  }
-
   return (
     <div 
-      className="min-h-dvh w-full overflow-x-hidden" 
-      style={backgroundStyle}
+      className="min-h-dvh w-full overflow-x-hidden relative" 
+      style={{ backgroundColor: 'var(--app-bg, #400810)' }}
     >
+      {/* Background Image - using img element like welcome page for fast loading */}
+      {theme?.menuBackgroundR2Url && (
+        <img
+          src={theme.menuBackgroundR2Url}
+          alt="Menu Background"
+          className="fixed inset-0 w-full h-full object-cover pointer-events-none"
+          style={{
+            zIndex: 0,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+          loading="eager"
+          decoding="async"
+        />
+      )}
       <MenuHeader
         logoUrl={restaurant?.logoR2Url || (restaurant?.logoMediaId ? `/assets/${restaurant.logoMediaId}` : undefined)}
       />
