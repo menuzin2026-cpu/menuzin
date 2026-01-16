@@ -1729,36 +1729,99 @@ export default function MenuBuilderPage() {
               boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
             }}
           >
-            <SortableContext items={sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
-              {sections.map((section) => (
-                <SortableSection
-                  key={section.id}
-                  section={section}
-                  expandedSections={expandedSections}
-                  expandedCategories={expandedCategories}
-                  activeId={activeId}
-                  holdingId={holdingId}
-                  holdingType={holdingType}
-                  onToggleSection={toggleSection}
-                  onToggleCategory={toggleCategory}
-                  onEditSection={handleEditSection}
-                  onDeleteSection={handleDelete}
-                  onEditCategory={handleEditCategory}
-                  onDeleteCategory={handleDelete}
-                  onEditItem={handleEditItem}
-                  onDeleteItem={handleDelete}
-                  onToggleActive={toggleActive}
-              onGripMouseDown={handleGripMouseDown}
-              onGripMouseUp={handleGripMouseUp}
-              onGripMouseLeave={handleGripMouseLeave}
-              onGripTouchStart={handleGripTouchStart}
-              onGripTouchEnd={handleGripTouchEnd}
-                  onShowAddCategory={setShowAddCategory}
-                  onShowAddItem={setShowAddItem}
-                  formatPrice={formatPriceWithCurrency}
-                />
-              ))}
-            </SortableContext>
+            {sections.length === 1 ? (
+              // If only one section, show categories directly without section header
+              <div className="space-y-2">
+                <SortableContext items={sections[0].categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                  {sections[0].categories && sections[0].categories.length > 0 ? (
+                    sections[0].categories.map((category) => (
+                      <SortableCategory
+                        key={category.id}
+                        category={category}
+                        sectionId={sections[0].id}
+                        expandedCategories={expandedCategories}
+                        activeId={activeId}
+                        holdingId={holdingId}
+                        holdingType={holdingType}
+                        onToggleCategory={toggleCategory}
+                        onEditCategory={handleEditCategory}
+                        onDeleteCategory={handleDelete}
+                        onEditItem={handleEditItem}
+                        onDeleteItem={handleDelete}
+                        onToggleActive={toggleActive}
+                        onGripMouseDown={handleGripMouseDown}
+                        onGripMouseUp={handleGripMouseUp}
+                        onGripMouseLeave={handleGripMouseLeave}
+                        onGripTouchStart={handleGripTouchStart}
+                        onGripTouchEnd={handleGripTouchEnd}
+                        onShowAddItem={setShowAddItem}
+                        formatPrice={formatPriceWithCurrency}
+                        openMenuId={openMenuId}
+                        openMenuType={openMenuType}
+                        setOpenMenuId={setOpenMenuId}
+                        setOpenMenuType={setOpenMenuType}
+                      />
+                    ))
+                  ) : (
+                    <div className="px-4 py-4 text-center text-white/70 text-sm">
+                      No categories in this section
+                    </div>
+                  )}
+                </SortableContext>
+                {/* Add Category Button */}
+                <Button
+                  onClick={() => setShowAddCategory(sections[0].id)}
+                  className="w-full mt-3 text-sm sm:text-base border"
+                  style={{
+                    backgroundColor: 'var(--app-bg, #400810)',
+                    color: 'var(--auto-text-primary, #FFFFFF)',
+                    borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
+                  }}
+                  variant="default"
+                >
+                  <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                  Add Category
+                </Button>
+              </div>
+            ) : (
+              // If multiple sections, show sections with expand/collapse
+              <SortableContext items={sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                {sections.map((section) => (
+                  <SortableSection
+                    key={section.id}
+                    section={section}
+                    expandedSections={expandedSections}
+                    expandedCategories={expandedCategories}
+                    activeId={activeId}
+                    holdingId={holdingId}
+                    holdingType={holdingType}
+                    onToggleSection={toggleSection}
+                    onToggleCategory={toggleCategory}
+                    onEditSection={handleEditSection}
+                    onDeleteSection={handleDelete}
+                    onEditCategory={handleEditCategory}
+                    onDeleteCategory={handleDelete}
+                    onEditItem={handleEditItem}
+                    onDeleteItem={handleDelete}
+                    onToggleActive={toggleActive}
+                    onGripMouseDown={handleGripMouseDown}
+                    onGripMouseUp={handleGripMouseUp}
+                    onGripMouseLeave={handleGripMouseLeave}
+                    onGripTouchStart={handleGripTouchStart}
+                    onGripTouchEnd={handleGripTouchEnd}
+                    onShowAddCategory={setShowAddCategory}
+                    onShowAddItem={setShowAddItem}
+                    formatPrice={formatPriceWithCurrency}
+                  />
+                ))}
+              </SortableContext>
+            )}
           </div>
           <DragOverlay>
             {activeId && activeType ? (
