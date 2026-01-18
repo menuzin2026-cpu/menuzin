@@ -10,7 +10,7 @@ import { ItemModal } from '@/components/item-modal'
 import { SearchDrawer } from '@/components/search-drawer'
 import { BasketDrawer } from '@/components/basket-drawer'
 import { PoweredByFooter } from '@/components/powered-by-footer'
-import { CategorySectionSkeleton, SectionHeaderSkeleton } from '@/components/menu-skeleton'
+import { CategorySectionSkeleton, SectionHeaderSkeleton, MenuItemSkeleton } from '@/components/menu-skeleton'
 import { Language } from '@/lib/i18n'
 import { getLocalizedText } from '@/lib/i18n'
 import { detectOverflow } from '@/lib/debug-overflow'
@@ -116,6 +116,8 @@ function MenuPageContent() {
   const fetchingCategoriesRef = useRef<Set<string>>(new Set())
   // Track current background prefetch runId for cancellation
   const prefetchRunIdRef = useRef<number>(0)
+  // Track current section loading runId for cancellation
+  const sectionLoadingRunIdRef = useRef<number>(0)
   
   // Keep ref in sync with state
   useEffect(() => {
@@ -224,6 +226,62 @@ function MenuPageContent() {
       }
     }
   }, [slug, categoryItemsCache])
+
+  // Load all categories in a section sequentially (for progressive loading)
+  const loadAllCategoriesInSection = useCallback((sectionId: string) => {
+    if (!slug || !sectionId) return
+    
+    // Increment runId to cancel any previous loading
+    sectionLoadingRunIdRef.current += 1
+    const currentRunId = sectionLoadingRunIdRef.current
+    
+    // Get active section and its categories
+    const activeSection = sections.find(s => s.id === sectionId)
+    if (!activeSection) return
+    
+    // Get sorted active categories
+    const sortedCategories = activeSection.categories
+      .filter(c => c.isActive)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+    
+    if (sortedCategories.length === 0) return
+    
+    // Load categories sequentially with small delay between each
+    const loadNext = async (index: number) => {
+      // Check if this run was cancelled
+      if (sectionLoadingRunIdRef.current !== currentRunId) {
+        return
+      }
+      
+      if (index >= sortedCategories.length) {
+        return
+      }
+      
+      const category = sortedCategories[index]
+      
+      // Skip if already cached or being fetched
+      if (categoryItemsCacheRef.current.has(category.id) || fetchingCategoriesRef.current.has(category.id)) {
+        // Continue to next category immediately
+        setTimeout(() => loadNext(index + 1), 50)
+        return
+      }
+      
+      // Fetch this category (background fetch, no loading indicator)
+      await fetchCategoryItems(category.id, true)
+      
+      // Check again if run was cancelled
+      if (sectionLoadingRunIdRef.current !== currentRunId) {
+        return
+      }
+      
+      // Small delay before next category (100-200ms for smooth progressive loading)
+      const delay = 100 + Math.random() * 100
+      setTimeout(() => loadNext(index + 1), delay)
+    }
+    
+    // Start loading after a short delay
+    setTimeout(() => loadNext(0), 100)
+  }, [slug, sections, fetchCategoryItems])
 
   // Background prefetch queue for remaining categories
   const startBackgroundPrefetch = useCallback((sectionId: string, firstCategoryId: string) => {
@@ -555,25 +613,15 @@ function MenuPageContent() {
     }
   }, [sections.length, activeSectionId, slug, currentLang])
 
-  // Fetch items when active category changes
+  // Load all categories in section when section changes
   useEffect(() => {
-    if (activeCategoryId && activeSectionId) {
-      // Check cache and fetching status before fetching
-      const isCached = categoryItemsCache.has(activeCategoryId)
-      const isFetching = fetchingCategoriesRef.current.has(activeCategoryId)
-      if (!isCached && !isFetching) {
-        fetchCategoryItems(activeCategoryId, false).then(() => {
-          // After first category loads successfully, start background prefetch
-          if (activeSectionId) {
-            startBackgroundPrefetch(activeSectionId, activeCategoryId)
-          }
-        })
-      } else if (isCached && activeSectionId) {
-        // If already cached, still start background prefetch for remaining categories
-        startBackgroundPrefetch(activeSectionId, activeCategoryId)
-      }
+    if (activeSectionId) {
+      // Cancel any previous section loading
+      sectionLoadingRunIdRef.current += 1
+      // Start loading all categories in the section sequentially
+      loadAllCategoriesInSection(activeSectionId)
     }
-  }, [activeCategoryId, activeSectionId, fetchCategoryItems, startBackgroundPrefetch]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeSectionId, loadAllCategoriesInSection])
 
   // Cancel background prefetch when section changes
   useEffect(() => {
@@ -1004,7 +1052,7 @@ function MenuPageContent() {
     return map
   }, [basket])
 
-  // Group items by category - use cached items from categoryItemsCache
+  // Group items by category - include ALL categories, even if no items loaded yet
   const itemsByCategory = useMemo(() => {
     if (!activeSection || !Array.isArray(activeSection.categories)) return []
     
@@ -1012,7 +1060,7 @@ function MenuPageContent() {
       .filter((c) => c?.isActive !== false)
       .sort((a, b) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
       .map((category) => {
-        // Get items from cache if available, otherwise empty array
+        // Get items from cache if available, otherwise empty array (will show skeleton)
         const cachedItems = categoryItemsCache.get(category.id) || []
         return {
           category,
@@ -1021,7 +1069,7 @@ function MenuPageContent() {
             .sort((a, b) => (a?.sortOrder || 0) - (b?.sortOrder || 0))
         }
       })
-      .filter((group) => group.items.length > 0)
+      // DO NOT filter - show all categories even if items.length === 0 (will render skeletons)
   }, [activeSection, categoryItemsCache])
 
 
@@ -1287,21 +1335,16 @@ function MenuPageContent() {
           <div className="flex items-center justify-center min-h-[50vh] px-4">
             <p className="text-white/70 text-center">No section selected. Please select a section from the navigation below.</p>
           </div>
-        ) : itemsByCategory.length === 0 && !loadingCategoryId ? (
+        ) : itemsByCategory.length === 0 ? (
           <div className="flex items-center justify-center min-h-[50vh] px-4">
             <p className="text-white/70 text-center">No items found in this section.</p>
-          </div>
-        ) : itemsByCategory.length === 0 && loadingCategoryId ? (
-          // Show skeleton while loading category items
-          <div className="px-2 sm:px-4 space-y-8 pt-2 w-full max-w-full">
-            <div className="space-y-4">
-              <SectionHeaderSkeleton />
-              <CategorySectionSkeleton />
-            </div>
           </div>
         ) : (
           <div className="px-2 sm:px-4 space-y-8 pt-2 w-full max-w-full">
             {itemsByCategory.map(({ category, items }, index) => {
+              const hasItems = items.length > 0
+              const skeletonCount = 6 // Show 6 skeleton items per category
+              
               return (
                 <div key={category.id} id={`category-${category.id}`} className="scroll-mt-4">
                   {/* Category Header with Triangular Background */}
@@ -1331,24 +1374,32 @@ function MenuPageContent() {
                     </div>
                   </div>
                   
-                  {/* Items Grid */}
+                  {/* Items Grid - show real items or skeleton placeholders */}
                   <div className="grid grid-cols-2 gap-1.5 sm:gap-3 pb-6 w-full items-stretch">
-                    {items.map((item, index) => {
-                      // Only prioritize first 2 items for faster initial load
-                      const isPriority = index < 2
-                      return (
-                        <ItemCard
-                          key={item.id}
-                          item={item}
-                          currentLang={currentLang}
-                          onItemClick={handleItemClick}
-                          onAddToBasket={handleAddToBasket}
-                          quantity={quantityByItemId.get(item.id) || 0}
-                          priority={isPriority}
-                          currency={uiSettings.currency}
-                        />
-                      )
-                    })}
+                    {hasItems ? (
+                      // Render real items
+                      items.map((item, itemIndex) => {
+                        // Only prioritize first 2 items for faster initial load
+                        const isPriority = itemIndex < 2
+                        return (
+                          <ItemCard
+                            key={item.id}
+                            item={item}
+                            currentLang={currentLang}
+                            onItemClick={handleItemClick}
+                            onAddToBasket={handleAddToBasket}
+                            quantity={quantityByItemId.get(item.id) || 0}
+                            priority={isPriority}
+                            currency={uiSettings.currency}
+                          />
+                        )
+                      })
+                    ) : (
+                      // Render skeleton items while loading
+                      Array.from({ length: skeletonCount }).map((_, skeletonIndex) => (
+                        <MenuItemSkeleton key={`skeleton-${category.id}-${skeletonIndex}`} />
+                      ))
+                    )}
                   </div>
                 </div>
               )
