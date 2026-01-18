@@ -1,9 +1,122 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { unstable_cache } from 'next/cache'
 
 // Enable caching for public endpoint
-export const revalidate = 60 // Revalidate every 60 seconds
-export const dynamic = 'force-dynamic' // But allow dynamic rendering
+export const revalidate = 30 // Revalidate every 30 seconds (shorter for faster updates)
+
+// Removed 'force-dynamic' to enable caching
+
+// Helper function to fetch bootstrap data (will be cached)
+async function fetchBootstrapData(restaurantId: string) {
+  // Run all queries in parallel using the restaurant ID
+  const [theme, sectionsWithCategories, uiSettings] = await Promise.all([
+    // Get theme (for menu background and colors)
+    prisma.theme.findUnique({
+      where: { restaurantId },
+      select: {
+        menuBackgroundR2Url: true,
+        headerFooterBgColor: true,
+        glassTintColor: true,
+        itemNameTextColor: true,
+        itemPriceTextColor: true,
+        itemDescriptionTextColor: true,
+        bottomNavSectionNameColor: true,
+        categoryNameColor: true,
+      },
+    }),
+    // Get sections with categories (without items for faster load)
+    prisma.section.findMany({
+      where: {
+        restaurantId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        nameKu: true,
+        nameEn: true,
+        nameAr: true,
+        sortOrder: true,
+        isActive: true,
+        categories: {
+          where: {
+            isActive: true, // restaurantId already filtered by parent query
+          },
+          select: {
+            id: true,
+            nameKu: true,
+            nameEn: true,
+            nameAr: true,
+            sortOrder: true,
+            isActive: true,
+            imageR2Url: true,
+            imageMediaId: true,
+          },
+          orderBy: {
+            sortOrder: 'asc',
+          },
+        },
+      },
+      orderBy: {
+        sortOrder: 'asc',
+      },
+    }),
+    // Get UI settings (typography sizes and currency)
+    (async () => {
+      try {
+        const settings = await prisma.uiSettings.findUnique({
+          where: { restaurantId },
+        })
+        if (settings) {
+          return {
+            sectionTitleSize: settings.sectionTitleSize ?? 22,
+            categoryTitleSize: settings.categoryTitleSize ?? 16,
+            itemNameSize: settings.itemNameSize ?? 14,
+            itemDescriptionSize: settings.itemDescriptionSize ?? 14,
+            itemPriceSize: settings.itemPriceSize ?? 16,
+            headerLogoSize: settings.headerLogoSize ?? 32,
+            bottomNavSectionSize: (settings as any).bottomNavSectionSize ?? 13,
+            bottomNavCategorySize: (settings as any).bottomNavCategorySize ?? 13,
+            currency: ((settings as any).currency === 'IQD' || (settings as any).currency === 'USD') 
+              ? (settings as any).currency 
+              : 'IQD',
+          }
+        }
+        // Return defaults if no settings found
+        return {
+          sectionTitleSize: 22,
+          categoryTitleSize: 16,
+          itemNameSize: 14,
+          itemDescriptionSize: 14,
+          itemPriceSize: 16,
+          headerLogoSize: 32,
+          bottomNavSectionSize: 13,
+          bottomNavCategorySize: 13,
+          currency: 'IQD',
+        }
+      } catch (error) {
+        // If query fails (e.g., column doesn't exist), return defaults
+        console.warn('Error fetching UI settings from bootstrap:', error)
+        return {
+          sectionTitleSize: 22,
+          categoryTitleSize: 16,
+          itemNameSize: 14,
+          itemDescriptionSize: 14,
+          itemPriceSize: 16,
+          headerLogoSize: 32,
+          bottomNavSectionSize: 13,
+          bottomNavCategorySize: 13,
+          currency: 'IQD',
+        }
+      }
+    })(),
+  ])
+
+  return { theme, sectionsWithCategories, uiSettings }
+}
+
+// Cached version of fetchBootstrapData
+// Note: unstable_cache needs to be called at module level, so we'll call it in the route handler
 
 export async function GET(
   request: NextRequest,
@@ -15,138 +128,19 @@ export async function GET(
       return NextResponse.json({ error: 'Slug is required' }, { status: 400 })
     }
 
-    // Parallel queries for faster response
-    const [restaurant, theme, sectionsWithCategories, uiSettings] = await Promise.all([
-      // Get restaurant basic info
-      prisma.restaurant.findUnique({
-        where: { slug },
-        select: {
-          id: true,
-          nameKu: true,
-          nameEn: true,
-          nameAr: true,
-          logoR2Url: true,
-          logoMediaId: true,
-          serviceChargePercent: true,
-        },
-      }),
-      // Get theme (for menu background and colors)
-      prisma.restaurant.findUnique({
-        where: { slug },
-        select: { id: true },
-      }).then((r) => {
-        if (!r) return null
-        return prisma.theme.findUnique({
-          where: { restaurantId: r.id },
-          select: {
-            menuBackgroundR2Url: true,
-            headerFooterBgColor: true,
-            glassTintColor: true,
-            itemNameTextColor: true,
-            itemPriceTextColor: true,
-            itemDescriptionTextColor: true,
-            bottomNavSectionNameColor: true,
-            categoryNameColor: true,
-          },
-        })
-      }),
-      // Get sections with categories (without items for faster load)
-      prisma.restaurant.findUnique({
-        where: { slug },
-        select: { id: true },
-      }).then((r) => {
-        if (!r) return []
-        return prisma.section.findMany({
-          where: {
-            restaurantId: r.id,
-            isActive: true,
-          },
-          select: {
-            id: true,
-            nameKu: true,
-            nameEn: true,
-            nameAr: true,
-            sortOrder: true,
-            isActive: true,
-            categories: {
-              where: {
-                restaurantId: r.id,
-                isActive: true,
-              },
-              select: {
-                id: true,
-                nameKu: true,
-                nameEn: true,
-                nameAr: true,
-                sortOrder: true,
-                isActive: true,
-                imageR2Url: true,
-                imageMediaId: true,
-              },
-              orderBy: {
-                sortOrder: 'asc',
-              },
-            },
-          },
-          orderBy: {
-            sortOrder: 'asc',
-          },
-        })
-      }),
-      // Get UI settings (typography sizes and currency)
-      prisma.restaurant.findUnique({
-        where: { slug },
-        select: { id: true },
-      }).then(async (r) => {
-        if (!r) return null
-        try {
-          const settings = await prisma.uiSettings.findUnique({
-            where: { restaurantId: r.id },
-          })
-          if (settings) {
-            return {
-              sectionTitleSize: settings.sectionTitleSize ?? 22,
-              categoryTitleSize: settings.categoryTitleSize ?? 16,
-              itemNameSize: settings.itemNameSize ?? 14,
-              itemDescriptionSize: settings.itemDescriptionSize ?? 14,
-              itemPriceSize: settings.itemPriceSize ?? 16,
-              headerLogoSize: settings.headerLogoSize ?? 32,
-              bottomNavSectionSize: (settings as any).bottomNavSectionSize ?? 13,
-              bottomNavCategorySize: (settings as any).bottomNavCategorySize ?? 13,
-              currency: ((settings as any).currency === 'IQD' || (settings as any).currency === 'USD') 
-                ? (settings as any).currency 
-                : 'IQD',
-            }
-          }
-          // Return defaults if no settings found
-          return {
-            sectionTitleSize: 22,
-            categoryTitleSize: 16,
-            itemNameSize: 14,
-            itemDescriptionSize: 14,
-            itemPriceSize: 16,
-            headerLogoSize: 32,
-            bottomNavSectionSize: 13,
-            bottomNavCategorySize: 13,
-            currency: 'IQD',
-          }
-        } catch (error) {
-          // If query fails (e.g., column doesn't exist), return defaults
-          console.warn('Error fetching UI settings from bootstrap:', error)
-          return {
-            sectionTitleSize: 22,
-            categoryTitleSize: 16,
-            itemNameSize: 14,
-            itemDescriptionSize: 14,
-            itemPriceSize: 16,
-            headerLogoSize: 32,
-            bottomNavSectionSize: 13,
-            bottomNavCategorySize: 13,
-            currency: 'IQD',
-          }
-        }
-      }),
-    ])
+    // OPTIMIZATION #1: Fetch restaurant ONCE (not 4 times)
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        nameKu: true,
+        nameEn: true,
+        nameAr: true,
+        logoR2Url: true,
+        logoMediaId: true,
+        serviceChargePercent: true,
+      },
+    })
 
     if (!restaurant) {
       return NextResponse.json(
@@ -159,6 +153,17 @@ export async function GET(
         }
       )
     }
+
+    // OPTIMIZATION #2: Use cached function for related data
+    const cachedFetch = unstable_cache(
+      async () => fetchBootstrapData(restaurant.id),
+      [`menu-bootstrap-${restaurant.id}`],
+      {
+        tags: ['menu-bootstrap', `restaurant-${restaurant.id}`],
+        revalidate: 30, // Cache for 30 seconds
+      }
+    )
+    const { theme, sectionsWithCategories, uiSettings } = await cachedFetch()
 
     // Return bootstrap data (basic info + structure, no items)
     return NextResponse.json(
@@ -197,7 +202,7 @@ export async function GET(
       },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
         },
       }
     )

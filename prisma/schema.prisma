@@ -65,6 +65,7 @@ model Section {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId])
+  @@index([restaurantId, isActive]) // Composite index for faster filtered queries
 }
 
 model Category {
@@ -88,6 +89,7 @@ model Category {
 
   @@index([restaurantId])
   @@index([sectionId])
+  @@index([sectionId, isActive]) // Composite index for faster filtered queries
 }
 
 model Item {
