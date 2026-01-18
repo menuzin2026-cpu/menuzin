@@ -99,6 +99,7 @@ export default function MenuBuilderPage() {
   })
   const [itemImage, setItemImage] = useState<File | null>(null)
   const [itemImagePreview, setItemImagePreview] = useState<string | null>(null)
+  const [itemImageRemoved, setItemImageRemoved] = useState(false) // Track if user intentionally removed image
   
   // Drag and drop states
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -824,6 +825,7 @@ export default function MenuBuilderPage() {
     const file = e.target.files?.[0]
     if (file) {
       setItemImage(file)
+      setItemImageRemoved(false) // Reset removal flag when new image is selected
       const reader = new FileReader()
       reader.onloadend = () => {
         setItemImagePreview(reader.result as string)
@@ -861,11 +863,15 @@ export default function MenuBuilderPage() {
       descriptionAr: item.descriptionAr || '',
       price: item.price.toString(),
     })
+    // Reset image removal flag
+    setItemImageRemoved(false)
     // Check R2 URL first, then fall back to old media ID
     if (item.imageR2Url) {
       setItemImagePreview(item.imageR2Url)
     } else if (item.imageMediaId) {
       setItemImagePreview(`/assets/${item.imageMediaId}`)
+    } else {
+      setItemImagePreview(null)
     }
   }
 
@@ -928,8 +934,9 @@ export default function MenuBuilderPage() {
         price: parseFloat(editItemForm.price),
       }
 
-      // Upload new image to R2 if provided (using server-side proxy to avoid CORS)
+      // Handle image: upload new, remove existing, or keep existing
       if (itemImage) {
+        // Upload new image to R2 if provided (using server-side proxy to avoid CORS)
         try {
           // Upload via server-side proxy (avoids CORS issues)
           const formData = new FormData()
@@ -961,6 +968,11 @@ export default function MenuBuilderPage() {
           toast.error(`Failed to upload image: ${uploadError.message || 'Unknown error'}`)
           return
         }
+      } else if (itemImageRemoved) {
+        // User intentionally removed the image - clear image fields
+        updateData.imageR2Key = null
+        updateData.imageR2Url = null
+        updateData.imageMediaId = null // Also clear old media ID if it exists
       }
 
       const response = await fetch(`/api/admin/items/${itemId}`, {
@@ -978,6 +990,7 @@ export default function MenuBuilderPage() {
       setEditingItem(null)
       setItemImage(null)
       setItemImagePreview(null)
+      setItemImageRemoved(false)
       fetchMenuData()
     } catch (error: any) {
       console.error('Error updating item:', error)
@@ -2160,6 +2173,7 @@ export default function MenuBuilderPage() {
                       onClick={() => {
                         setItemImage(null)
                         setItemImagePreview(null)
+                        setItemImageRemoved(true) // Mark that user wants to remove image
                       }}
                       className="w-full text-xs sm:text-sm"
                     >
@@ -2372,6 +2386,7 @@ export default function MenuBuilderPage() {
             setEditingItem(null)
             setItemImage(null)
             setItemImagePreview(null)
+            setItemImageRemoved(false)
           }}
         >
           <div 
@@ -2392,6 +2407,7 @@ export default function MenuBuilderPage() {
                   setEditingItem(null)
                   setItemImage(null)
                   setItemImagePreview(null)
+                  setItemImageRemoved(false)
                 }}
                 className="text-white/70 hover:text-white"
               >
@@ -2513,6 +2529,7 @@ export default function MenuBuilderPage() {
                       onClick={() => {
                         setItemImage(null)
                         setItemImagePreview(null)
+                        setItemImageRemoved(true) // Mark that user wants to remove image
                       }}
                       className="w-full text-xs sm:text-sm"
                     >
@@ -2539,6 +2556,7 @@ export default function MenuBuilderPage() {
                     setEditingItem(null)
                     setItemImage(null)
                     setItemImagePreview(null)
+                    setItemImageRemoved(false)
                   }}
                   className="text-xs sm:text-sm py-2"
                 >
