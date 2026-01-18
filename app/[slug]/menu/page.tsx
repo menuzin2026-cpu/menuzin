@@ -122,6 +122,18 @@ function MenuPageContent() {
     categoryItemsCacheRef.current = categoryItemsCache
   }, [categoryItemsCache])
   
+  // Preload background image immediately when URL becomes available
+  useEffect(() => {
+    if (!theme?.menuBackgroundR2Url) return
+    
+    // Preload the background image immediately using Image constructor
+    // This starts the download before React renders the <img> element
+    const img = new Image()
+    img.src = theme.menuBackgroundR2Url
+    // Optional: Set decoding to async for better performance
+    img.decoding = 'async'
+  }, [theme?.menuBackgroundR2Url])
+  
   // Refs for bottom navigation auto-scroll
   const categoryNavContainerRef = useRef<HTMLDivElement>(null)
   const categoryButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
