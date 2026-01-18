@@ -262,7 +262,7 @@ function MenuPageContent() {
       // Skip if already cached or being fetched
       if (categoryItemsCacheRef.current.has(category.id) || fetchingCategoriesRef.current.has(category.id)) {
         // Continue to next category immediately
-        setTimeout(() => loadNext(index + 1), 50)
+        loadNext(index + 1)
         return
       }
       
@@ -274,13 +274,12 @@ function MenuPageContent() {
         return
       }
       
-      // Small delay before next category (100-200ms for smooth progressive loading)
-      const delay = 100 + Math.random() * 100
-      setTimeout(() => loadNext(index + 1), delay)
+      // Load next category immediately (no delay)
+      loadNext(index + 1)
     }
     
-    // Start loading after a short delay
-    setTimeout(() => loadNext(0), 100)
+    // Start loading immediately
+    loadNext(0)
   }, [slug, sections, fetchCategoryItems])
 
   // Background prefetch queue for remaining categories
