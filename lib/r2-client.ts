@@ -86,10 +86,12 @@ export function generateR2Key(
     .toLowerCase()
     .substring(0, 100) // Limit length
 
+  // Generate unique versioned key: timestamp + random string for guaranteed uniqueness
   const timestamp = Date.now()
+  const random = Math.random().toString(36).substring(2, 9) // 7 random chars
   const itemPrefix = itemId ? `${itemId}-` : ''
   
-  return `restaurants/${restaurantId}/${scope}/${itemPrefix}${timestamp}-${safeFileName}`
+  return `restaurants/${restaurantId}/${scope}/${itemPrefix}${timestamp}-${random}-${safeFileName}`
 }
 
 /**

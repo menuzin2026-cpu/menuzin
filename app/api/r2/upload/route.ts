@@ -10,6 +10,40 @@ const uploadSchema = z.object({
   itemId: z.string().optional(),
 })
 
+/**
+ * Infer Content-Type from file extension if not provided
+ */
+function inferContentType(fileName: string, providedType?: string): string {
+  // If provided type is valid, use it
+  if (providedType && providedType !== 'application/octet-stream' && providedType !== '') {
+    return providedType
+  }
+
+  // Infer from extension
+  const ext = fileName.toLowerCase().split('.').pop() || ''
+  const extensionMap: Record<string, string> = {
+    // Images
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+    gif: 'image/gif',
+    svg: 'image/svg+xml',
+    // Videos
+    mp4: 'video/mp4',
+    webm: 'video/webm',
+    mov: 'video/quicktime',
+  }
+
+  const inferredType = extensionMap[ext]
+  if (inferredType) {
+    return inferredType
+  }
+
+  // Default fallback
+  return 'application/octet-stream'
+}
+
 export async function POST(request: NextRequest) {
   // Server-side only check
   if (typeof window !== 'undefined') {
@@ -90,31 +124,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate R2 key
+    // Generate R2 key with versioning for immutable caching
     let key: string
     if (isPlatformScope) {
-      // Platform footer logo: platform/footer/{timestamp}-{filename}
+      // Platform footer logo: platform/footer/{timestamp}-{random}-{filename}
       const timestamp = Date.now()
+      const random = Math.random().toString(36).substring(2, 9) // 7 random chars for uniqueness
       const safeFileName = file.name
         .replace(/[^a-zA-Z0-9.-]/g, '-')
         .toLowerCase()
         .substring(0, 100)
-      key = `platform/footer/${timestamp}-${safeFileName}`
+      key = `platform/footer-logo/${timestamp}-${random}-${safeFileName}`
     } else {
       key = generateR2Key(validation.data.scope, validation.data.restaurantId!, file.name, validation.data.itemId)
     }
+
+    // Infer Content-Type with fallback
+    const contentType = inferContentType(file.name, file.type)
 
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Upload to R2
+    // Upload to R2 with immutable caching headers
     const client = getR2Client()
     const command = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME!,
       Key: key,
       Body: buffer,
-      ContentType: file.type,
+      ContentType: contentType,
+      CacheControl: 'public, max-age=31536000, immutable', // 1 year immutable cache
     })
 
     await client.send(command)
@@ -122,9 +161,10 @@ export async function POST(request: NextRequest) {
     // Generate public URL
     const publicUrl = getR2PublicUrl(key)
 
-    console.log('[R2 UPLOAD PROXY] ✅ File uploaded successfully')
-    console.log('[R2 UPLOAD PROXY] Key:', key)
-    console.log('[R2 UPLOAD PROXY] Public URL:', publicUrl)
+    console.log('[R2 UPLOAD] ✅ Upload successful')
+    console.log('[R2 UPLOAD] Key:', key)
+    console.log('[R2 UPLOAD] ContentType:', contentType)
+    console.log('[R2 UPLOAD] Public URL:', publicUrl)
 
     return NextResponse.json({
       key,
