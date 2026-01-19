@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { ensureRestaurantWelcomeBgMimeTypeColumn, ensureRestaurantSocialMediaColumns } from '@/lib/ensure-columns'
+import { unstable_cache } from 'next/cache'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -136,92 +137,76 @@ export async function GET(request: NextRequest) {
     await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
     await ensureRestaurantSocialMediaColumns(prisma)
 
-    // Query by slug - no fallback to first restaurant
-    // Try to include footerLogo, but handle gracefully if column doesn't exist
-    let restaurant: any = null
-    try {
-      // Set a timeout for database queries to handle slow connections (5 seconds)
-      const queryPromise = prisma.restaurant.findUnique({
-        where: { slug },
-        include: {
-          logo: {
-            select: {
-              id: true,
-              mimeType: true,
-              size: true,
-            },
-          },
-          footerLogo: {
-            select: {
-              id: true,
-              mimeType: true,
-              size: true,
-            },
-          },
-          welcomeBackground: {
-            select: {
-              id: true,
-              mimeType: true,
-              size: true,
-            },
-          },
-        },
-      })
-
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Database query timeout')), 5000)
-      })
-
-      restaurant = await Promise.race([queryPromise, timeoutPromise]) as any
-    } catch (error: any) {
-      // If footerLogo relation fails (column doesn't exist) or missing columns (P2022), retry without footerLogo
-      if (error?.message?.includes('footerLogo') || error?.code === 'P2021' || error?.code === 'P2022') {
-        console.warn('[DB COMPAT] Column not found, querying without footerLogo:', error.message)
-        try {
-          restaurant = await prisma.restaurant.findUnique({
-            where: { slug },
-            include: {
-              logo: {
-                select: {
-                  id: true,
-                  mimeType: true,
-                  size: true,
-                },
-              },
-              welcomeBackground: {
-                select: {
-                  id: true,
-                  mimeType: true,
-                  size: true,
-                },
+    // Helper function to fetch restaurant data (will be cached)
+    async function fetchRestaurantData(slugParam: string): Promise<any> {
+      // Query by slug - no fallback to first restaurant
+      // Try to include footerLogo, but handle gracefully if column doesn't exist
+      let restaurant: any = null
+      try {
+        // Set a timeout for database queries to handle slow connections (5 seconds)
+        const queryPromise = prisma.restaurant.findUnique({
+          where: { slug: slugParam },
+          include: {
+            logo: {
+              select: {
+                id: true,
+                mimeType: true,
+                size: true,
               },
             },
-          })
-        } catch (retryError: any) {
-          // If still fails (e.g., missing social media columns), use raw SQL fallback
-          // Only select columns that definitely exist (core columns)
-          console.warn('[DB COMPAT] Prisma query failed, using raw SQL fallback:', retryError)
-          // Try to select serviceChargePercent if column exists, otherwise default to 0
-          let rawResult: any[] | null = null
+            footerLogo: {
+              select: {
+                id: true,
+                mimeType: true,
+                size: true,
+              },
+            },
+            welcomeBackground: {
+              select: {
+                id: true,
+                mimeType: true,
+                size: true,
+              },
+            },
+          },
+        })
+
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Database query timeout')), 5000)
+        })
+
+        restaurant = await Promise.race([queryPromise, timeoutPromise]) as any
+      } catch (error: any) {
+        // If footerLogo relation fails (column doesn't exist) or missing columns (P2022), retry without footerLogo
+        if (error?.message?.includes('footerLogo') || error?.code === 'P2021' || error?.code === 'P2022') {
+          console.warn('[DB COMPAT] Column not found, querying without footerLogo:', error.message)
           try {
-            rawResult = await prisma.$queryRawUnsafe<any[]>(
-              `SELECT 
-                id, "nameKu", "nameEn", "nameAr",
-                "logoMediaId", "footerLogoMediaId", "welcomeBackgroundMediaId",
-                "welcomeOverlayColor", "welcomeOverlayOpacity", "welcomeTextEn",
-                "googleMapsUrl", "phoneNumber", "brandColors", "updatedAt",
-                "logoR2Key", "logoR2Url", "footerLogoR2Key", "footerLogoR2Url",
-                "welcomeBgR2Key", "welcomeBgR2Url", "welcomeBgMimeType",
-                COALESCE("instagramUrl", NULL) as "instagramUrl",
-                COALESCE("snapchatUrl", NULL) as "snapchatUrl",
-                COALESCE("tiktokUrl", NULL) as "tiktokUrl",
-                COALESCE("serviceChargePercent", 0) as "serviceChargePercent"
-              FROM "Restaurant"
-              WHERE slug = '${slug.replace(/'/g, "''")}'`
-            )
-          } catch (sqlError: any) {
-            // If serviceChargePercent column doesn't exist, select without it
-            if (sqlError?.message?.includes('serviceChargePercent') || sqlError?.message?.includes('instagramUrl') || sqlError?.code === '42703') {
+            restaurant = await prisma.restaurant.findUnique({
+              where: { slug: slugParam },
+              include: {
+                logo: {
+                  select: {
+                    id: true,
+                    mimeType: true,
+                    size: true,
+                  },
+                },
+                welcomeBackground: {
+                  select: {
+                    id: true,
+                    mimeType: true,
+                    size: true,
+                  },
+                },
+              },
+            })
+          } catch (retryError: any) {
+            // If still fails (e.g., missing social media columns), use raw SQL fallback
+            // Only select columns that definitely exist (core columns)
+            console.warn('[DB COMPAT] Prisma query failed, using raw SQL fallback:', retryError)
+            // Try to select serviceChargePercent if column exists, otherwise default to 0
+            let rawResult: any[] | null = null
+            try {
               rawResult = await prisma.$queryRawUnsafe<any[]>(
                 `SELECT 
                   id, "nameKu", "nameEn", "nameAr",
@@ -229,74 +214,116 @@ export async function GET(request: NextRequest) {
                   "welcomeOverlayColor", "welcomeOverlayOpacity", "welcomeTextEn",
                   "googleMapsUrl", "phoneNumber", "brandColors", "updatedAt",
                   "logoR2Key", "logoR2Url", "footerLogoR2Key", "footerLogoR2Url",
-                  "welcomeBgR2Key", "welcomeBgR2Url", "welcomeBgMimeType"
+                  "welcomeBgR2Key", "welcomeBgR2Url", "welcomeBgMimeType",
+                  COALESCE("instagramUrl", NULL) as "instagramUrl",
+                  COALESCE("snapchatUrl", NULL) as "snapchatUrl",
+                  COALESCE("tiktokUrl", NULL) as "tiktokUrl",
+                  COALESCE("serviceChargePercent", 0) as "serviceChargePercent"
                 FROM "Restaurant"
-                WHERE slug = '${slug.replace(/'/g, "''")}'`
+                WHERE slug = '${slugParam.replace(/'/g, "''")}'`
               )
+            } catch (sqlError: any) {
+              // If serviceChargePercent column doesn't exist, select without it
+              if (sqlError?.message?.includes('serviceChargePercent') || sqlError?.message?.includes('instagramUrl') || sqlError?.code === '42703') {
+                rawResult = await prisma.$queryRawUnsafe<any[]>(
+                  `SELECT 
+                    id, "nameKu", "nameEn", "nameAr",
+                    "logoMediaId", "footerLogoMediaId", "welcomeBackgroundMediaId",
+                    "welcomeOverlayColor", "welcomeOverlayOpacity", "welcomeTextEn",
+                    "googleMapsUrl", "phoneNumber", "brandColors", "updatedAt",
+                    "logoR2Key", "logoR2Url", "footerLogoR2Key", "footerLogoR2Url",
+                    "welcomeBgR2Key", "welcomeBgR2Url", "welcomeBgMimeType"
+                  FROM "Restaurant"
+                  WHERE slug = '${slugParam.replace(/'/g, "''")}'`
+                )
+              } else {
+                throw sqlError
+              }
+            }
+            
+            if (rawResult && rawResult.length > 0) {
+              restaurant = rawResult[0]
+              // Set default values for columns that might not exist yet
+              restaurant.instagramUrl = restaurant.instagramUrl ?? null
+              restaurant.snapchatUrl = restaurant.snapchatUrl ?? null
+              restaurant.tiktokUrl = restaurant.tiktokUrl ?? null
+              restaurant.serviceChargePercent = restaurant.serviceChargePercent ?? 0
+              // Fetch related media separately
+              if (restaurant.logoMediaId) {
+                try {
+                  const logo = await prisma.media.findUnique({
+                    where: { id: restaurant.logoMediaId },
+                    select: { id: true, mimeType: true, size: true },
+                  })
+                  restaurant.logo = logo
+                } catch {
+                  restaurant.logo = null
+                }
+              }
+              if (restaurant.footerLogoMediaId) {
+                try {
+                  const footerLogo = await prisma.media.findUnique({
+                    where: { id: restaurant.footerLogoMediaId },
+                    select: { id: true, mimeType: true, size: true },
+                  })
+                  restaurant.footerLogo = footerLogo
+                } catch {
+                  restaurant.footerLogo = null
+                }
+              }
+              if (restaurant.welcomeBackgroundMediaId) {
+                try {
+                  const welcomeBg = await prisma.media.findUnique({
+                    where: { id: restaurant.welcomeBackgroundMediaId },
+                    select: { id: true, mimeType: true, size: true },
+                  })
+                  restaurant.welcomeBackground = welcomeBg
+                } catch {
+                  restaurant.welcomeBackground = null
+                }
+              }
             } else {
-              throw sqlError
+              restaurant = null
             }
           }
-          
-          if (rawResult && rawResult.length > 0) {
-            restaurant = rawResult[0]
-            // Set default values for columns that might not exist yet
-            restaurant.instagramUrl = restaurant.instagramUrl ?? null
-            restaurant.snapchatUrl = restaurant.snapchatUrl ?? null
-            restaurant.tiktokUrl = restaurant.tiktokUrl ?? null
-            restaurant.serviceChargePercent = restaurant.serviceChargePercent ?? 0
-            // Fetch related media separately
-            if (restaurant.logoMediaId) {
-              try {
-                const logo = await prisma.media.findUnique({
-                  where: { id: restaurant.logoMediaId },
-                  select: { id: true, mimeType: true, size: true },
-                })
-                restaurant.logo = logo
-              } catch {
-                restaurant.logo = null
-              }
-            }
-            if (restaurant.footerLogoMediaId) {
-              try {
-                const footerLogo = await prisma.media.findUnique({
-                  where: { id: restaurant.footerLogoMediaId },
-                  select: { id: true, mimeType: true, size: true },
-                })
-                restaurant.footerLogo = footerLogo
-              } catch {
-                restaurant.footerLogo = null
-              }
-            }
-            if (restaurant.welcomeBackgroundMediaId) {
-              try {
-                const welcomeBg = await prisma.media.findUnique({
-                  where: { id: restaurant.welcomeBackgroundMediaId },
-                  select: { id: true, mimeType: true, size: true },
-                })
-                restaurant.welcomeBackground = welcomeBg
-              } catch {
-                restaurant.welcomeBackground = null
-              }
-            }
-          } else {
-            restaurant = null
+        } else {
+          // If it's a timeout or connection error, throw to be handled outside
+          if (error?.message?.includes('timeout') || error?.code === 'P1001' || error?.code === 'P1002') {
+            throw error
           }
+          throw error
         }
-      } else {
-        // If it's a timeout or connection error, return fallback
-        if (error?.message?.includes('timeout') || error?.code === 'P1001' || error?.code === 'P1002') {
-          console.warn('[WARN] Database connection issue, returning fallback data:', error.message)
-          const fallbackData = await getFallbackData(slug)
-          return NextResponse.json(fallbackData, {
-            headers: {
-              'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-              'X-Fallback': 'true',
-            },
-          })
-        }
-        throw error
       }
+      
+      return restaurant
+    }
+
+    // Use cached function to fetch restaurant data
+    const cachedFetch = unstable_cache(
+      async () => fetchRestaurantData(slug),
+      [`restaurant-data-by-slug-${slug}`],
+      {
+        tags: [`restaurant-slug-${slug}`],
+        revalidate: 300, // Cache for 5 minutes
+      }
+    )
+
+    let restaurant: any = null
+    try {
+      restaurant = await cachedFetch()
+    } catch (error: any) {
+      // If it's a timeout or connection error, return fallback
+      if (error?.message?.includes('timeout') || error?.code === 'P1001' || error?.code === 'P1002') {
+        console.warn('[WARN] Database connection issue, returning fallback data:', error.message)
+        const fallbackData = await getFallbackData(slug)
+        return NextResponse.json(fallbackData, {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'X-Fallback': 'true',
+          },
+        })
+      }
+      throw error
     }
 
     // Return 404 if restaurant doesn't exist (deleted restaurants should not work)
@@ -350,11 +377,11 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
         },
       }
     )
-  } catch (error) {
+  } catch (error: unknown) {
     // Log full error details on server (never expose to client)
     const errorDetails = error instanceof Error ? {
       message: error.message,

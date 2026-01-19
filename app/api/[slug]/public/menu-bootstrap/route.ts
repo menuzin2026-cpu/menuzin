@@ -129,6 +129,7 @@ export async function GET(
     }
 
     // OPTIMIZATION #1: Fetch restaurant ONCE (not 4 times)
+    // Include welcome page fields for faster welcome page loading
     const restaurant = await prisma.restaurant.findUnique({
       where: { slug },
       select: {
@@ -139,6 +140,19 @@ export async function GET(
         logoR2Url: true,
         logoMediaId: true,
         serviceChargePercent: true,
+        // Welcome page fields
+        welcomeBgR2Url: true,
+        welcomeBgMimeType: true,
+        welcomeOverlayColor: true,
+        welcomeOverlayOpacity: true,
+        welcomeTextEn: true,
+        googleMapsUrl: true,
+        phoneNumber: true,
+        instagramUrl: true,
+        snapchatUrl: true,
+        tiktokUrl: true,
+        welcomeBackgroundMediaId: true,
+        updatedAt: true,
       },
     })
 
@@ -176,6 +190,19 @@ export async function GET(
           logoR2Url: restaurant.logoR2Url,
           logoMediaId: restaurant.logoMediaId,
           serviceChargePercent: restaurant.serviceChargePercent ?? 0,
+          // Welcome page fields (optional, menu page ignores these)
+          welcomeBgR2Url: (restaurant as any).welcomeBgR2Url || null,
+          welcomeBgMimeType: (restaurant as any).welcomeBgMimeType || null,
+          welcomeOverlayColor: (restaurant as any).welcomeOverlayColor || null,
+          welcomeOverlayOpacity: (restaurant as any).welcomeOverlayOpacity ?? null,
+          welcomeTextEn: (restaurant as any).welcomeTextEn || null,
+          googleMapsUrl: (restaurant as any).googleMapsUrl || null,
+          phoneNumber: (restaurant as any).phoneNumber || null,
+          instagramUrl: (restaurant as any).instagramUrl || null,
+          snapchatUrl: (restaurant as any).snapchatUrl || null,
+          tiktokUrl: (restaurant as any).tiktokUrl || null,
+          welcomeBackgroundMediaId: (restaurant as any).welcomeBackgroundMediaId || null,
+          updatedAt: (restaurant as any).updatedAt ? new Date((restaurant as any).updatedAt).toISOString() : null,
         },
         theme: theme ? {
           menuBackgroundR2Url: theme.menuBackgroundR2Url,
