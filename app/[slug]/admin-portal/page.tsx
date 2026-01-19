@@ -32,7 +32,7 @@ export default function AdminDashboard() {
     try {
       await fetch('/api/admin/logout', { method: 'POST' })
       toast.success('Logged out successfully')
-      router.push(`/${slug}/admin/login`)
+      router.push(`/${slug}/admin-portal/login`)
     } catch (error) {
       console.error('Logout error:', error)
       toast.error('Failed to logout')
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button
-            onClick={() => router.push(`/${slug}/admin/menu-builder`)}
+            onClick={() => router.push(`/${slug}/admin-portal/menu-builder`)}
             className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
             style={{
               boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
           </button>
 
           <button
-            onClick={() => router.push(`/${slug}/admin/feedback`)}
+            onClick={() => router.push(`/${slug}/admin-portal/feedback`)}
             className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
             style={{
               boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
           </button>
 
           <button
-            onClick={() => router.push(`/${slug}/admin/settings`)}
+            onClick={() => router.push(`/${slug}/admin-portal/settings`)}
             className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
             style={{
               boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
           </button>
 
           <button
-            onClick={() => router.push(`/${slug}/admin/typography`)}
+            onClick={() => router.push(`/${slug}/admin-portal/typography`)}
             className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
             style={{
               boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
           </button>
 
           <button
-            onClick={() => router.push(`/${slug}/admin/theme`)}
+            onClick={() => router.push(`/${slug}/admin-portal/theme`)}
             className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
             style={{
               boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',

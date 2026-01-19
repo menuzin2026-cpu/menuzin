@@ -50,14 +50,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 6) REDIRECT: admin-portal to admin (backward compatibility)
-  if (pathname.includes('/admin-portal')) {
-    const newPath = pathname.replace('/admin-portal', '/admin')
-    return NextResponse.redirect(new URL(newPath, request.url))
+  // 6) BLOCK: [slug]/admin routes (return 404, no redirect)
+  const pathSegments = pathname.split('/').filter(Boolean)
+  if (pathSegments.length >= 2 && pathSegments[1] === 'admin') {
+    // Block /[slug]/admin routes - only /[slug]/admin-portal is allowed
+    return new NextResponse(null, { status: 404 })
   }
 
   // 7) Check for reserved slugs in first path segment
-  const pathSegments = pathname.split('/').filter(Boolean)
   if (pathSegments.length > 0) {
     const firstSegment = pathSegments[0]
     

@@ -20,7 +20,7 @@ export function AdminAuthWrapper({
     }
 
     // Skip auth check for login page
-    if (pathname?.endsWith('/admin/login') || pathname?.endsWith('/admin-portal/login')) {
+    if (pathname?.endsWith('/admin-portal/login')) {
       return
     }
 
@@ -65,7 +65,7 @@ export function AdminAuthWrapper({
           // Session is for different restaurant - clear session and redirect to login
           console.error(`[SECURITY] Session restaurant mismatch: session slug=${sessionData.restaurantSlug}, URL slug=${slug}`)
           await fetch('/api/admin/logout', { method: 'POST' })
-          router.push(`/${slug}/admin/login`)
+          router.push(`/${slug}/admin-portal/login`)
           return
         }
       } catch (error) {
@@ -86,7 +86,7 @@ export function AdminAuthWrapper({
   }, [pathname, router])
 
   // Don't render children until we've checked auth (except for login page)
-  if (!pathname?.endsWith('/admin/login')) {
+  if (!pathname?.endsWith('/admin-portal/login')) {
     // Return null briefly while checking, then render children
     // In a real app, you might want a loading state here
     return <>{children}</>

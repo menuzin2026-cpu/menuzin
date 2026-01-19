@@ -730,95 +730,101 @@ export default function MenuBuilderPage() {
       return
     }
 
-    try {
-      // Create item first (without image)
-      const response = await fetch('/api/admin/items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...itemForm,
-          categoryId,
-          price: parseFloat(itemForm.price),
-          imageMediaId: null,
-        }),
-      })
+    // Close modal immediately and clear form
+    const imageToUpload = itemImage // Store image before clearing state
+    const formDataToSave = { ...itemForm } // Store form data
+    setShowAddItem(null)
+    setItemForm({ 
+      nameKu: '', 
+      nameEn: '', 
+      nameAr: '', 
+      descriptionKu: '', 
+      descriptionEn: '', 
+      descriptionAr: '', 
+      price: '' 
+    })
+    setItemImage(null)
+    setItemImagePreview(null)
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to create item')
-      }
+    // Save in background (non-blocking)
+    ;(async () => {
+      try {
+        // Create item first (without image)
+        const response = await fetch('/api/admin/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formDataToSave,
+            categoryId,
+            price: parseFloat(formDataToSave.price),
+            imageMediaId: null,
+          }),
+        })
 
-      const newItem = await response.json()
-
-      // Close modal and show success immediately (don't wait for image upload)
-      toast.success('Item created successfully')
-      setShowAddItem(null)
-      setItemForm({ 
-        nameKu: '', 
-        nameEn: '', 
-        nameAr: '', 
-        descriptionKu: '', 
-        descriptionEn: '', 
-        descriptionAr: '', 
-        price: '' 
-      })
-      const imageToUpload = itemImage // Store image before clearing state
-      setItemImage(null)
-      setItemImagePreview(null)
-      fetchMenuData()
-
-      // Upload image in background (non-blocking, automatic)
-      if (imageToUpload && newItem.id) {
-        // Upload in background - don't await, let it complete automatically
-        ;(async () => {
-        try {
-          // Upload via server-side proxy (avoids CORS issues)
-          const formData = new FormData()
-            formData.append('file', imageToUpload)
-          formData.append('scope', 'itemImage')
-          formData.append('restaurantId', restaurantId)
-          formData.append('itemId', newItem.id)
-
-          const uploadResponse = await fetch('/api/r2/upload', {
-            method: 'POST',
-            body: formData,
-          })
-
-          if (!uploadResponse.ok) {
-            const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
-            console.error('[R2 UPLOAD] Upload failed:', errorData)
-            throw new Error(errorData.error || 'Failed to upload image')
-          }
-
-          const { key, publicUrl } = await uploadResponse.json()
-
-          // Update item with R2 key/URL
-          const updateResponse = await fetch(`/api/admin/items/${newItem.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageR2Key: key, imageR2Url: publicUrl }),
-          })
-
-          if (!updateResponse.ok) {
-            const errorData = await updateResponse.json().catch(() => ({ error: 'Unknown error' }))
-            console.error('[R2 UPLOAD] Database update failed:', errorData)
-            throw new Error(errorData.error || 'Failed to save image URL to database')
-          }
-
-          console.log('[R2 UPLOAD] ✅ Image uploaded successfully:', { key, publicUrl })
-            // Refresh menu data to show the uploaded image
-            fetchMenuData()
-        } catch (uploadError: any) {
-          console.error('[R2 UPLOAD] ❌ Error uploading image:', uploadError)
-            // Show error toast but don't block the UI
-            toast.error(`Image upload failed: ${uploadError.message || 'Unknown error'}`)
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to create item')
         }
-        })()
+
+        const newItem = await response.json()
+
+        // Show success toast
+        toast.success('Item created successfully')
+        fetchMenuData()
+
+        // Upload image in background (non-blocking, automatic)
+        if (imageToUpload && newItem.id) {
+          // Upload in background - don't await, let it complete automatically
+          ;(async () => {
+            try {
+              // Upload via server-side proxy (avoids CORS issues)
+              const formData = new FormData()
+              formData.append('file', imageToUpload)
+              formData.append('scope', 'itemImage')
+              formData.append('restaurantId', restaurantId)
+              formData.append('itemId', newItem.id)
+
+              const uploadResponse = await fetch('/api/r2/upload', {
+                method: 'POST',
+                body: formData,
+              })
+
+              if (!uploadResponse.ok) {
+                const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+                console.error('[R2 UPLOAD] Upload failed:', errorData)
+                throw new Error(errorData.error || 'Failed to upload image')
+              }
+
+              const { key, publicUrl } = await uploadResponse.json()
+
+              // Update item with R2 key/URL
+              const updateResponse = await fetch(`/api/admin/items/${newItem.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageR2Key: key, imageR2Url: publicUrl }),
+              })
+
+              if (!updateResponse.ok) {
+                const errorData = await updateResponse.json().catch(() => ({ error: 'Unknown error' }))
+                console.error('[R2 UPLOAD] Database update failed:', errorData)
+                throw new Error(errorData.error || 'Failed to save image URL to database')
+              }
+
+              console.log('[R2 UPLOAD] ✅ Image uploaded successfully:', { key, publicUrl })
+              // Refresh menu data to show the uploaded image
+              fetchMenuData()
+            } catch (uploadError: any) {
+              console.error('[R2 UPLOAD] ❌ Error uploading image:', uploadError)
+              // Show error toast but don't block the UI
+              toast.error(`Image upload failed: ${uploadError.message || 'Unknown error'}`)
+            }
+          })()
+        }
+      } catch (error: any) {
+        console.error('Error creating item:', error)
+        toast.error(error.message || 'Failed to create item')
       }
-    } catch (error: any) {
-      console.error('Error creating item:', error)
-      toast.error(error.message || 'Failed to create item')
-    }
+    })()
   }
 
   const handleItemImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -877,48 +883,62 @@ export default function MenuBuilderPage() {
 
   const handleUpdateSection = async (e: React.FormEvent, sectionId: string) => {
     e.preventDefault()
-    try {
-      const response = await fetch(`/api/admin/sections/${sectionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editSectionForm),
-      })
+    
+    // Close modal immediately
+    const formDataToSave = { ...editSectionForm }
+    setEditingSection(null)
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to update section')
+    // Save in background (non-blocking)
+    ;(async () => {
+      try {
+        const response = await fetch(`/api/admin/sections/${sectionId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formDataToSave),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to update section')
+        }
+
+        toast.success('Section updated successfully')
+        fetchMenuData()
+      } catch (error: any) {
+        console.error('Error updating section:', error)
+        toast.error(error.message || 'Failed to update section')
       }
-
-      toast.success('Section updated successfully')
-      setEditingSection(null)
-      fetchMenuData()
-    } catch (error: any) {
-      console.error('Error updating section:', error)
-      toast.error(error.message || 'Failed to update section')
-    }
+    })()
   }
 
   const handleUpdateCategory = async (e: React.FormEvent, categoryId: string) => {
     e.preventDefault()
-    try {
-      const response = await fetch(`/api/admin/categories/${categoryId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editCategoryForm),
-      })
+    
+    // Close modal immediately
+    const formDataToSave = { ...editCategoryForm }
+    setEditingCategory(null)
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to update category')
+    // Save in background (non-blocking)
+    ;(async () => {
+      try {
+        const response = await fetch(`/api/admin/categories/${categoryId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formDataToSave),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to update category')
+        }
+
+        toast.success('Category updated successfully')
+        fetchMenuData()
+      } catch (error: any) {
+        console.error('Error updating category:', error)
+        toast.error(error.message || 'Failed to update category')
       }
-
-      toast.success('Category updated successfully')
-      setEditingCategory(null)
-      fetchMenuData()
-    } catch (error: any) {
-      console.error('Error updating category:', error)
-      toast.error(error.message || 'Failed to update category')
-    }
+    })()
   }
 
   const handleUpdateItem = async (e: React.FormEvent, itemId: string) => {
@@ -928,74 +948,82 @@ export default function MenuBuilderPage() {
       return
     }
 
-    try {
-      const updateData: any = {
-        ...editItemForm,
-        price: parseFloat(editItemForm.price),
-      }
+    // Close modal immediately and clear form
+    const imageToUpload = itemImage // Store image before clearing state
+    const imageRemovedFlag = itemImageRemoved // Store removal flag
+    const formDataToSave = { ...editItemForm } // Store form data
+    setEditingItem(null)
+    setItemImage(null)
+    setItemImagePreview(null)
+    setItemImageRemoved(false)
 
-      // Handle image: upload new, remove existing, or keep existing
-      if (itemImage) {
-        // Upload new image to R2 if provided (using server-side proxy to avoid CORS)
-        try {
-          // Upload via server-side proxy (avoids CORS issues)
-          const formData = new FormData()
-          formData.append('file', itemImage)
-          formData.append('scope', 'itemImage')
-          formData.append('restaurantId', restaurantId)
-          formData.append('itemId', itemId)
-
-          const uploadResponse = await fetch('/api/r2/upload', {
-            method: 'POST',
-            body: formData,
-          })
-
-          if (!uploadResponse.ok) {
-            const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
-            console.error('[R2 UPLOAD] Upload failed:', errorData)
-            throw new Error(errorData.error || 'Failed to upload image')
-          }
-
-          const { key, publicUrl } = await uploadResponse.json()
-
-          // Add R2 fields to update data
-          updateData.imageR2Key = key
-          updateData.imageR2Url = publicUrl
-          
-          console.log('[R2 UPLOAD] ✅ Image uploaded successfully:', { key, publicUrl })
-        } catch (uploadError: any) {
-          console.error('[R2 UPLOAD] ❌ Error uploading image:', uploadError)
-          toast.error(`Failed to upload image: ${uploadError.message || 'Unknown error'}`)
-          return
+    // Save in background (non-blocking)
+    ;(async () => {
+      try {
+        const updateData: any = {
+          ...formDataToSave,
+          price: parseFloat(formDataToSave.price),
         }
-      } else if (itemImageRemoved) {
-        // User intentionally removed the image - clear image fields
-        updateData.imageR2Key = null
-        updateData.imageR2Url = null
-        updateData.imageMediaId = null // Also clear old media ID if it exists
+
+        // Handle image: upload new, remove existing, or keep existing
+        if (imageToUpload) {
+          // Upload new image to R2 if provided (using server-side proxy to avoid CORS)
+          try {
+            // Upload via server-side proxy (avoids CORS issues)
+            const formData = new FormData()
+            formData.append('file', imageToUpload)
+            formData.append('scope', 'itemImage')
+            formData.append('restaurantId', restaurantId)
+            formData.append('itemId', itemId)
+
+            const uploadResponse = await fetch('/api/r2/upload', {
+              method: 'POST',
+              body: formData,
+            })
+
+            if (!uploadResponse.ok) {
+              const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }))
+              console.error('[R2 UPLOAD] Upload failed:', errorData)
+              throw new Error(errorData.error || 'Failed to upload image')
+            }
+
+            const { key, publicUrl } = await uploadResponse.json()
+
+            // Add R2 fields to update data
+            updateData.imageR2Key = key
+            updateData.imageR2Url = publicUrl
+            
+            console.log('[R2 UPLOAD] ✅ Image uploaded successfully:', { key, publicUrl })
+          } catch (uploadError: any) {
+            console.error('[R2 UPLOAD] ❌ Error uploading image:', uploadError)
+            toast.error(`Failed to upload image: ${uploadError.message || 'Unknown error'}`)
+            return
+          }
+        } else if (imageRemovedFlag) {
+          // User intentionally removed the image - clear image fields
+          updateData.imageR2Key = null
+          updateData.imageR2Url = null
+          updateData.imageMediaId = null // Also clear old media ID if it exists
+        }
+
+        const response = await fetch(`/api/admin/items/${itemId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to update item')
+        }
+
+        toast.success('Item updated successfully')
+        fetchMenuData()
+      } catch (error: any) {
+        console.error('Error updating item:', error)
+        toast.error(error.message || 'Failed to update item')
       }
-
-      const response = await fetch(`/api/admin/items/${itemId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to update item')
-      }
-
-      toast.success('Item updated successfully')
-      setEditingItem(null)
-      setItemImage(null)
-      setItemImagePreview(null)
-      setItemImageRemoved(false)
-      fetchMenuData()
-    } catch (error: any) {
-      console.error('Error updating item:', error)
-      toast.error(error.message || 'Failed to update item')
-    }
+    })()
   }
 
   // Sortable Section Component

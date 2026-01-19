@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
 
       if (response.ok) {
         toast.success('Login successful!')
-        router.push(`/${slug}/admin`)
+        router.push(`/${slug}/admin-portal`)
       } else {
         toast.error(data.error || 'Invalid PIN')
       }

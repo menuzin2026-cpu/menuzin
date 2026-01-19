@@ -62,34 +62,40 @@ export default function TypographyPage() {
   }
 
   const handleSave = async () => {
-    setIsLoading(true)
-    try {
-      console.log('[DEBUG] Typography page - Saving settings:', JSON.stringify(settings, null, 2))
-      const response = await fetch('/api/admin/ui-settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      })
-      
-      if (response.ok) {
-        const responseData = await response.json()
-        console.log('[DEBUG] Typography page - Save response:', JSON.stringify(responseData, null, 2))
-        toast.success('Typography settings saved successfully!')
-        // Trigger storage event so menu page can detect the update
-        localStorage.setItem('typography-updated', Date.now().toString())
-        // Also trigger a custom event for same-tab communication
-        window.dispatchEvent(new Event('typography-updated'))
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        toast.error(errorData.message || 'Failed to save settings')
-        console.error('Settings save error:', errorData)
+    // Show immediate feedback and save in background
+    toast.loading('Saving typography settings...', { id: 'save-typography' })
+    
+    // Save in background (non-blocking)
+    ;(async () => {
+      try {
+        console.log('[DEBUG] Typography page - Saving settings:', JSON.stringify(settings, null, 2))
+        const response = await fetch('/api/admin/ui-settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings),
+        })
+        
+        if (response.ok) {
+          const responseData = await response.json()
+          console.log('[DEBUG] Typography page - Save response:', JSON.stringify(responseData, null, 2))
+          toast.dismiss('save-typography')
+          toast.success('Typography settings saved successfully!')
+          // Trigger storage event so menu page can detect the update
+          localStorage.setItem('typography-updated', Date.now().toString())
+          // Also trigger a custom event for same-tab communication
+          window.dispatchEvent(new Event('typography-updated'))
+        } else {
+          const errorData = await response.json().catch(() => ({}))
+          toast.dismiss('save-typography')
+          toast.error(errorData.message || 'Failed to save settings')
+          console.error('Settings save error:', errorData)
+        }
+      } catch (error) {
+        console.error('Error saving settings:', error)
+        toast.dismiss('save-typography')
+        toast.error('Failed to save settings')
       }
-    } catch (error) {
-      console.error('Error saving settings:', error)
-      toast.error('Failed to save settings')
-    } finally {
-      setIsLoading(false)
-    }
+    })()
   }
 
   const updateInputValue = (key: keyof UiSettings, value: string) => {

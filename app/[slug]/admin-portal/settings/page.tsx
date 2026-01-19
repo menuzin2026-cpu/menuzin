@@ -416,76 +416,83 @@ export default function SettingsPage() {
   }
 
   const handleSave = async () => {
-    setIsLoading(true)
-    try {
-      // Ensure R2 fields are explicitly set to null if they should be removed
-      // Explicitly include serviceChargePercent to ensure it's always sent (even if 0)
-      const saveData = {
-        ...settings,
-        slug,
-        serviceChargePercent: settings.serviceChargePercent ?? 0, // Ensure it's always sent, default to 0
-        // Explicitly include R2 fields - if they're null in state, send null to clear them
-        logoR2Key: settings.logoR2Key ?? null,
-        logoR2Url: settings.logoR2Url ?? null,
-        footerLogoR2Key: settings.footerLogoR2Key ?? null,
-        footerLogoR2Url: settings.footerLogoR2Url ?? null,
-        welcomeBgR2Key: settings.welcomeBgR2Key ?? null,
-        welcomeBgR2Url: settings.welcomeBgR2Url ?? null,
-        welcomeBgMimeType: settings.welcomeBgMimeType ?? null,
-      }
-      
-      // Log the save data for debugging
-      console.log('[SETTINGS SAVE] Saving data:', {
-        restaurantId: settings.id,
-        slug,
-        serviceChargePercent: saveData.serviceChargePercent,
-      })
-      
-      const response = await fetch('/api/admin/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(saveData),
-      })
-
-      // Fix "body stream already read" error by reading response once
-      const raw = await response.text()
-      let parsed = null
+    // Show immediate feedback and save in background
+    toast.loading('Saving settings...', { id: 'save-settings' })
+    
+    // Save in background (non-blocking)
+    ;(async () => {
       try {
-        parsed = raw ? JSON.parse(raw) : null
-      } catch (parseError) {
-        console.error('Error parsing response:', parseError)
-      }
-      
-      // Check for mismatch error
-      const handled = await handleMismatchError(response, parsed || {})
-      if (handled) {
-        return
-      }
+        // Ensure R2 fields are explicitly set to null if they should be removed
+        // Explicitly include serviceChargePercent to ensure it's always sent (even if 0)
+        const saveData = {
+          ...settings,
+          slug,
+          serviceChargePercent: settings.serviceChargePercent ?? 0, // Ensure it's always sent, default to 0
+          // Explicitly include R2 fields - if they're null in state, send null to clear them
+          logoR2Key: settings.logoR2Key ?? null,
+          logoR2Url: settings.logoR2Url ?? null,
+          footerLogoR2Key: settings.footerLogoR2Key ?? null,
+          footerLogoR2Url: settings.footerLogoR2Url ?? null,
+          welcomeBgR2Key: settings.welcomeBgR2Key ?? null,
+          welcomeBgR2Url: settings.welcomeBgR2Url ?? null,
+          welcomeBgMimeType: settings.welcomeBgMimeType ?? null,
+        }
+        
+        // Log the save data for debugging
+        console.log('[SETTINGS SAVE] Saving data:', {
+          restaurantId: settings.id,
+          slug,
+          serviceChargePercent: saveData.serviceChargePercent,
+        })
+        
+        const response = await fetch('/api/admin/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(saveData),
+        })
 
-      if (response.ok) {
-        toast.success('Settings saved successfully!')
-        // Refresh settings to get updated data
-        if (parsed) {
-          setSettings(parsed)
-          setServiceChargeInput(parsed.serviceChargePercent?.toString() || '0')
+        // Fix "body stream already read" error by reading response once
+        const raw = await response.text()
+        let parsed = null
+        try {
+          parsed = raw ? JSON.parse(raw) : null
+        } catch (parseError) {
+          console.error('Error parsing response:', parseError)
         }
-        // Trigger menu page refresh if it's open (using localStorage event and custom event)
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem('service-charge-updated', Date.now().toString())
-          window.dispatchEvent(new Event('storage'))
-          window.dispatchEvent(new Event('service-charge-updated'))
+        
+        // Check for mismatch error
+        const handled = await handleMismatchError(response, parsed || {})
+        if (handled) {
+          toast.dismiss('save-settings')
+          return
         }
-      } else {
-        toast.error(parsed?.message || parsed?.error || 'Failed to save settings')
-        console.error('Settings save error:', parsed)
+
+        if (response.ok) {
+          toast.dismiss('save-settings')
+          toast.success('Settings saved successfully!')
+          // Refresh settings to get updated data
+          if (parsed) {
+            setSettings(parsed)
+            setServiceChargeInput(parsed.serviceChargePercent?.toString() || '0')
+          }
+          // Trigger menu page refresh if it's open (using localStorage event and custom event)
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('service-charge-updated', Date.now().toString())
+            window.dispatchEvent(new Event('storage'))
+            window.dispatchEvent(new Event('service-charge-updated'))
+          }
+        } else {
+          toast.dismiss('save-settings')
+          toast.error(parsed?.message || parsed?.error || 'Failed to save settings')
+          console.error('Settings save error:', parsed)
+        }
+      } catch (error) {
+        console.error('Error saving settings:', error)
+        toast.dismiss('save-settings')
+        toast.error('Failed to save settings')
       }
-    } catch (error) {
-      console.error('Error saving settings:', error)
-      toast.error('Failed to save settings')
-    } finally {
-      setIsLoading(false)
-    }
+    })()
   }
 
   return (
