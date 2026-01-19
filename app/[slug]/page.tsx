@@ -1,9 +1,6 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { notFound } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
 import { WelcomeClient } from './welcome-client'
-import { WelcomeBackground } from './welcome-background'
 import { WelcomeLogo } from './welcome-logo'
 import { WelcomeText } from './welcome-text'
 import { WelcomeContact } from './welcome-contact'
@@ -11,99 +8,88 @@ import { WelcomeLanguageButtons } from './welcome-language-buttons'
 import { SocialMediaIcons } from '@/components/social-media-icons'
 import { RestaurantData } from '@/lib/get-restaurant-data'
 
-export default function WelcomePage() {
-  const params = useParams()
-  const slug = params.slug as string
-  const [restaurant, setRestaurant] = useState<RestaurantData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-  useEffect(() => {
-    // Fetch from fast cached menu-bootstrap endpoint instead of slow /data/restaurant
-    const fetchBootstrap = async () => {
-      try {
-        const res = await fetch(`/api/${slug}/public/menu-bootstrap`)
-        if (!res.ok) {
-          if (res.status === 404) {
-            setError(true)
-            setIsLoading(false)
-            return
-          }
-          throw new Error('Failed to fetch')
-        }
-        const data = await res.json()
-        
-        if (!data.restaurant) {
-          setError(true)
-          setIsLoading(false)
-          return
-        }
+interface PageProps {
+  params: {
+    slug: string
+  }
+}
 
-        // Transform bootstrap data to RestaurantData format
-        const restaurantData: RestaurantData = {
-          id: data.restaurant.id,
-          nameKu: data.restaurant.nameKu,
-          nameEn: data.restaurant.nameEn,
-          nameAr: data.restaurant.nameAr,
-          logoMediaId: data.restaurant.logoMediaId,
-          logo: null, // Not needed for welcome page (uses R2 URL)
-          footerLogoMediaId: null,
-          footerLogo: null,
-          welcomeBackgroundMediaId: data.restaurant.welcomeBackgroundMediaId,
-          welcomeBackground: null, // Not needed for welcome page (uses R2 URL and mimeType)
-          logoR2Url: data.restaurant.logoR2Url,
-          welcomeBgR2Url: data.restaurant.welcomeBgR2Url,
-          welcomeBgMimeType: data.restaurant.welcomeBgMimeType,
-          welcomeOverlayColor: data.restaurant.welcomeOverlayColor || '#000000',
-          welcomeOverlayOpacity: data.restaurant.welcomeOverlayOpacity ?? 0.5,
-          welcomeTextEn: data.restaurant.welcomeTextEn,
-          googleMapsUrl: data.restaurant.googleMapsUrl,
-          phoneNumber: data.restaurant.phoneNumber,
-          instagramUrl: data.restaurant.instagramUrl,
-          snapchatUrl: data.restaurant.snapchatUrl,
-          tiktokUrl: data.restaurant.tiktokUrl,
-          serviceChargePercent: data.restaurant.serviceChargePercent ?? 0,
-          brandColors: null, // Not needed for welcome page
-          updatedAt: data.restaurant.updatedAt ? new Date(data.restaurant.updatedAt) : new Date(),
-        }
+export default async function WelcomePage({ params }: PageProps) {
+  const { slug } = params
 
-        setRestaurant(restaurantData)
-        setIsLoading(false)
-      } catch (err) {
-        console.error('[ERROR] Welcome page - Error fetching bootstrap:', err)
-        setError(true)
-        setIsLoading(false)
-      }
+  try {
+    // Fetch restaurant data directly server-side (fast, no loading state)
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        nameKu: true,
+        nameEn: true,
+        nameAr: true,
+        logoMediaId: true,
+        logoR2Url: true,
+        welcomeBgR2Url: true,
+        welcomeBgMimeType: true,
+        welcomeOverlayColor: true,
+        welcomeOverlayOpacity: true,
+        welcomeTextEn: true,
+        googleMapsUrl: true,
+        phoneNumber: true,
+        instagramUrl: true,
+        snapchatUrl: true,
+        tiktokUrl: true,
+        welcomeBackgroundMediaId: true,
+        serviceChargePercent: true,
+        updatedAt: true,
+      },
+    })
+
+    if (!restaurant) {
+      notFound()
     }
 
-    if (slug) {
-      fetchBootstrap()
+    // Transform to RestaurantData format
+    const restaurantData: RestaurantData = {
+      id: restaurant.id,
+      nameKu: restaurant.nameKu,
+      nameEn: restaurant.nameEn,
+      nameAr: restaurant.nameAr,
+      logoMediaId: restaurant.logoMediaId,
+      logo: null,
+      footerLogoMediaId: null,
+      footerLogo: null,
+      welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
+      welcomeBackground: null,
+      logoR2Url: restaurant.logoR2Url,
+      welcomeBgR2Url: restaurant.welcomeBgR2Url,
+      welcomeBgMimeType: restaurant.welcomeBgMimeType,
+      welcomeOverlayColor: restaurant.welcomeOverlayColor || '#000000',
+      welcomeOverlayOpacity: restaurant.welcomeOverlayOpacity ?? 0.5,
+      welcomeTextEn: restaurant.welcomeTextEn,
+      googleMapsUrl: restaurant.googleMapsUrl,
+      phoneNumber: restaurant.phoneNumber,
+      instagramUrl: restaurant.instagramUrl,
+      snapchatUrl: restaurant.snapchatUrl,
+      tiktokUrl: restaurant.tiktokUrl,
+      serviceChargePercent: restaurant.serviceChargePercent ?? 0,
+      brandColors: null,
+      updatedAt: restaurant.updatedAt || new Date(),
     }
-  }, [slug])
 
-  if (isLoading) {
     return (
-      <div className="min-h-dvh w-full flex items-center justify-center" style={{ backgroundColor: 'var(--app-bg, #400810)' }}>
-        <div className="text-white">Loading...</div>
-      </div>
+      <WelcomeClient restaurant={restaurantData}>
+        <WelcomeLogo restaurant={restaurantData} isLoaded={true} />
+        <WelcomeText restaurant={restaurantData} isLoaded={true} />
+        <WelcomeLanguageButtons slug={slug} isLoaded={true} />
+        <WelcomeContact restaurant={restaurantData} isLoaded={true} />
+        <SocialMediaIcons restaurant={restaurantData} isLoaded={true} />
+      </WelcomeClient>
     )
+  } catch (error) {
+    console.error('[ERROR] Welcome page - Error fetching restaurant:', error)
+    notFound()
   }
-
-  if (error || !restaurant) {
-    return (
-      <div className="min-h-dvh w-full flex items-center justify-center" style={{ backgroundColor: 'var(--app-bg, #400810)' }}>
-        <div className="text-white">Restaurant not found</div>
-      </div>
-    )
-  }
-
-  return (
-    <WelcomeClient restaurant={restaurant}>
-      <WelcomeLogo restaurant={restaurant} isLoaded={true} />
-      <WelcomeText restaurant={restaurant} isLoaded={true} />
-      <WelcomeLanguageButtons slug={slug} isLoaded={true} />
-      <WelcomeContact restaurant={restaurant} isLoaded={true} />
-      <SocialMediaIcons restaurant={restaurant} isLoaded={true} />
-    </WelcomeClient>
-  )
 }
