@@ -45,8 +45,9 @@ export function PoweredByFooter({ footerLogoUrl }: PoweredByFooterProps) {
               height: '18px',
               aspectRatio: '60/18'
             }}
-            loading="eager"
+            loading="lazy"
             decoding="async"
+            fetchPriority="low"
           />
         )}
       </a>

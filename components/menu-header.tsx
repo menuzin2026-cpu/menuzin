@@ -27,8 +27,9 @@ export function MenuHeader({ logoUrl }: MenuHeaderProps) {
               maxWidth: '100%',
               aspectRatio: 'auto'
             }}
-            loading="eager"
+            loading="lazy"
             decoding="async"
+            fetchPriority="low"
           />
         ) : (
           <div 

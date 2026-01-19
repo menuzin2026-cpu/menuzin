@@ -118,12 +118,56 @@ function MenuPageContent() {
   const prefetchRunIdRef = useRef<number>(0)
   // Track current section loading runId for cancellation
   const sectionLoadingRunIdRef = useRef<number>(0)
+  // Track background image load state for logo priority control
+  const [bgLoaded, setBgLoaded] = useState(false)
+  // Track R2 origin for preconnect (extracted from background URL)
+  const [r2Origin, setR2Origin] = useState<string | null>(null)
   
   // Keep ref in sync with state
   useEffect(() => {
     categoryItemsCacheRef.current = categoryItemsCache
   }, [categoryItemsCache])
   
+  // Extract R2 origin from background URL and inject preconnect/preload into head
+  useEffect(() => {
+    if (!theme?.menuBackgroundR2Url) {
+      setR2Origin(null)
+      return
+    }
+    
+    try {
+      const url = new URL(theme.menuBackgroundR2Url)
+      const origin = `${url.protocol}//${url.host}`
+      setR2Origin(origin)
+      
+      // Inject preconnect link
+      let preconnectLink = document.querySelector('link[rel="preconnect"][data-r2-origin]') as HTMLLinkElement
+      if (!preconnectLink) {
+        preconnectLink = document.createElement('link')
+        preconnectLink.rel = 'preconnect'
+        preconnectLink.crossOrigin = 'anonymous'
+        preconnectLink.setAttribute('data-r2-origin', 'true')
+        document.head.appendChild(preconnectLink)
+      }
+      preconnectLink.href = origin
+      
+      // Inject preload link for background image
+      let preloadLink = document.querySelector('link[rel="preload"][as="image"][data-bg-preload]') as HTMLLinkElement
+      if (!preloadLink) {
+        preloadLink = document.createElement('link')
+        preloadLink.rel = 'preload'
+        preloadLink.as = 'image'
+        preloadLink.setAttribute('fetchpriority', 'high')
+        preloadLink.setAttribute('data-bg-preload', 'true')
+        document.head.appendChild(preloadLink)
+      }
+      preloadLink.href = theme.menuBackgroundR2Url
+    } catch (error) {
+      // Invalid URL, skip preconnect
+      setR2Origin(null)
+    }
+  }, [theme?.menuBackgroundR2Url])
+
   // Preload background image immediately when URL becomes available
   useEffect(() => {
     if (!theme?.menuBackgroundR2Url) return
@@ -134,6 +178,14 @@ function MenuPageContent() {
     img.src = theme.menuBackgroundR2Url
     // Optional: Set decoding to async for better performance
     img.decoding = 'async'
+    // Track when background loads
+    img.onload = () => {
+      setBgLoaded(true)
+    }
+    img.onerror = () => {
+      // Even on error, allow logos to load (don't block forever)
+      setBgLoaded(true)
+    }
   }, [theme?.menuBackgroundR2Url])
   
   // Refs for bottom navigation auto-scroll
@@ -227,7 +279,57 @@ function MenuPageContent() {
     }
   }, [slug, categoryItemsCache])
 
-  // Load all categories in a section sequentially (for progressive loading)
+  // Helper function for concurrency-limited parallel execution
+  const runWithConcurrency = useCallback(async <T,>(
+    tasks: Array<() => Promise<T>>,
+    concurrency: number,
+    shouldCancel: () => boolean
+  ): Promise<void> => {
+    if (tasks.length === 0) return
+    
+    const results: Promise<void>[] = []
+    let taskIndex = 0
+    
+    // Process tasks with concurrency limit
+    while (taskIndex < tasks.length && !shouldCancel()) {
+      const batch: Promise<void>[] = []
+      
+      // Start up to 'concurrency' tasks in parallel
+      while (batch.length < concurrency && taskIndex < tasks.length && !shouldCancel()) {
+        const task = tasks[taskIndex++]
+        const promise = task()
+          .then(() => {
+            // Task completed successfully
+          })
+          .catch((error) => {
+            // Log error but don't stop other tasks
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Error in parallel task:', error)
+            }
+          })
+          .finally(() => {
+            // Remove from batch when done
+            const index = batch.indexOf(promise)
+            if (index !== -1) {
+              batch.splice(index, 1)
+            }
+          })
+        
+        batch.push(promise)
+        results.push(promise)
+      }
+      
+      // Wait for at least one task in the batch to complete before starting more
+      if (batch.length > 0 && taskIndex < tasks.length && !shouldCancel()) {
+        await Promise.race(batch)
+      }
+    }
+    
+    // Wait for all remaining tasks to complete
+    await Promise.all(results)
+  }, [])
+
+  // Load all categories in a section with parallel batches (concurrency 2-3)
   const loadAllCategoriesInSection = useCallback((sectionId: string) => {
     if (!slug || !sectionId) return
     
@@ -246,41 +348,28 @@ function MenuPageContent() {
     
     if (sortedCategories.length === 0) return
     
-    // Load categories sequentially with small delay between each
-    const loadNext = async (index: number) => {
-      // Check if this run was cancelled
-      if (sectionLoadingRunIdRef.current !== currentRunId) {
-        return
-      }
-      
-      if (index >= sortedCategories.length) {
-        return
-      }
-      
-      const category = sortedCategories[index]
-      
-      // Skip if already cached or being fetched
-      if (categoryItemsCacheRef.current.has(category.id) || fetchingCategoriesRef.current.has(category.id)) {
-        // Continue to next category immediately
-        loadNext(index + 1)
-        return
-      }
-      
-      // Fetch this category (background fetch, no loading indicator)
-      await fetchCategoryItems(category.id, true)
-      
-      // Check again if run was cancelled
-      if (sectionLoadingRunIdRef.current !== currentRunId) {
-        return
-      }
-      
-      // Load next category immediately (no delay)
-      loadNext(index + 1)
-    }
+    // Create tasks for categories that need loading
+    const tasks = sortedCategories
+      .filter(category => {
+        // Skip if already cached or being fetched
+        return !categoryItemsCacheRef.current.has(category.id) && 
+               !fetchingCategoriesRef.current.has(category.id)
+      })
+      .map(category => () => fetchCategoryItems(category.id, true))
     
-    // Start loading immediately
-    loadNext(0)
-  }, [slug, sections, fetchCategoryItems])
+    if (tasks.length === 0) return
+    
+    // Run with concurrency limit of 3
+    runWithConcurrency(
+      tasks,
+      3,
+      () => sectionLoadingRunIdRef.current !== currentRunId
+    ).catch((error) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error in loadAllCategoriesInSection:', error)
+      }
+    })
+  }, [slug, sections, fetchCategoryItems, runWithConcurrency])
 
   // Background prefetch queue for remaining categories
   const startBackgroundPrefetch = useCallback((sectionId: string, firstCategoryId: string) => {
@@ -1115,10 +1204,13 @@ function MenuPageContent() {
           }}
           loading="eager"
           decoding="async"
+          fetchPriority="high"
+          onLoad={() => setBgLoaded(true)}
+          onError={() => setBgLoaded(true)} // Allow logos even if bg fails
         />
       )}
       <MenuHeader
-        logoUrl={restaurant?.logoR2Url || (restaurant?.logoMediaId ? `/assets/${restaurant.logoMediaId}` : undefined)}
+        logoUrl={bgLoaded ? (restaurant?.logoR2Url || (restaurant?.logoMediaId ? `/assets/${restaurant.logoMediaId}` : undefined)) : undefined}
       />
 
       <FloatingActionBar
@@ -1435,7 +1527,7 @@ function MenuPageContent() {
       />
 
       {/* Powered By Footer */}
-      <PoweredByFooter footerLogoUrl={footerLogoUrl} />
+      <PoweredByFooter footerLogoUrl={bgLoaded ? footerLogoUrl : null} />
     </div>
   )
 }
