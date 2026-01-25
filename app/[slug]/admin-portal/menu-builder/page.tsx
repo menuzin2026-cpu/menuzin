@@ -1668,40 +1668,6 @@ export default function MenuBuilderPage() {
           </Button>
         </div>
 
-        {/* Show Add Section button immediately */}
-        <div 
-          className="admin-card mb-4"
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #D1D5DB',
-            borderRadius: '0.75rem',
-            padding: '1rem 1.5rem',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-          }}
-        >
-          <Button
-            onClick={() => setShowAddSection(true)}
-            className="w-full sm:w-auto"
-            style={{
-              backgroundColor: '#27C499',
-              color: '#FFFFFF',
-              border: 'none',
-              borderRadius: '0.5rem',
-              padding: '0.75rem 1.5rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#20B08A'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27C499'}
-          >
-            <Plus className="w-5 h-5" />
-            Add Section
-          </Button>
-        </div>
-
         {/* Show skeleton only for content area while loading */}
         {isLoadingMenu ? (
           <div 
@@ -1909,6 +1875,30 @@ export default function MenuBuilderPage() {
                 </div>
               ))}
             </SortableContext>
+            {/* Add Section Button - at bottom of sections */}
+            <div className="mt-4 pt-4 border-t" style={{ borderColor: '#E5E7EB' }}>
+              <Button
+                onClick={() => setShowAddSection(true)}
+                className="w-full sm:w-auto"
+                style={{
+                  backgroundColor: '#27C499',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  padding: '0.75rem 1.5rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#20B08A'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27C499'}
+              >
+                <Plus className="w-5 h-5" />
+                Add Section
+              </Button>
+            </div>
             </div>
             <DragOverlay>
               {activeId && activeType ? (
