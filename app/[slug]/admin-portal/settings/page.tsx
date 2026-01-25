@@ -641,7 +641,7 @@ export default function SettingsPage() {
                       onChange={(e) => setSettings({ ...settings, snapchatUrl: e.target.value || null })}
                       placeholder="https://snapchat.com/add/yourusername"
                     />
-                    <p className="text-xs admin-heading/50 mt-1">
+                    <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>
                       Leave empty to hide Snapchat icon
                     </p>
                   </div>
@@ -655,7 +655,7 @@ export default function SettingsPage() {
                       onChange={(e) => setSettings({ ...settings, tiktokUrl: e.target.value || null })}
                       placeholder="https://tiktok.com/@yourusername"
                     />
-                    <p className="text-xs admin-heading/50 mt-1">
+                    <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>
                       Leave empty to hide TikTok icon
                     </p>
                   </div>
@@ -712,7 +712,7 @@ export default function SettingsPage() {
                     }}
                     placeholder="0"
                   />
-                  <p className="text-xs admin-heading/50 mt-1">
+                  <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>
                     Percentage added to basket subtotal (0-100, decimals allowed, e.g., 10 or 2.5)
                   </p>
                 </div>
@@ -720,7 +720,7 @@ export default function SettingsPage() {
               
               {settings.slug && (
                 <div>
-                  <label className="block text-sm font-medium admin-heading mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                     QR Code URL
                   </label>
                   <div className="flex items-center gap-2">
@@ -728,7 +728,11 @@ export default function SettingsPage() {
                       type="text"
                       value={`https://menuzin.com/${settings.slug}`}
                       readOnly
-                      className="bg-gray-50 admin-heading/70 cursor-not-allowed"
+                      style={{ 
+                        backgroundColor: '#F7F9F8',
+                        color: '#475569',
+                        cursor: 'not-allowed',
+                      }}
                     />
                     <Button
                       type="button"
@@ -742,7 +746,7 @@ export default function SettingsPage() {
                       Copy
                     </Button>
                   </div>
-                  <p className="text-xs admin-heading/50 mt-1">
+                  <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>
                     Use this URL for your QR code
                   </p>
                 </div>
@@ -756,13 +760,22 @@ export default function SettingsPage() {
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium admin-heading mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Welcome Text
                 </label>
                 <textarea
                   value={settings.welcomeTextEn}
                   onChange={(e) => setSettings({ ...settings, welcomeTextEn: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm admin-heading placeholder:admin-heading/70 focus-visible:outline-none focus-visible:ring-2"
+                  style={{
+                    width: '100%',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #E5E7EB',
+                    backgroundColor: '#FFFFFF',
+                    padding: '0.75rem',
+                    fontSize: '0.875rem',
+                    color: '#0F172A',
+                  }}
+                  className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27C499]"
                   rows={3}
                   placeholder="Enter welcome message..."
                 />
@@ -811,9 +824,9 @@ export default function SettingsPage() {
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     {!backgroundPreview && (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 mb-2 admin-heading/70" />
-                        <p className="text-sm admin-heading/70">Click to upload background</p>
-                        <p className="text-xs admin-heading/50 mt-1">PNG, JPG, WEBP, MP4 (max 4MB)</p>
+                        <Upload className="w-8 h-8 mb-2" style={{ color: '#475569' }} />
+                        <p className="text-sm" style={{ color: '#475569' }}>Click to upload background</p>
+                        <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>PNG, JPG, WEBP, MP4 (max 4MB)</p>
                       </div>
                     )}
                     <input
@@ -825,7 +838,7 @@ export default function SettingsPage() {
                     />
                   </label>
                   {uploadingBackground && (
-                    <p className="text-sm admin-heading/70">Uploading background...</p>
+                    <p className="text-sm" style={{ color: '#475569' }}>Uploading background...</p>
                   )}
                 </div>
               </div>

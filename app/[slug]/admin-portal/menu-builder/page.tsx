@@ -1084,8 +1084,8 @@ export default function MenuBuilderPage() {
         ref={setNodeRef}
         className={`flex items-center gap-2 sm:gap-3 p-2 rounded border relative ${isHolding ? 'scale-105 shadow-lg' : ''}`}
         style={{
-          borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          border: '1px solid #D1D5DB',
+          backgroundColor: '#FFFFFF',
           ...style,
         }}
       >
@@ -1105,7 +1105,7 @@ export default function MenuBuilderPage() {
           onClick={(e) => e.stopPropagation()}
           className="p-1 rounded transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
           style={{ 
-            color: 'var(--auto-text-primary, #FFFFFF)',
+            color: '#475569',
             touchAction: 'none',
             userSelect: 'none',
             WebkitUserSelect: 'none',
@@ -1118,7 +1118,7 @@ export default function MenuBuilderPage() {
             </div>
             </div>
         {/* Equals Sign */}
-        <div className="text-white/50 flex-shrink-0">
+        <div className="flex-shrink-0" style={{ color: '#94A3B8' }}>
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
           </svg>
@@ -1130,15 +1130,15 @@ export default function MenuBuilderPage() {
         >
             <div className="p-1 rounded transition-colors flex-shrink-0">
               {expandedSections.has(section.id) ? (
-                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: '#475569' }} />
               ) : (
-                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: '#475569' }} />
               )}
             </div>
             <div className="flex-1 min-w-0">
             <div 
               className="font-medium truncate text-sm sm:text-base"
-                  style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+                  style={{ color: '#0F172A' }}
                 >
                   {section.nameEn}
               </div>
@@ -1161,9 +1161,9 @@ export default function MenuBuilderPage() {
                 className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
                 style={{
                   backgroundColor: section.isActive 
-                    ? 'var(--app-bg, #400810)' 
-                    : 'var(--auto-danger, #EF4444)',
-                  borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                    ? '#27C499' 
+                    : '#EF4444',
+                  border: '1px solid #D1D5DB',
                 }}
               ></div>
             </label>
@@ -1184,16 +1184,16 @@ export default function MenuBuilderPage() {
               }}
               className="h-10 w-10 p-0 sm:h-12 sm:w-12"
             >
-              <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'var(--auto-text-primary, #FFFFFF)' }} />
+              <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: '#475569' }} />
             </Button>
             {/* Dropdown Menu */}
             {openMenuId === section.id && openMenuType === 'section' && (
               <div 
                 className="absolute right-0 top-full mt-1 z-50 rounded-lg border shadow-lg"
                 style={{
-                  backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-                  borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-                  backdropFilter: 'blur(10px)',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #D1D5DB',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -1206,7 +1206,7 @@ export default function MenuBuilderPage() {
                       onEditSection(section)
                     }}
                     className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2"
-                    style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+                    style={{ color: '#0F172A' }}
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit
@@ -1219,7 +1219,9 @@ export default function MenuBuilderPage() {
                       onDeleteSection('section', section.id, section.nameEn)
                     }}
                     className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2"
-                    style={{ color: 'var(--auto-danger, #EF4444)' }}
+                    style={{ color: '#EF4444' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FEE2E2'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete
@@ -1281,8 +1283,8 @@ export default function MenuBuilderPage() {
         ref={setNodeRef}
         className={`flex items-center gap-2 sm:gap-3 p-2 rounded border relative ${isHolding ? 'scale-105 shadow-lg' : ''}`}
         style={{
-          borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          border: '1px solid #D1D5DB',
+          backgroundColor: '#FFFFFF',
           ...style,
         }}
       >
@@ -1298,7 +1300,7 @@ export default function MenuBuilderPage() {
           onClick={(e) => e.stopPropagation()}
           className="p-1 rounded transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
           style={{ 
-            color: 'var(--auto-text-primary, #FFFFFF)',
+            color: '#475569',
             touchAction: 'none',
             userSelect: 'none',
             WebkitUserSelect: 'none',
@@ -1311,7 +1313,7 @@ export default function MenuBuilderPage() {
             </div>
             </div>
         {/* Equals Sign */}
-        <div className="text-white/50 flex-shrink-0">
+        <div className="flex-shrink-0" style={{ color: '#94A3B8' }}>
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
           </svg>
@@ -1323,19 +1325,19 @@ export default function MenuBuilderPage() {
         >
           <div className="p-1 rounded transition-colors flex-shrink-0">
               {expandedCategories.has(category.id) ? (
-                <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: '#475569' }} />
               ) : (
-                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: '#475569' }} />
               )}
             </div>
             <div className="flex-1 min-w-0">
             <div 
               className="font-medium truncate text-sm sm:text-base"
-                  style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+                  style={{ color: '#0F172A' }}
                 >
                   {category.nameEn}
               </div>
-            <div className="text-xs truncate" style={{ color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))' }}>
+            <div className="text-xs truncate" style={{ color: '#94A3B8' }}>
               {category.items?.length || 0} Items
             </div>
           </div>
@@ -1357,9 +1359,9 @@ export default function MenuBuilderPage() {
                 className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
                 style={{
                   backgroundColor: category.isActive 
-                    ? 'var(--app-bg, #400810)' 
-                    : 'var(--auto-danger, #EF4444)',
-                  borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                    ? '#27C499' 
+                    : '#EF4444',
+                  border: '1px solid #D1D5DB',
                 }}
               ></div>
             </label>
@@ -1380,16 +1382,16 @@ export default function MenuBuilderPage() {
               }}
               className="h-10 w-10 p-0 sm:h-12 sm:w-12"
             >
-              <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'var(--auto-text-primary, #FFFFFF)' }} />
+              <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: '#475569' }} />
             </Button>
             {/* Dropdown Menu */}
             {openMenuId === category.id && openMenuType === 'category' && (
               <div 
                 className="absolute right-0 top-full mt-1 z-50 rounded-lg border shadow-lg"
                 style={{
-                  backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-                  borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-                  backdropFilter: 'blur(10px)',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #D1D5DB',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -1402,7 +1404,7 @@ export default function MenuBuilderPage() {
                       onEditCategory(category)
                     }}
                     className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2"
-                    style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+                    style={{ color: '#0F172A' }}
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit
@@ -1415,7 +1417,9 @@ export default function MenuBuilderPage() {
                       onDeleteCategory('category', category.id, category.nameEn)
                     }}
                     className="w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2"
-                    style={{ color: 'var(--auto-danger, #EF4444)' }}
+                    style={{ color: '#EF4444' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FEE2E2'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete
@@ -1467,8 +1471,8 @@ export default function MenuBuilderPage() {
         ref={setNodeRef}
         className={`flex items-center gap-2 sm:gap-3 p-2 rounded border relative ${isHolding ? 'scale-105 shadow-lg' : ''}`}
         style={{
-          borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          border: '1px solid #D1D5DB',
+          backgroundColor: '#FFFFFF',
           ...style,
         }}
       >
@@ -1484,7 +1488,7 @@ export default function MenuBuilderPage() {
           onClick={(e) => e.stopPropagation()}
           className="p-1 rounded transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
           style={{ 
-            color: 'var(--auto-text-primary, #FFFFFF)',
+            color: '#475569',
             touchAction: 'none',
             userSelect: 'none',
             WebkitUserSelect: 'none',
@@ -1497,7 +1501,7 @@ export default function MenuBuilderPage() {
             </div>
             </div>
         {/* Equals Sign */}
-        <div className="text-white/50 flex-shrink-0">
+        <div className="flex-shrink-0" style={{ color: '#94A3B8' }}>
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path d="M3 8a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 12a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" />
           </svg>
@@ -1524,7 +1528,7 @@ export default function MenuBuilderPage() {
                   if (parent) {
                     const fallback = document.createElement('div')
                     fallback.className = 'w-full h-full flex items-center justify-center text-xs'
-                    fallback.style.color = 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))'
+                    fallback.style.color = '#94A3B8'
                     fallback.textContent = 'No Img'
                     parent.appendChild(fallback)
                   }
@@ -1533,7 +1537,7 @@ export default function MenuBuilderPage() {
             ) : (
               <div 
                 className="w-full h-full flex items-center justify-center text-xs"
-                style={{ color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))' }}
+                style={{ color: '#94A3B8' }}
               >
                 No Img
               </div>
@@ -1547,7 +1551,12 @@ export default function MenuBuilderPage() {
         >
           <div 
             className="font-medium truncate text-sm sm:text-base"
-            style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+                    style={{ 
+                      color: '#0F172A',
+                      backgroundColor: 'transparent',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E6F7F2'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             {item.nameEn}
           </div>
@@ -1572,9 +1581,9 @@ export default function MenuBuilderPage() {
               className="w-9 h-5 sm:w-11 sm:h-6 peer-focus:outline-none rounded-full peer peer-checked:after:left-auto peer-checked:after:right-[2px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all border"
               style={{
                 backgroundColor: item.isActive 
-                  ? 'var(--app-bg, #400810)' 
-                  : 'var(--auto-danger, #EF4444)',
-                borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                  ? '#27C499' 
+                  : '#EF4444',
+                border: '1px solid #D1D5DB',
               }}
             ></div>
           </label>
@@ -1587,7 +1596,7 @@ export default function MenuBuilderPage() {
             }}
             className="h-10 w-10 p-0 sm:h-12 sm:w-12"
           >
-            <Trash2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--auto-danger, #EF4444)' }} />
+            <Trash2 className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: '#EF4444' }} />
           </Button>
         </div>
       </div>
@@ -1644,9 +1653,9 @@ export default function MenuBuilderPage() {
           <div 
             className="backdrop-blur-xl rounded-2xl border p-3 sm:p-6 space-y-3 sm:space-y-4"
             style={{
-              backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-              borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-              boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
             }}
           >
             {/* Always show sections with expand/collapse - sections start collapsed */}
@@ -1739,15 +1748,15 @@ export default function MenuBuilderPage() {
                                           onClick={() => setShowAddItem(category.id)}
                                           className="w-full mt-3 text-sm sm:text-base border"
                                           style={{
-                                            backgroundColor: 'var(--app-bg, #400810)',
-                                            color: 'var(--auto-text-primary, #FFFFFF)',
-                                            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                                            backgroundColor: '#27C499',
+                                            color: '#FFFFFF',
+                                            border: '1px solid #D1D5DB',
                                           }}
                                           onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
+                                            e.currentTarget.style.backgroundColor = '#20B08A'
                                           }}
                                           onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
+                                            e.currentTarget.style.backgroundColor = '#27C499'
                                           }}
                                           variant="default"
                                         >
@@ -1757,7 +1766,7 @@ export default function MenuBuilderPage() {
                                       </>
                                     ) : (
                                       <>
-                                        <div className="px-4 py-4 text-center text-white/70 text-sm">
+                                        <div className="px-4 py-4 text-center text-sm" style={{ color: '#94A3B8' }}>
                                           No items in this category
                                         </div>
                                         {/* Add Item Button */}
@@ -1765,15 +1774,15 @@ export default function MenuBuilderPage() {
                                           onClick={() => setShowAddItem(category.id)}
                                           className="w-full mt-3 text-sm sm:text-base border"
                                           style={{
-                                            backgroundColor: 'var(--app-bg, #400810)',
-                                            color: 'var(--auto-text-primary, #FFFFFF)',
-                                            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                                            backgroundColor: '#27C499',
+                                            color: '#FFFFFF',
+                                            border: '1px solid #D1D5DB',
                                           }}
                                           onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
+                                            e.currentTarget.style.backgroundColor = '#20B08A'
                                           }}
                                           onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
+                                            e.currentTarget.style.backgroundColor = '#27C499'
                                           }}
                                           variant="default"
                                         >
@@ -1788,7 +1797,7 @@ export default function MenuBuilderPage() {
                             </div>
                           ))
                         ) : (
-                          <div className="px-4 py-4 text-center text-white/70 text-sm">
+                          <div className="px-4 py-4 text-center text-sm" style={{ color: '#94A3B8' }}>
                             No categories in this section
                           </div>
                         )}
@@ -1798,15 +1807,15 @@ export default function MenuBuilderPage() {
                         onClick={() => setShowAddCategory(section.id)}
                         className="w-full mt-3 text-sm sm:text-base border"
                         style={{
-                          backgroundColor: 'var(--app-bg, #400810)',
-                          color: 'var(--auto-text-primary, #FFFFFF)',
-                          borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+                          backgroundColor: '#27C499',
+                          color: '#FFFFFF',
+                          border: '1px solid #D1D5DB',
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
+                          e.currentTarget.style.backgroundColor = '#20B08A'
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
+                          e.currentTarget.style.backgroundColor = '#27C499'
                         }}
                         variant="default"
                       >
@@ -1826,9 +1835,9 @@ export default function MenuBuilderPage() {
                   <div 
                     className="border rounded-xl p-3 backdrop-blur-sm"
                     style={{
-                      borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-                      backgroundColor: 'var(--auto-surface-bg-2, rgba(255, 255, 255, 0.05))',
-                      color: 'var(--auto-text-primary, #FFFFFF)',
+                      border: '1px solid #D1D5DB',
+                      backgroundColor: '#F7F9F8',
+                      color: '#475569',
                     }}
                   >
                     {sections.find(s => s.id === activeId)?.nameEn}
@@ -1838,9 +1847,9 @@ export default function MenuBuilderPage() {
                   <div 
                     className="border rounded-lg p-2 backdrop-blur-sm"
                     style={{
-                      borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-                      backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                      color: 'var(--auto-text-primary, #FFFFFF)',
+                      border: '1px solid #D1D5DB',
+                      backgroundColor: '#F7F9F8',
+                      color: '#475569',
                     }}
                   >
                     {sections
@@ -1852,9 +1861,9 @@ export default function MenuBuilderPage() {
                   <div 
                     className="border rounded p-2 backdrop-blur-sm flex items-center gap-2"
                     style={{
-                      borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-                      backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                      color: 'var(--auto-text-primary, #FFFFFF)',
+                      border: '1px solid #D1D5DB',
+                      backgroundColor: '#FFFFFF',
+                      color: '#475569',
                     }}
                   >
                     {sections
@@ -1874,15 +1883,15 @@ export default function MenuBuilderPage() {
             onClick={() => setShowAddSection(true)}
             className="w-full mt-4 text-sm sm:text-base border"
             style={{
-              backgroundColor: 'var(--app-bg, #400810)',
-              color: 'var(--auto-text-primary, #FFFFFF)',
-              borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
+              backgroundColor: '#27C499',
+              color: '#FFFFFF',
+              border: '1px solid #D1D5DB',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))'
+              e.currentTarget.style.backgroundColor = '#20B08A'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--app-bg, #400810)'
+              e.currentTarget.style.backgroundColor = '#27C499'
             }}
             variant="default"
             size="lg"
@@ -1906,26 +1915,29 @@ export default function MenuBuilderPage() {
             className="backdrop-blur-xl rounded-3xl border p-4 sm:p-6 w-full max-w-md mx-2 sm:mx-auto"
             onClick={(e) => e.stopPropagation()}
             style={{
-              backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-              borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-              boxShadow: `0 20px 50px -12px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 8px 16px -4px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.06)',
             }}
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Add Section</h2>
+              <h2 className="text-xl font-bold" style={{ color: '#0F172A' }}>Add Section</h2>
               <button
                 onClick={() => {
                   setShowAddSection(false)
                   setSectionForm({ nameKu: '', nameEn: '', nameAr: '' })
                 }}
-                className="text-white/70 hover:text-white"
+                style={{ color: '#475569', cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
+                className=""
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleAddSection} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (Kurdish)
                 </label>
                 <Input
@@ -1935,7 +1947,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (English)
                 </label>
                 <Input
@@ -1945,7 +1957,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (Arabic)
                 </label>
                 <Input
@@ -1959,7 +1971,7 @@ export default function MenuBuilderPage() {
                   type="submit" 
                   className="flex-1"
                   style={{
-                    backgroundColor: 'var(--app-bg, #400810)',
+                    backgroundColor: '#27C499',
                     color: '#FFFFFF',
                   }}
                 >
@@ -1994,26 +2006,29 @@ export default function MenuBuilderPage() {
             className="backdrop-blur-xl rounded-3xl border p-4 sm:p-6 w-full max-w-md mx-2 sm:mx-auto"
             onClick={(e) => e.stopPropagation()}
             style={{
-              backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-              borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-              boxShadow: `0 20px 50px -12px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 8px 16px -4px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.06)',
             }}
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Add Category</h2>
+              <h2 className="text-xl font-bold" style={{ color: '#0F172A' }}>Add Category</h2>
               <button
                 onClick={() => {
                   setShowAddCategory(null)
                   setCategoryForm({ nameKu: '', nameEn: '', nameAr: '' })
                 }}
-                className="text-white/70 hover:text-white"
+                style={{ color: '#475569', cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
+                className=""
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={(e) => handleAddCategory(e, showAddCategory)} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (Kurdish)
                 </label>
                 <Input
@@ -2023,7 +2038,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (English)
                 </label>
                 <Input
@@ -2033,7 +2048,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (Arabic)
                 </label>
                 <Input
@@ -2047,7 +2062,7 @@ export default function MenuBuilderPage() {
                   type="submit" 
                   className="flex-1"
                   style={{
-                    backgroundColor: 'var(--app-bg, #400810)',
+                    backgroundColor: '#27C499',
                     color: '#FFFFFF',
                   }}
                 >
@@ -2092,7 +2107,7 @@ export default function MenuBuilderPage() {
             }}
           >
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h2 className="text-lg sm:text-xl font-bold text-white">Add Item</h2>
+              <h2 className="text-lg sm:text-xl font-bold admin-text">Add Item</h2>
               <button
                 onClick={() => {
                   setShowAddItem(null)
@@ -2106,14 +2121,17 @@ export default function MenuBuilderPage() {
                     price: '' 
                   })
                 }}
-                className="text-white/70 hover:text-white"
+                style={{ color: '#475569', cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
+                className=""
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={(e) => handleAddItem(e, showAddItem)} className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Name (Kurdish)
                 </label>
                 <Input
@@ -2124,7 +2142,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Name (English)
                 </label>
                 <Input
@@ -2135,7 +2153,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Name (Arabic)
                 </label>
                 <Input
@@ -2146,40 +2164,40 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Description (English)
                 </label>
                 <textarea
                   value={itemForm.descriptionEn}
                   onChange={(e) => setItemForm({ ...itemForm, descriptionEn: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm text-white placeholder:text-white/70 focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
                   rows={2}
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Description (Kurdish)
                 </label>
                 <textarea
                   value={itemForm.descriptionKu}
                   onChange={(e) => setItemForm({ ...itemForm, descriptionKu: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm text-white placeholder:text-white/70 focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
                   rows={2}
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Description (Arabic)
                 </label>
                 <textarea
                   value={itemForm.descriptionAr}
                   onChange={(e) => setItemForm({ ...itemForm, descriptionAr: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm text-white placeholder:text-white/70 focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
                   rows={2}
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Price (IQD)
                 </label>
                 <Input
@@ -2193,7 +2211,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Image (Optional)
                 </label>
                 <div className="space-y-2">
@@ -2206,8 +2224,8 @@ export default function MenuBuilderPage() {
                       />
                     ) : (
                       <div className="flex flex-col items-center justify-center pt-3 pb-4 sm:pt-5 sm:pb-6">
-                        <Upload className="w-6 h-6 sm:w-8 sm:h-8 mb-1 sm:mb-2 text-white/70" />
-                        <p className="text-xs sm:text-sm text-white/70">Click to upload image</p>
+                        <Upload className="w-6 h-6 sm:w-8 sm:h-8 mb-1 sm:mb-2 admin-body" />
+                        <p className="text-xs sm:text-sm admin-body">Click to upload image</p>
                         <p className="text-[10px] sm:text-xs text-gray-500 mt-1">PNG, JPG, WEBP (max 5MB)</p>
                       </div>
                     )}
@@ -2240,7 +2258,7 @@ export default function MenuBuilderPage() {
                   type="submit" 
                   className="flex-1 text-xs sm:text-sm py-2"
                   style={{
-                    backgroundColor: 'var(--app-bg, #400810)',
+                    backgroundColor: '#27C499',
                     color: '#FFFFFF',
                   }}
                 >
@@ -2283,23 +2301,26 @@ export default function MenuBuilderPage() {
             className="backdrop-blur-xl rounded-3xl border p-4 sm:p-6 w-full max-w-md mx-2 sm:mx-auto"
             onClick={(e) => e.stopPropagation()}
             style={{
-              backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-              borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-              boxShadow: `0 20px 50px -12px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 8px 16px -4px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.06)',
             }}
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Edit Section</h2>
+              <h2 className="text-xl font-bold admin-text">Edit Section</h2>
               <button
                 onClick={() => setEditingSection(null)}
-                className="text-white/70 hover:text-white"
+                style={{ color: '#475569', cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
+                className=""
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={(e) => handleUpdateSection(e, editingSection)} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (Kurdish)
                 </label>
                 <Input
@@ -2309,7 +2330,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (English)
                 </label>
                 <Input
@@ -2319,7 +2340,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (Arabic)
                 </label>
                 <Input
@@ -2333,7 +2354,7 @@ export default function MenuBuilderPage() {
                   type="submit" 
                   className="flex-1"
                   style={{
-                    backgroundColor: 'var(--app-bg, #400810)',
+                    backgroundColor: '#27C499',
                     color: '#FFFFFF',
                   }}
                 >
@@ -2362,23 +2383,26 @@ export default function MenuBuilderPage() {
             className="backdrop-blur-xl rounded-3xl border p-4 sm:p-6 w-full max-w-md mx-2 sm:mx-auto"
             onClick={(e) => e.stopPropagation()}
             style={{
-              backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-              borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-              boxShadow: `0 20px 50px -12px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 8px 16px -4px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.06)',
             }}
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Edit Category</h2>
+              <h2 className="text-xl font-bold admin-text">Edit Category</h2>
               <button
                 onClick={() => setEditingCategory(null)}
-                className="text-white/70 hover:text-white"
+                style={{ color: '#475569', cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
+                className=""
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={(e) => handleUpdateCategory(e, editingCategory)} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (Kurdish)
                 </label>
                 <Input
@@ -2388,7 +2412,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (English)
                 </label>
                 <Input
@@ -2398,7 +2422,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: '#0F172A' }}>
                   Name (Arabic)
                 </label>
                 <Input
@@ -2412,7 +2436,7 @@ export default function MenuBuilderPage() {
                   type="submit" 
                   className="flex-1"
                   style={{
-                    backgroundColor: 'var(--app-bg, #400810)',
+                    backgroundColor: '#27C499',
                     color: '#FFFFFF',
                   }}
                 >
@@ -2454,7 +2478,7 @@ export default function MenuBuilderPage() {
             }}
           >
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h2 className="text-lg sm:text-xl font-bold text-white">Edit Item</h2>
+              <h2 className="text-lg sm:text-xl font-bold admin-text">Edit Item</h2>
               <button
                 onClick={() => {
                   setEditingItem(null)
@@ -2462,14 +2486,17 @@ export default function MenuBuilderPage() {
                   setItemImagePreview(null)
                   setItemImageRemoved(false)
                 }}
-                className="text-white/70 hover:text-white"
+                style={{ color: '#475569', cursor: 'pointer' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
+                className=""
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={(e) => handleUpdateItem(e, editingItem)} className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Name (Kurdish)
                 </label>
                 <Input
@@ -2480,7 +2507,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Name (English)
                 </label>
                 <Input
@@ -2491,7 +2518,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Name (Arabic)
                 </label>
                 <Input
@@ -2502,40 +2529,40 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Description (English)
                 </label>
                 <textarea
                   value={editItemForm.descriptionEn}
                   onChange={(e) => setEditItemForm({ ...editItemForm, descriptionEn: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm text-white placeholder:text-white/70 focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
                   rows={2}
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Description (Kurdish)
                 </label>
                 <textarea
                   value={editItemForm.descriptionKu}
                   onChange={(e) => setEditItemForm({ ...editItemForm, descriptionKu: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm text-white placeholder:text-white/70 focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
                   rows={2}
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Description (Arabic)
                 </label>
                 <textarea
                   value={editItemForm.descriptionAr}
                   onChange={(e) => setEditItemForm({ ...editItemForm, descriptionAr: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm text-white placeholder:text-white/70 focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
                   rows={2}
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Price (IQD)
                 </label>
                 <Input
@@ -2549,7 +2576,7 @@ export default function MenuBuilderPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-white mb-1">
+                <label className="block text-xs sm:text-sm font-medium admin-text mb-1">
                   Image (Optional - Leave empty to keep current)
                 </label>
                 <div className="space-y-2">
@@ -2563,8 +2590,8 @@ export default function MenuBuilderPage() {
                   <label className="flex flex-col items-center justify-center w-full h-20 sm:h-24 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:bg-white/5 transition-colors">
                     {!itemImagePreview && (
                       <div className="flex flex-col items-center justify-center pt-2 pb-3 sm:pt-3 sm:pb-4">
-                        <Upload className="w-5 h-5 sm:w-6 sm:h-6 mb-1 text-white/70" />
-                        <p className="text-[10px] sm:text-xs text-white/70">Click to change image</p>
+                        <Upload className="w-5 h-5 sm:w-6 sm:h-6 mb-1 admin-body" />
+                        <p className="text-[10px] sm:text-xs admin-body">Click to change image</p>
                       </div>
                     )}
                     <input
@@ -2596,7 +2623,7 @@ export default function MenuBuilderPage() {
                   type="submit" 
                   className="flex-1 text-xs sm:text-sm py-2"
                   style={{
-                    backgroundColor: 'var(--app-bg, #400810)',
+                    backgroundColor: '#27C499',
                     color: '#FFFFFF',
                   }}
                 >
