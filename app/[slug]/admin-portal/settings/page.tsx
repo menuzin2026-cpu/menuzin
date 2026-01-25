@@ -58,7 +58,7 @@ export default function SettingsPage() {
     welcomeBackgroundMediaId: null,
   })
   const [serviceChargeInput, setServiceChargeInput] = useState<string>('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [footerLogoFile, setFooterLogoFile] = useState<File | null>(null)
@@ -894,11 +894,11 @@ export default function SettingsPage() {
 
           <Button 
             onClick={handleSave} 
-            disabled={isLoading} 
+            disabled={isSaving} 
             className="w-full" 
             size="lg"
             style={{ 
-              backgroundColor: isLoading ? '#94A3B8' : '#27C499',
+              backgroundColor: isSaving ? '#94A3B8' : '#27C499',
               color: '#FFFFFF',
               border: 'none',
               borderRadius: '0.5rem',
