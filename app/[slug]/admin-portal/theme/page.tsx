@@ -78,7 +78,7 @@ export default function ThemePage() {
   const router = useRouter()
   const params = useParams()
   const slug = params.slug as string
-  const { bootstrap, isLoading: isLoadingBootstrap, refresh } = useAdminBootstrap()
+  const { bootstrap, isLoading: isLoadingBootstrap, refresh: refreshBootstrap } = useAdminBootstrap()
   const [theme, setTheme] = useState<ThemeColors>(getInitialTheme())
   const [previewTheme, setPreviewTheme] = useState<ThemeColors>(getInitialTheme())
   const [isLoading, setIsLoading] = useState(false)
@@ -97,8 +97,6 @@ export default function ThemePage() {
     const initialTheme = getInitialTheme()
     applyThemeToDocument(initialTheme)
   }, [])
-
-  const { bootstrap, isLoading: isLoadingBootstrap, refresh } = useAdminBootstrap()
 
   useEffect(() => {
     // Use bootstrap data if available, otherwise fetch
@@ -474,8 +472,8 @@ export default function ThemePage() {
         }
         toast.success('Theme saved successfully!')
         // Refresh bootstrap cache after save
-        if (refresh) {
-          refresh()
+        if (refreshBootstrap) {
+          refreshBootstrap()
         }
         // Trigger menu page refresh if it's open (using localStorage event and custom event)
         if (typeof window !== 'undefined') {
