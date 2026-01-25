@@ -94,7 +94,28 @@ export default function SettingsPage() {
   useEffect(() => {
     // Use bootstrap data if available, otherwise fetch
     if (bootstrap?.settings) {
-      setSettings(bootstrap.settings)
+      const settingsData = bootstrap.settings
+      setSettings(settingsData)
+      // Update service charge input field with current value
+      setServiceChargeInput(settingsData.serviceChargePercent?.toString() || '0')
+      // Set logo preview
+      if (settingsData.logoR2Url) {
+        setLogoPreview(settingsData.logoR2Url)
+      } else if (settingsData.logoMediaId) {
+        setLogoPreview(`/assets/${settingsData.logoMediaId}`)
+      }
+      // Set footer logo preview
+      if (settingsData.footerLogoR2Url) {
+        setFooterLogoPreview(settingsData.footerLogoR2Url)
+      } else if (settingsData.footerLogoMediaId) {
+        setFooterLogoPreview(`/assets/${settingsData.footerLogoMediaId}`)
+      }
+      // Set background preview (check mimeType to determine if video)
+      if (settingsData.welcomeBgR2Url) {
+        setBackgroundPreview(settingsData.welcomeBgR2Url)
+      } else if (settingsData.welcomeBackgroundMediaId) {
+        setBackgroundPreview(`/assets/${settingsData.welcomeBackgroundMediaId}`)
+      }
     } else if (!isLoading) {
       // Only fetch if not loading (bootstrap might be loading)
       fetchSettings()
@@ -802,11 +823,12 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   {backgroundPreview && (
                     <div className="relative">
-                      {backgroundPreview.startsWith('data:video/') || settings.welcomeBackgroundMediaId ? (
+                      {backgroundPreview.startsWith('data:video/') || settings.welcomeBgMimeType?.startsWith('video/') || (settings.welcomeBackgroundMediaId && !settings.welcomeBgR2Url) ? (
                         <video
                           src={backgroundPreview.startsWith('data:') ? backgroundPreview : backgroundPreview}
-                          className="w-full h-48 object-cover rounded-lg border-2 border-gray-300"
-                          controls={false}
+                          className="w-full h-48 object-cover rounded-lg border-2"
+                          style={{ borderColor: '#D1D5DB' }}
+                          controls
                           muted
                           loop
                           playsInline
@@ -815,7 +837,8 @@ export default function SettingsPage() {
                         <img
                           src={backgroundPreview}
                           alt="Welcome Background"
-                          className="w-full h-48 object-cover rounded-lg border-2 border-gray-300"
+                          className="w-full h-48 object-cover rounded-lg border-2"
+                          style={{ borderColor: '#D1D5DB' }}
                         />
                       )}
                       <button

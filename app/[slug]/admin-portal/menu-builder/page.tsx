@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import toast from 'react-hot-toast'
 import { formatPrice } from '@/lib/utils'
+import { MenuBuilderSkeleton } from '../components/admin-skeleton'
 import {
   DndContext,
   closestCenter,
@@ -73,6 +74,7 @@ export default function MenuBuilderPage() {
   const slug = params.slug as string
   const [restaurantId, setRestaurantId] = useState<string | null>(null)
   const [sections, setSections] = useState<Section[]>([])
+  const [isLoadingMenu, setIsLoadingMenu] = useState(true)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
   const [editingItem, setEditingItem] = useState<string | null>(null)
@@ -236,6 +238,7 @@ export default function MenuBuilderPage() {
 
   const fetchMenuData = async () => {
     const startTime = performance.now()
+    setIsLoadingMenu(true)
     try {
       const response = await fetch('/api/admin/menu', {
         credentials: 'include',
@@ -254,7 +257,10 @@ export default function MenuBuilderPage() {
         }))
       }))
       
+      // Show sections immediately (don't wait for images to load)
       setSections(normalizedSections)
+      setIsLoadingMenu(false)
+      
       // Sections start collapsed - user clicks to expand
       const fetchTime = performance.now() - startTime
       if (process.env.NODE_ENV === 'development') {
@@ -266,6 +272,7 @@ export default function MenuBuilderPage() {
     } catch (error) {
       console.error('Error fetching menu:', error)
       toast.error('Failed to load menu data')
+      setIsLoadingMenu(false)
     }
   }
 
@@ -1601,6 +1608,11 @@ export default function MenuBuilderPage() {
         </div>
       </div>
     )
+  }
+
+  // Show skeleton while loading
+  if (isLoadingMenu) {
+    return <MenuBuilderSkeleton />
   }
 
   return (

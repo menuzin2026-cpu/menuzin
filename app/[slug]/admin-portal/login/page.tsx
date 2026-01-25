@@ -103,7 +103,7 @@ export default function AdminLoginPage() {
               <div
                 className="rounded-full p-4 flex items-center justify-center"
                 style={{
-                  backgroundColor: '#E6F7F2',
+                  backgroundColor: '#000000',
                   width: '100px',
                   height: '100px',
                   minWidth: '100px',
@@ -133,7 +133,7 @@ export default function AdminLoginPage() {
             <div 
               className="inline-flex items-center justify-center w-[100px] h-[100px] rounded-full mb-6"
               style={{
-                backgroundColor: '#E6F7F2',
+                backgroundColor: '#000000',
               }}
             />
           )}
@@ -197,23 +197,6 @@ export default function AdminLoginPage() {
             {isLoading ? 'Logging in...' : 'Login'}
           </Button>
         </form>
-
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => router.push(`/${slug}/menu`)}
-            style={{ 
-              color: '#475569',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
-          >
-            ← Back to Menu
-          </button>
-        </div>
       </div>
     </div>
   )
