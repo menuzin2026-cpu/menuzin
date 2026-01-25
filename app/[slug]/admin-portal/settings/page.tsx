@@ -90,17 +90,24 @@ export default function SettingsPage() {
   }
 
   useEffect(() => {
-    fetchSettings()
-    fetchTheme()
+    // Parallelize fetches for better performance
+    Promise.all([fetchSettings(), fetchTheme()])
   }, [])
 
   const fetchTheme = async (retryCount = 0) => {
+    const startTime = performance.now()
     try {
-      const response = await fetch('/data/theme')
+      const response = await fetch('/api/admin/theme', {
+        credentials: 'include',
+      })
       if (response.ok) {
         const data = await response.json()
         if (data.theme?.appBg) {
           setAppBgColor(data.theme.appBg)
+        }
+        const fetchTime = performance.now() - startTime
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[PERF] Theme fetch (client): ${fetchTime.toFixed(2)}ms`)
         }
       }
     } catch (error) {
@@ -112,8 +119,11 @@ export default function SettingsPage() {
   }
 
   const fetchSettings = async () => {
+    const startTime = performance.now()
     try {
-      const response = await fetch(`/api/admin/settings?slug=${slug}`)
+      const response = await fetch(`/api/admin/settings?slug=${slug}`, {
+        credentials: 'include',
+      })
       const data = await response.json()
       
       if (response.status === 401 || response.status === 403) {
@@ -151,8 +161,12 @@ export default function SettingsPage() {
         }
         if (data.welcomeBgR2Url) {
           setBackgroundPreview(data.welcomeBgR2Url)
-        } else if (data.welcomeBackgroundMediaId) {
+        } else         if (data.welcomeBackgroundMediaId) {
           setBackgroundPreview(`/assets/${data.welcomeBackgroundMediaId}`)
+        }
+        const fetchTime = performance.now() - startTime
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[PERF] Settings fetch (client): ${fetchTime.toFixed(2)}ms`)
         }
       } else {
         console.error('Error fetching settings:', response.status, response.statusText)

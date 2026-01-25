@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminSession } from '@/lib/auth'
 
-// Force dynamic rendering to prevent caching
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+import { unstable_cache } from 'next/cache'
 
 // Default values
 const DEFAULT_SETTINGS = {
@@ -20,6 +18,7 @@ const DEFAULT_SETTINGS = {
 }
 
 export async function GET() {
+  const startTime = Date.now()
   try {
     const session = await requireAdminSession()
 
@@ -29,13 +28,19 @@ export async function GET() {
       return NextResponse.json(DEFAULT_SETTINGS)
     }
 
-    // Get or create UI settings for this restaurant
-    let settings = await prisma.uiSettings.findUnique({
-      where: { restaurantId: session.restaurantId },
-    })
+    // Get or create UI settings for this restaurant - cache for 30 seconds
+    let settings = await unstable_cache(
+      async () => {
+        return await prisma.uiSettings.findUnique({
+          where: { restaurantId: session.restaurantId },
+        })
+      },
+      [`admin-ui-settings-${session.restaurantId}`],
+      { revalidate: 30 } // 30 seconds cache
+    )()
     
     if (!settings) {
-      // Create default settings if none exist
+      // Create default settings if none exist (don't cache creation, needs to be fresh)
       settings = await prisma.uiSettings.create({
         data: {
           restaurantId: session.restaurantId,
@@ -44,17 +49,29 @@ export async function GET() {
       })
     }
 
-    return NextResponse.json({
-      sectionTitleSize: settings.sectionTitleSize,
-      categoryTitleSize: settings.categoryTitleSize,
-      itemNameSize: settings.itemNameSize,
-      itemDescriptionSize: settings.itemDescriptionSize,
-      itemPriceSize: settings.itemPriceSize,
-      headerLogoSize: settings.headerLogoSize,
-      bottomNavSectionSize: (settings as any).bottomNavSectionSize ?? DEFAULT_SETTINGS.bottomNavSectionSize,
-      bottomNavCategorySize: (settings as any).bottomNavCategorySize ?? DEFAULT_SETTINGS.bottomNavCategorySize,
-      currency: (settings as any).currency ?? DEFAULT_SETTINGS.currency,
-    })
+    const fetchTime = Date.now() - startTime
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[PERF] UI Settings fetch: ${fetchTime}ms`)
+    }
+
+    return NextResponse.json(
+      {
+        sectionTitleSize: settings.sectionTitleSize,
+        categoryTitleSize: settings.categoryTitleSize,
+        itemNameSize: settings.itemNameSize,
+        itemDescriptionSize: settings.itemDescriptionSize,
+        itemPriceSize: settings.itemPriceSize,
+        headerLogoSize: settings.headerLogoSize,
+        bottomNavSectionSize: (settings as any).bottomNavSectionSize ?? DEFAULT_SETTINGS.bottomNavSectionSize,
+        bottomNavCategorySize: (settings as any).bottomNavCategorySize ?? DEFAULT_SETTINGS.bottomNavCategorySize,
+        currency: (settings as any).currency ?? DEFAULT_SETTINGS.currency,
+      },
+      {
+        headers: {
+          'Cache-Control': 'private, s-maxage=30, stale-while-revalidate=60',
+        },
+      }
+    )
   } catch (error) {
     console.error('Error fetching UI settings:', error)
     // Return defaults on error

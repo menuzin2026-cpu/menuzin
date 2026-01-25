@@ -1,11 +1,11 @@
-export const dynamic = "force-dynamic"
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminSession, SessionExpiredError, deleteAdminSession } from '@/lib/auth'
 import { ensureRestaurantWelcomeBgMimeTypeColumn, ensureRestaurantSocialMediaColumns } from '@/lib/ensure-columns'
+import { unstable_cache } from 'next/cache'
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now()
   try {
     // Ensure DB columns exist in production before querying
     await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
@@ -27,10 +27,16 @@ export async function GET(request: NextRequest) {
     const slugParam = searchParams.get('slug')
     
     // Get restaurant by session restaurantId (CRITICAL: Always use session restaurantId for data isolation)
-    // Don't use select here - we need to safely access fields that might not exist yet
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { id: session.restaurantId },
-    })
+    // Cache for 30 seconds (settings don't change frequently)
+    const restaurant = await unstable_cache(
+      async () => {
+        return await prisma.restaurant.findUnique({
+          where: { id: session.restaurantId },
+        })
+      },
+      [`admin-settings-${session.restaurantId}`],
+      { revalidate: 30 } // 30 seconds cache
+    )()
     if (!restaurant) {
       console.error(`[SECURITY] Restaurant not found for session restaurantId=${session.restaurantId}`)
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
@@ -67,7 +73,13 @@ export async function GET(request: NextRequest) {
     console.log('[SETTINGS GET] Restaurant ID:', session.restaurantId)
     console.log('[SETTINGS GET] Service charge percent from DB:', restaurantServiceCharge, '(type:', typeof restaurantServiceCharge, ')')
 
-    return NextResponse.json({
+    const fetchTime = Date.now() - startTime
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[PERF] Settings fetch: ${fetchTime}ms`)
+    }
+
+    return NextResponse.json(
+      {
       id: restaurant.id,
       nameKu: restaurant.nameKu,
       nameEn: restaurant.nameEn,
@@ -93,7 +105,13 @@ export async function GET(request: NextRequest) {
       welcomeBgR2Key: getR2Field('welcomeBgR2Key'),
       welcomeBgR2Url: getR2Field('welcomeBgR2Url'),
       welcomeBgMimeType: getR2Field('welcomeBgMimeType'),
-    })
+    },
+    {
+      headers: {
+        'Cache-Control': 'private, s-maxage=30, stale-while-revalidate=60',
+      },
+    }
+  )
   } catch (error: any) {
     if (error instanceof SessionExpiredError) {
       await deleteAdminSession()

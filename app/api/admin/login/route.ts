@@ -12,6 +12,7 @@ const loginSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
   try {
     // Get client IP for rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
@@ -52,14 +53,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No admin accounts found for this restaurant' }, { status: 404 })
     }
 
-    // Try to find an admin with matching PIN
-    let matchedAdmin = null
-    for (const admin of admins) {
-      const isValid = await verifyPin(pin, admin.pinHash)
-      if (isValid) {
-        matchedAdmin = admin
-        break
-      }
+    // Try to find an admin with matching PIN (parallelize for performance)
+    const startTime = Date.now()
+    const pinChecks = await Promise.all(
+      admins.map(admin => verifyPin(pin, admin.pinHash))
+    )
+    const matchedAdmin = admins.find((_, i) => pinChecks[i]) || null
+    const pinCheckTime = Date.now() - startTime
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[PERF] Login PIN verification: ${pinCheckTime}ms (${admins.length} admins checked in parallel)`)
     }
 
     if (!matchedAdmin) {
@@ -82,6 +85,10 @@ export async function POST(request: NextRequest) {
     await createAdminSession(restaurant.id, matchedAdmin.id)
 
     // Log successful login for debugging
+    const totalTime = Date.now() - startTime
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[PERF] Login total: ${totalTime}ms`)
+    }
     console.log(`[LOGIN] Admin logged in: restaurantId=${restaurant.id}, slug=${slug}, adminId=${matchedAdmin.id}`)
 
     return NextResponse.json({ success: true, adminId: matchedAdmin.id, restaurantId: restaurant.id, slug: restaurant.slug })

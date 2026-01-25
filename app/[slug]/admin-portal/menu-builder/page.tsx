@@ -235,8 +235,11 @@ export default function MenuBuilderPage() {
 
 
   const fetchMenuData = async () => {
+    const startTime = performance.now()
     try {
-      const response = await fetch('/api/admin/menu')
+      const response = await fetch('/api/admin/menu', {
+        credentials: 'include',
+      })
       if (!response.ok) {
         throw new Error('Failed to fetch menu data')
       }
@@ -253,6 +256,13 @@ export default function MenuBuilderPage() {
       
       setSections(normalizedSections)
       // Sections start collapsed - user clicks to expand
+      const fetchTime = performance.now() - startTime
+      if (process.env.NODE_ENV === 'development') {
+        const totalItems = normalizedSections.reduce((sum, s) => 
+          sum + s.categories.reduce((catSum, c) => catSum + c.items.length, 0), 0
+        )
+        console.log(`[PERF] Menu fetch (client): ${fetchTime.toFixed(2)}ms (${normalizedSections.length} sections, ${totalItems} items)`)
+      }
     } catch (error) {
       console.error('Error fetching menu:', error)
       toast.error('Failed to load menu data')

@@ -1,9 +1,8 @@
-export const dynamic = "force-dynamic"
-
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminSession } from '@/lib/auth'
 import { ensureThemeColumns } from '@/lib/ensure-columns'
+import { unstable_cache } from 'next/cache'
 import { z } from 'zod'
 
 const themeSchema = z.object({
@@ -20,17 +19,24 @@ const themeSchema = z.object({
 })
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now()
   try {
     // Ensure DB columns exist in production before querying
     await ensureThemeColumns(prisma)
     
     const session = await requireAdminSession()
 
-    // Get restaurant by session restaurantId to get its slug
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { id: session.restaurantId },
-      select: { id: true, slug: true },
-    })
+    // Get restaurant by session restaurantId to get its slug - cache for 10 seconds
+    const restaurant = await unstable_cache(
+      async () => {
+        return await prisma.restaurant.findUnique({
+          where: { id: session.restaurantId },
+          select: { id: true, slug: true },
+        })
+      },
+      [`restaurant-theme-${session.restaurantId}`],
+      { revalidate: 10 } // 10 seconds cache
+    )()
     
     if (!restaurant) {
       return NextResponse.json({ error: 'SESSION_RESTAURANT_MISMATCH', message: 'Restaurant not found for session' }, { status: 403 })
@@ -45,11 +51,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'SESSION_RESTAURANT_MISMATCH', message: 'Session restaurant does not match URL restaurant' }, { status: 403 })
     }
 
-    let theme = await prisma.theme.findUnique({
-      where: { restaurantId: session.restaurantId },
-    })
+    // Cache theme lookup for 30 seconds
+    let theme = await unstable_cache(
+      async () => {
+        return await prisma.theme.findUnique({
+          where: { restaurantId: session.restaurantId },
+        })
+      },
+      [`admin-theme-${session.restaurantId}`],
+      { revalidate: 30 } // 30 seconds cache
+    )()
 
-    // If theme doesn't exist, create it with neutral defaults
+    // If theme doesn't exist, create it with neutral defaults (don't cache creation)
     if (!theme) {
       theme = await prisma.theme.create({
         data: {
@@ -61,6 +74,11 @@ export async function GET(request: NextRequest) {
 
     // Safely access new fields that may not exist yet
     const themeResponse = theme as any
+
+    const fetchTime = Date.now() - startTime
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[PERF] Theme fetch: ${fetchTime}ms`)
+    }
 
     return NextResponse.json(
       { theme: {
@@ -81,7 +99,7 @@ export async function GET(request: NextRequest) {
       } },
       {
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Cache-Control': 'private, s-maxage=30, stale-while-revalidate=60',
         },
       }
     )

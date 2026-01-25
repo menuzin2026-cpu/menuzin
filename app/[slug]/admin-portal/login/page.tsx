@@ -36,6 +36,7 @@ export default function AdminLoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    const startTime = performance.now()
 
     try {
       const response = await fetch('/api/admin/login', {
@@ -49,6 +50,10 @@ export default function AdminLoginPage() {
       const data = await response.json()
 
       if (response.ok) {
+        const loginTime = performance.now() - startTime
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[PERF] Login total (client): ${loginTime.toFixed(2)}ms`)
+        }
         toast.success('Login successful!')
         router.push(`/${slug}/admin-portal`)
       } else {
