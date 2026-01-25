@@ -1,14 +1,26 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Menu, MessageSquare, Settings, LogOut, Type, Palette } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import toast from 'react-hot-toast'
+import { useAdmin } from './admin-context'
 
 export default function AdminDashboard() {
   const router = useRouter()
   const params = useParams()
   const slug = params.slug as string
+  const { session, bootstrap } = useAdmin()
+
+  // Prefetch all admin routes on mount for instant navigation
+  useEffect(() => {
+    router.prefetch(`/${slug}/admin-portal/menu-builder`)
+    router.prefetch(`/${slug}/admin-portal/settings`)
+    router.prefetch(`/${slug}/admin-portal/theme`)
+    router.prefetch(`/${slug}/admin-portal/typography`)
+    router.prefetch(`/${slug}/admin-portal/feedback`)
+  }, [router, slug])
 
   const handleLogout = async () => {
     try {

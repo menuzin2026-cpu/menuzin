@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Upload, X } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAdmin } from '../admin-context'
 
 interface RestaurantSettings {
   id?: string
@@ -87,9 +88,16 @@ export default function SettingsPage() {
     return false // Not a mismatch error
   }
 
+  const { bootstrap, refreshBootstrap } = useAdmin()
+
   useEffect(() => {
-    fetchSettings()
-  }, [])
+    // Use bootstrap data if available, otherwise fetch
+    if (bootstrap?.settings) {
+      setSettings(bootstrap.settings)
+    } else {
+      fetchSettings()
+    }
+  }, [bootstrap])
 
   const fetchSettings = async () => {
     const startTime = performance.now()

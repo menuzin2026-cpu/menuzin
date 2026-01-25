@@ -1,4 +1,5 @@
 import { AdminAuthWrapper } from './auth-wrapper'
+import { AdminProvider } from './admin-context'
 import './admin-theme.css'
 
 export default function AdminLayout({
@@ -8,7 +9,9 @@ export default function AdminLayout({
 }) {
   return (
     <div className="admin-root">
-      <AdminAuthWrapper>{children}</AdminAuthWrapper>
+      <AdminProvider>
+        <AdminAuthWrapper>{children}</AdminAuthWrapper>
+      </AdminProvider>
     </div>
   )
 }

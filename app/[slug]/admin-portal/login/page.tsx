@@ -55,6 +55,14 @@ export default function AdminLoginPage() {
         if (process.env.NODE_ENV === 'development') {
           console.log(`[PERF] Login total (client): ${loginTime.toFixed(2)}ms`)
         }
+        
+        // Prefetch admin routes for instant navigation
+        router.prefetch(`/${slug}/admin-portal`)
+        router.prefetch(`/${slug}/admin-portal/menu-builder`)
+        router.prefetch(`/${slug}/admin-portal/settings`)
+        router.prefetch(`/${slug}/admin-portal/theme`)
+        router.prefetch(`/${slug}/admin-portal/typography`)
+        
         toast.success('Login successful!')
         router.push(`/${slug}/admin-portal`)
       } else {
