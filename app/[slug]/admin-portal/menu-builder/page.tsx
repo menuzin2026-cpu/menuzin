@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import toast from 'react-hot-toast'
 import { formatPrice } from '@/lib/utils'
+import { useAdminBootstrap } from '../admin-context'
 import { MenuBuilderSkeleton } from '../components/admin-skeleton'
 import {
   DndContext,
@@ -154,27 +155,44 @@ export default function MenuBuilderPage() {
     }
   }, [openMenuId])
 
+  const { bootstrap, isLoading: isLoadingBootstrap } = useAdminBootstrap()
+
   useEffect(() => {
-    fetchRestaurantId()
-    fetchMenuData()
-    // Fetch currency from UI settings
-    const fetchCurrency = async () => {
-      try {
-        const response = await fetch('/api/admin/ui-settings', {
-          credentials: 'include',
-        })
-        if (response.ok) {
-          const data = await response.json()
-          if (data.currency && (data.currency === 'IQD' || data.currency === 'USD')) {
-            setCurrency(data.currency)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching currency:', error)
-      }
+    // Use bootstrap data for restaurant ID and currency immediately
+    if (bootstrap?.settings?.id) {
+      setRestaurantId(bootstrap.settings.id)
+    } else {
+      fetchRestaurantId()
     }
-    fetchCurrency()
-  }, [])
+    
+    if (bootstrap?.uiSettings?.currency) {
+      const currencyValue = bootstrap.uiSettings.currency
+      if (currencyValue === 'IQD' || currencyValue === 'USD') {
+        setCurrency(currencyValue)
+      }
+    } else {
+      // Fetch currency from UI settings
+      const fetchCurrency = async () => {
+        try {
+          const response = await fetch('/api/admin/ui-settings', {
+            credentials: 'include',
+          })
+          if (response.ok) {
+            const data = await response.json()
+            if (data.currency && (data.currency === 'IQD' || data.currency === 'USD')) {
+              setCurrency(data.currency)
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching currency:', error)
+        }
+      }
+      fetchCurrency()
+    }
+    
+    // Fetch menu data (always fetch fresh data for menu builder)
+    fetchMenuData()
+  }, [bootstrap])
   
   // Create formatPrice wrapper with currency
   const formatPriceWithCurrency = (price: number) => formatPrice(price, currency)
@@ -1610,11 +1628,6 @@ export default function MenuBuilderPage() {
     )
   }
 
-  // Show skeleton while loading
-  if (isLoadingMenu) {
-    return <MenuBuilderSkeleton />
-  }
-
   return (
     <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: '#F7F9F8' }}>
       <div className="max-w-6xl mx-auto">
@@ -1655,24 +1668,81 @@ export default function MenuBuilderPage() {
           </Button>
         </div>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragMove={handleDragMove}
-          onDragEnd={handleDragEnd}
+        {/* Show Add Section button immediately */}
+        <div 
+          className="admin-card mb-4"
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #D1D5DB',
+            borderRadius: '0.75rem',
+            padding: '1rem 1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+          }}
         >
+          <Button
+            onClick={() => setShowAddSection(true)}
+            className="w-full sm:w-auto"
+            style={{
+              backgroundColor: '#27C499',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.75rem 1.5rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#20B08A'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27C499'}
+          >
+            <Plus className="w-5 h-5" />
+            Add Section
+          </Button>
+        </div>
+
+        {/* Show skeleton only for content area while loading */}
+        {isLoadingMenu ? (
           <div 
-            className="backdrop-blur-xl rounded-2xl border p-3 sm:p-6 space-y-3 sm:space-y-4"
+            className="admin-card space-y-4"
             style={{
               backgroundColor: '#FFFFFF',
               border: '1px solid #D1D5DB',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
             }}
           >
-            {/* Always show sections with expand/collapse - sections start collapsed */}
-            <SortableContext items={sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
-              {sections.map((section) => (
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-3">
+                <div className="h-6 bg-gray-200 rounded w-40 animate-pulse" />
+                <div className="ml-4 space-y-2">
+                  <div className="h-5 bg-gray-200 rounded w-32 animate-pulse" />
+                  <div className="h-5 bg-gray-200 rounded w-32 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragMove={handleDragMove}
+            onDragEnd={handleDragEnd}
+          >
+            <div 
+              className="backdrop-blur-xl rounded-2xl border p-3 sm:p-6 space-y-3 sm:space-y-4"
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #D1D5DB',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              }}
+            >
+              {/* Always show sections with expand/collapse - sections start collapsed */}
+              <SortableContext items={sections.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                {sections.map((section) => (
                 <div key={section.id} className="space-y-2">
                   <SortableSection
                     section={section}
@@ -1839,79 +1909,56 @@ export default function MenuBuilderPage() {
                 </div>
               ))}
             </SortableContext>
-          </div>
-          <DragOverlay>
-            {activeId && activeType ? (
-              <div className="opacity-80">
-                {activeType === 'section' && (
-                  <div 
-                    className="border rounded-xl p-3 backdrop-blur-sm"
-                    style={{
-                      border: '1px solid #D1D5DB',
-                      backgroundColor: '#F7F9F8',
-                      color: '#475569',
-                    }}
-                  >
-                    {sections.find(s => s.id === activeId)?.nameEn}
-                  </div>
-                )}
-                {activeType === 'category' && (
-                  <div 
-                    className="border rounded-lg p-2 backdrop-blur-sm"
-                    style={{
-                      border: '1px solid #D1D5DB',
-                      backgroundColor: '#F7F9F8',
-                      color: '#475569',
-                    }}
-                  >
-                    {sections
-                      .flatMap(s => s.categories)
-                      .find(c => c.id === activeId)?.nameEn}
-                  </div>
-                )}
-                {activeType === 'item' && (
-                  <div 
-                    className="border rounded p-2 backdrop-blur-sm flex items-center gap-2"
-                    style={{
-                      border: '1px solid #D1D5DB',
-                      backgroundColor: '#FFFFFF',
-                      color: '#475569',
-                    }}
-                  >
-                    {sections
-                      .flatMap(s => s.categories)
-                      .flatMap(c => c.items)
-                      .find(i => i.id === activeId)?.nameEn}
-                  </div>
-                )}
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-        
-        {/* Add Section Button */}
-        <div className="mt-4">
-          <Button
-            onClick={() => setShowAddSection(true)}
-            className="w-full mt-4 text-sm sm:text-base border"
-            style={{
-              backgroundColor: '#27C499',
-              color: '#FFFFFF',
-              border: '1px solid #D1D5DB',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#20B08A'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#27C499'
-            }}
-            variant="default"
-            size="lg"
-          >
-            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-            Add Section
-          </Button>
-        </div>
+            </div>
+            <DragOverlay>
+              {activeId && activeType ? (
+                <div className="opacity-80">
+                  {activeType === 'section' && (
+                    <div 
+                      className="border rounded-xl p-3 backdrop-blur-sm"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#F7F9F8',
+                        color: '#475569',
+                      }}
+                    >
+                      {sections.find(s => s.id === activeId)?.nameEn}
+                    </div>
+                  )}
+                  {activeType === 'category' && (
+                    <div 
+                      className="border rounded-lg p-2 backdrop-blur-sm"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#F7F9F8',
+                        color: '#475569',
+                      }}
+                    >
+                      {sections
+                        .flatMap(s => s.categories)
+                        .find(c => c.id === activeId)?.nameEn}
+                    </div>
+                  )}
+                  {activeType === 'item' && (
+                    <div 
+                      className="border rounded p-2 backdrop-blur-sm flex items-center gap-2"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#FFFFFF',
+                        color: '#475569',
+                      }}
+                    >
+                      {sections
+                        .flatMap(s => s.categories)
+                        .flatMap(c => c.items)
+                        .find(i => i.id === activeId)?.nameEn}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        )}
       </div>
 
       {/* Add Section Modal */}

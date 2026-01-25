@@ -8,6 +8,8 @@ import { X, Copy, Check, Palette, Upload } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { HexColorPicker } from 'react-colorful'
 import { generateColorScheme, normalizeToHex } from '@/lib/color-utils'
+import { useAdminBootstrap } from '../admin-context'
+import { SettingsSkeleton } from '../components/admin-skeleton'
 
 interface ThemeColors {
   appBg: string
@@ -76,6 +78,7 @@ export default function ThemePage() {
   const router = useRouter()
   const params = useParams()
   const slug = params.slug as string
+  const { bootstrap, isLoading: isLoadingBootstrap, refresh } = useAdminBootstrap()
   const [theme, setTheme] = useState<ThemeColors>(getInitialTheme())
   const [previewTheme, setPreviewTheme] = useState<ThemeColors>(getInitialTheme())
   const [isLoading, setIsLoading] = useState(false)
@@ -95,44 +98,71 @@ export default function ThemePage() {
     applyThemeToDocument(initialTheme)
   }, [])
 
+  const { bootstrap, isLoading: isLoadingBootstrap, refresh } = useAdminBootstrap()
+
   useEffect(() => {
-    // Fetch the actual theme from API after initial render
-    fetchTheme()
-    
-    // Fetch restaurant ID for menu background upload
-    const fetchRestaurantId = async () => {
-      try {
-        const response = await fetch('/api/admin/settings')
-        if (response.ok) {
-          const data = await response.json()
-          if (data.id) {
-            setRestaurantId(data.id)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching restaurant ID:', error)
+    // Use bootstrap data if available, otherwise fetch
+    if (bootstrap?.theme) {
+      const themeData = { ...defaultTheme, ...bootstrap.theme }
+      setTheme(themeData)
+      setPreviewTheme(themeData)
+      if (themeData.menuBackgroundR2Url) {
+        setMenuBgPreview(themeData.menuBackgroundR2Url)
       }
+      // Apply immediately on load
+      applyThemeToDocument(themeData)
+    } else if (!isLoadingBootstrap) {
+      // Only fetch if not loading (bootstrap might be loading)
+      fetchTheme()
     }
-    fetchRestaurantId()
     
-    // Fetch currency from UI settings
-    const fetchCurrency = async () => {
-      try {
-        const response = await fetch('/api/admin/ui-settings', {
-          credentials: 'include',
-        })
-        if (response.ok) {
-          const data = await response.json()
-          if (data.currency && (data.currency === 'IQD' || data.currency === 'USD')) {
-            setCurrency(data.currency)
+    // Use bootstrap settings for restaurant ID
+    if (bootstrap?.settings?.id) {
+      setRestaurantId(bootstrap.settings.id)
+    } else {
+      // Fetch restaurant ID for menu background upload
+      const fetchRestaurantId = async () => {
+        try {
+          const response = await fetch('/api/admin/settings')
+          if (response.ok) {
+            const data = await response.json()
+            if (data.id) {
+              setRestaurantId(data.id)
+            }
           }
+        } catch (error) {
+          console.error('Error fetching restaurant ID:', error)
         }
-      } catch (error) {
-        console.error('Error fetching currency:', error)
       }
+      fetchRestaurantId()
     }
-    fetchCurrency()
-  }, [])
+    
+    // Use bootstrap UI settings for currency
+    if (bootstrap?.uiSettings?.currency) {
+      const currencyValue = bootstrap.uiSettings.currency
+      if (currencyValue === 'IQD' || currencyValue === 'USD') {
+        setCurrency(currencyValue)
+      }
+    } else {
+      // Fetch currency from UI settings
+      const fetchCurrency = async () => {
+        try {
+          const response = await fetch('/api/admin/ui-settings', {
+            credentials: 'include',
+          })
+          if (response.ok) {
+            const data = await response.json()
+            if (data.currency && (data.currency === 'IQD' || data.currency === 'USD')) {
+              setCurrency(data.currency)
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching currency:', error)
+        }
+      }
+      fetchCurrency()
+    }
+  }, [bootstrap, isLoadingBootstrap])
 
   const fetchTheme = async () => {
     try {
