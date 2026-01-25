@@ -1944,6 +1944,11 @@ export default function MenuBuilderPage() {
                   value={sectionForm.nameKu}
                   onChange={(e) => setSectionForm({ ...sectionForm, nameKu: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -1954,6 +1959,11 @@ export default function MenuBuilderPage() {
                   value={sectionForm.nameEn}
                   onChange={(e) => setSectionForm({ ...sectionForm, nameEn: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -1964,6 +1974,11 @@ export default function MenuBuilderPage() {
                   value={sectionForm.nameAr}
                   onChange={(e) => setSectionForm({ ...sectionForm, nameAr: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div className="flex gap-2 pt-2">
@@ -2035,6 +2050,11 @@ export default function MenuBuilderPage() {
                   value={categoryForm.nameKu}
                   onChange={(e) => setCategoryForm({ ...categoryForm, nameKu: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2045,6 +2065,11 @@ export default function MenuBuilderPage() {
                   value={categoryForm.nameEn}
                   onChange={(e) => setCategoryForm({ ...categoryForm, nameEn: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2055,6 +2080,11 @@ export default function MenuBuilderPage() {
                   value={categoryForm.nameAr}
                   onChange={(e) => setCategoryForm({ ...categoryForm, nameAr: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div className="flex gap-2 pt-2">
@@ -2139,6 +2169,11 @@ export default function MenuBuilderPage() {
                   onChange={(e) => setItemForm({ ...itemForm, nameKu: e.target.value })}
                   required
                   className="text-sm"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2150,6 +2185,11 @@ export default function MenuBuilderPage() {
                   onChange={(e) => setItemForm({ ...itemForm, nameEn: e.target.value })}
                   required
                   className="text-sm"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2161,6 +2201,11 @@ export default function MenuBuilderPage() {
                   onChange={(e) => setItemForm({ ...itemForm, nameAr: e.target.value })}
                   required
                   className="text-sm"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2170,7 +2215,12 @@ export default function MenuBuilderPage() {
                 <textarea
                   value={itemForm.descriptionEn}
                   onChange={(e) => setItemForm({ ...itemForm, descriptionEn: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg px-3 py-2 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                   rows={2}
                 />
               </div>
@@ -2181,7 +2231,12 @@ export default function MenuBuilderPage() {
                 <textarea
                   value={itemForm.descriptionKu}
                   onChange={(e) => setItemForm({ ...itemForm, descriptionKu: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg px-3 py-2 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                   rows={2}
                 />
               </div>
@@ -2192,7 +2247,12 @@ export default function MenuBuilderPage() {
                 <textarea
                   value={itemForm.descriptionAr}
                   onChange={(e) => setItemForm({ ...itemForm, descriptionAr: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg px-3 py-2 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                   rows={2}
                 />
               </div>
@@ -2208,6 +2268,11 @@ export default function MenuBuilderPage() {
                   onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })}
                   required
                   className="text-sm"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2327,6 +2392,11 @@ export default function MenuBuilderPage() {
                   value={editSectionForm.nameKu}
                   onChange={(e) => setEditSectionForm({ ...editSectionForm, nameKu: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2337,6 +2407,11 @@ export default function MenuBuilderPage() {
                   value={editSectionForm.nameEn}
                   onChange={(e) => setEditSectionForm({ ...editSectionForm, nameEn: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2347,6 +2422,11 @@ export default function MenuBuilderPage() {
                   value={editSectionForm.nameAr}
                   onChange={(e) => setEditSectionForm({ ...editSectionForm, nameAr: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div className="flex gap-2 pt-2">
@@ -2409,6 +2489,11 @@ export default function MenuBuilderPage() {
                   value={editCategoryForm.nameKu}
                   onChange={(e) => setEditCategoryForm({ ...editCategoryForm, nameKu: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2419,6 +2504,11 @@ export default function MenuBuilderPage() {
                   value={editCategoryForm.nameEn}
                   onChange={(e) => setEditCategoryForm({ ...editCategoryForm, nameEn: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2429,6 +2519,11 @@ export default function MenuBuilderPage() {
                   value={editCategoryForm.nameAr}
                   onChange={(e) => setEditCategoryForm({ ...editCategoryForm, nameAr: e.target.value })}
                   required
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div className="flex gap-2 pt-2">
@@ -2504,6 +2599,11 @@ export default function MenuBuilderPage() {
                   onChange={(e) => setEditItemForm({ ...editItemForm, nameKu: e.target.value })}
                   required
                   className="text-sm"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2515,6 +2615,11 @@ export default function MenuBuilderPage() {
                   onChange={(e) => setEditItemForm({ ...editItemForm, nameEn: e.target.value })}
                   required
                   className="text-sm"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2526,6 +2631,11 @@ export default function MenuBuilderPage() {
                   onChange={(e) => setEditItemForm({ ...editItemForm, nameAr: e.target.value })}
                   required
                   className="text-sm"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>
@@ -2535,7 +2645,12 @@ export default function MenuBuilderPage() {
                 <textarea
                   value={editItemForm.descriptionEn}
                   onChange={(e) => setEditItemForm({ ...editItemForm, descriptionEn: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg px-3 py-2 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                   rows={2}
                 />
               </div>
@@ -2546,7 +2661,12 @@ export default function MenuBuilderPage() {
                 <textarea
                   value={editItemForm.descriptionKu}
                   onChange={(e) => setEditItemForm({ ...editItemForm, descriptionKu: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg px-3 py-2 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                   rows={2}
                 />
               </div>
@@ -2557,7 +2677,12 @@ export default function MenuBuilderPage() {
                 <textarea
                   value={editItemForm.descriptionAr}
                   onChange={(e) => setEditItemForm({ ...editItemForm, descriptionAr: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs sm:text-sm admin-text placeholder:admin-body focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg px-3 py-2 text-xs sm:text-sm focus-visible:outline-none focus-visible:ring-2"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                   rows={2}
                 />
               </div>
@@ -2573,6 +2698,11 @@ export default function MenuBuilderPage() {
                   onChange={(e) => setEditItemForm({ ...editItemForm, price: e.target.value })}
                   required
                   className="text-sm"
+                  style={{
+                    border: '1px solid #D1D5DB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F172A',
+                  }}
                 />
               </div>
               <div>

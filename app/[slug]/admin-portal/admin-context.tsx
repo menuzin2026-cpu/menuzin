@@ -1,7 +1,8 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, ReactNode } from 'react'
 import { useParams } from 'next/navigation'
+import useSWR from 'swr'
 
 interface AdminSession {
   authenticated: boolean
@@ -42,120 +43,96 @@ interface AdminBootstrap {
 interface AdminContextType {
   session: AdminSession | null
   bootstrap: AdminBootstrap | null
-  isLoading: boolean
+  isLoadingSession: boolean
+  isLoadingBootstrap: boolean
   error: Error | null
-  refreshSession: () => Promise<void>
-  refreshBootstrap: () => Promise<void>
+  mutateSession: () => Promise<any>
+  mutateBootstrap: () => Promise<any>
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined)
 
-export function AdminProvider({ children }: { children: ReactNode }) {
-  const params = useParams()
-  const slug = params.slug as string
-  const [session, setSession] = useState<AdminSession | null>(null)
-  const [bootstrap, setBootstrap] = useState<AdminBootstrap | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-
-  const fetchSession = async () => {
-    try {
-      const response = await fetch('/api/admin/check-session', {
-        credentials: 'include',
-      })
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          setSession({
-            authenticated: false,
-            restaurantId: null,
-            restaurantSlug: null,
-            adminUserId: null,
-          })
-          return
-        }
-        throw new Error(`Session check failed: ${response.status}`)
-      }
-
-      const data = await response.json()
-      setSession({
-        authenticated: data.authenticated,
-        restaurantId: data.restaurantId,
-        restaurantSlug: data.restaurantSlug,
-        adminUserId: data.adminUserId,
-      })
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch session'))
-      setSession({
+// Fetcher functions
+const sessionFetcher = async (url: string): Promise<AdminSession> => {
+  const response = await fetch(url, { credentials: 'include' })
+  if (!response.ok) {
+    if (response.status === 401) {
+      return {
         authenticated: false,
         restaurantId: null,
         restaurantSlug: null,
         adminUserId: null,
-      })
-    }
-  }
-
-  const fetchBootstrap = async () => {
-    try {
-      const response = await fetch(`/api/${slug}/admin/bootstrap`, {
-        credentials: 'include',
-      })
-      
-      if (!response.ok) {
-        throw new Error(`Bootstrap failed: ${response.status}`)
       }
-
-      const data = await response.json()
-      setBootstrap(data)
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch bootstrap'))
     }
+    throw new Error(`Session check failed: ${response.status}`)
   }
-
-  const refreshSession = async () => {
-    await fetchSession()
+  const data = await response.json()
+  return {
+    authenticated: data.authenticated,
+    restaurantId: data.restaurantId,
+    restaurantSlug: data.restaurantSlug,
+    adminUserId: data.adminUserId,
   }
+}
 
-  const refreshBootstrap = async () => {
-    await fetchBootstrap()
+const bootstrapFetcher = async (url: string): Promise<AdminBootstrap> => {
+  const response = await fetch(url, { credentials: 'include' })
+  if (!response.ok) {
+    throw new Error(`Bootstrap failed: ${response.status}`)
   }
+  return response.json()
+}
 
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true)
-      setError(null)
-      
-      // Fetch session first
-      await fetchSession()
-      
-      // Small delay to ensure session state is set
-      setTimeout(async () => {
-        // Check if authenticated before fetching bootstrap
-        const sessionResponse = await fetch('/api/admin/check-session', {
-          credentials: 'include',
-        })
-        if (sessionResponse.ok) {
-          const sessionData = await sessionResponse.json()
-          if (sessionData.authenticated) {
-            await fetchBootstrap()
-          }
-        }
-        setIsLoading(false)
-      }, 50)
+export function AdminProvider({ children }: { children: ReactNode }) {
+  const params = useParams()
+  const slug = params.slug as string
+
+  // Fetch session with SWR
+  const {
+    data: session,
+    error: sessionError,
+    isLoading: isLoadingSession,
+    mutate: mutateSession,
+  } = useSWR<AdminSession>(
+    '/api/admin/check-session',
+    sessionFetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 5000, // Dedupe requests within 5 seconds
+      refreshInterval: 60000, // Refresh every 60 seconds
     }
+  )
 
-    loadData()
-  }, [slug])
+  // Fetch bootstrap with SWR (only if authenticated)
+  const {
+    data: bootstrap,
+    error: bootstrapError,
+    isLoading: isLoadingBootstrap,
+    mutate: mutateBootstrap,
+  } = useSWR<AdminBootstrap>(
+    session?.authenticated ? `/api/${slug}/admin/bootstrap` : null,
+    bootstrapFetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 10000, // Dedupe requests within 10 seconds
+      refreshInterval: 30000, // Refresh every 30 seconds
+    }
+  )
+
+  const error = sessionError || bootstrapError || null
 
   return (
     <AdminContext.Provider
       value={{
-        session,
-        bootstrap,
-        isLoading,
+        session: session || null,
+        bootstrap: bootstrap || null,
+        isLoadingSession,
+        isLoadingBootstrap,
         error,
-        refreshSession,
-        refreshBootstrap,
+        mutateSession,
+        mutateBootstrap,
       }}
     >
       {children}
@@ -169,4 +146,14 @@ export function useAdmin() {
     throw new Error('useAdmin must be used within an AdminProvider')
   }
   return context
+}
+
+// Helper hook for pages that need bootstrap data
+export function useAdminBootstrap() {
+  const { bootstrap, isLoadingBootstrap, mutateBootstrap } = useAdmin()
+  return {
+    bootstrap,
+    isLoading: isLoadingBootstrap,
+    refresh: mutateBootstrap,
+  }
 }

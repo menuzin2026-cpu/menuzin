@@ -5,6 +5,8 @@ import { useRouter, useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import toast from 'react-hot-toast'
+import { useAdminBootstrap } from '../admin-context'
+import { SettingsSkeleton } from '../components/admin-skeleton'
 
 interface UiSettings {
   sectionTitleSize: number
@@ -33,10 +35,26 @@ export default function TypographyPage() {
   })
   const [inputValues, setInputValues] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
+  const { bootstrap, isLoading: isLoadingBootstrap, refresh } = useAdminBootstrap()
 
   useEffect(() => {
-    fetchSettings()
-  }, [])
+    // Use bootstrap data if available, otherwise fetch
+    if (bootstrap?.uiSettings) {
+      setSettings(bootstrap.uiSettings)
+      setInputValues({
+        sectionTitleSize: String(bootstrap.uiSettings.sectionTitleSize),
+        categoryTitleSize: String(bootstrap.uiSettings.categoryTitleSize),
+        itemNameSize: String(bootstrap.uiSettings.itemNameSize),
+        itemDescriptionSize: String(bootstrap.uiSettings.itemDescriptionSize),
+        itemPriceSize: String(bootstrap.uiSettings.itemPriceSize),
+        headerLogoSize: String(bootstrap.uiSettings.headerLogoSize),
+        bottomNavSectionSize: String(bootstrap.uiSettings.bottomNavSectionSize),
+        bottomNavCategorySize: String(bootstrap.uiSettings.bottomNavCategorySize),
+      })
+    } else if (!isLoadingBootstrap) {
+      fetchSettings()
+    }
+  }, [bootstrap, isLoadingBootstrap])
 
   const fetchSettings = async () => {
     try {
@@ -89,6 +107,11 @@ export default function TypographyPage() {
           toast.dismiss('save-typography')
           toast.error(errorData.message || 'Failed to save settings')
           console.error('Settings save error:', errorData)
+        }
+        
+        // Refresh bootstrap cache after save
+        if (refresh) {
+          refresh()
         }
       } catch (error) {
         console.error('Error saving settings:', error)
@@ -149,6 +172,11 @@ export default function TypographyPage() {
         setInputValues((prev) => ({ ...prev, [key]: String(finalValue) }))
       }
     }
+  }
+
+  // Show skeleton while loading bootstrap data
+  if (isLoadingBootstrap && !bootstrap?.uiSettings) {
+    return <SettingsSkeleton />
   }
 
   return (

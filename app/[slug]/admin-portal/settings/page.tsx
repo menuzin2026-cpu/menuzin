@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Upload, X } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useAdmin } from '../admin-context'
+import { useAdminBootstrap } from '../admin-context'
+import { SettingsSkeleton } from '../components/admin-skeleton'
 
 interface RestaurantSettings {
   id?: string
@@ -88,16 +89,17 @@ export default function SettingsPage() {
     return false // Not a mismatch error
   }
 
-  const { bootstrap, refreshBootstrap } = useAdmin()
+  const { bootstrap, isLoading, refresh } = useAdminBootstrap()
 
   useEffect(() => {
     // Use bootstrap data if available, otherwise fetch
     if (bootstrap?.settings) {
       setSettings(bootstrap.settings)
-    } else {
+    } else if (!isLoading) {
+      // Only fetch if not loading (bootstrap might be loading)
       fetchSettings()
     }
-  }, [bootstrap])
+  }, [bootstrap, isLoading])
 
   const fetchSettings = async () => {
     const startTime = performance.now()
@@ -488,6 +490,11 @@ export default function SettingsPage() {
         toast.error('Failed to save settings')
       }
     })()
+  }
+
+  // Show skeleton while loading bootstrap data
+  if (isLoading && !bootstrap?.settings) {
+    return <SettingsSkeleton />
   }
 
   return (

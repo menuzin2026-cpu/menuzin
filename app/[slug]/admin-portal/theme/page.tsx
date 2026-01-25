@@ -519,28 +519,43 @@ export default function ThemePage() {
 
 
   return (
-    <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: 'var(--app-bg, #400810)' }}>
+    <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: '#F7F9F8' }}>
       <div className="max-w-4xl mx-auto">
         <div 
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 backdrop-blur-xl rounded-2xl p-3 sm:p-4 border"
+          className="admin-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6"
           style={{
-            backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-            boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #D1D5DB',
+            borderRadius: '0.75rem',
+            padding: '1rem 1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
           }}
         >
           <div className="flex items-center gap-3">
-            <Palette className="w-6 h-6 sm:w-8 sm:h-8 text-[#FBBF24]" />
+            <Palette className="w-6 h-6 sm:w-8 sm:h-8" style={{ color: '#27C499' }} />
             <h1 
               className="text-xl sm:text-2xl md:text-3xl font-bold"
-              style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+              style={{ color: '#0F172A' }}
             >
               Theme & Colors
             </h1>
           </div>
           <Button 
             onClick={() => router.push(`/${slug}/admin-portal`)} 
-            className="bg-white/10 hover:bg-white/15 border border-white/20 text-white shadow-lg text-sm sm:text-base w-full sm:w-auto"
+            style={{
+              backgroundColor: '#27C499',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              width: '100%',
+            }}
+            className="sm:w-auto"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#20B08A'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27C499'}
           >
             Back
           </Button>
@@ -549,17 +564,18 @@ export default function ThemePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Color Input */}
           <div 
-            className="lg:col-span-2 backdrop-blur-xl rounded-2xl border p-4 sm:p-6"
+            className="admin-card lg:col-span-2 p-4 sm:p-6"
             style={{
-              backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-              borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-              boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              borderRadius: '0.75rem',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
             }}
           >
             <div className="flex items-center justify-between mb-4">
               <h2 
                 className="text-lg sm:text-xl font-bold"
-                style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+                style={{ color: '#0F172A' }}
               >
                 Background Color
               </h2>
@@ -567,7 +583,7 @@ export default function ThemePage() {
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-white">
+                <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                   Background Color (Welcome Page, Menu Page, Admin Panel)
                 </label>
                 <div className="flex items-center gap-2">
@@ -589,18 +605,30 @@ export default function ThemePage() {
                     }}
                     className="flex-1 text-sm"
                     placeholder="#400810"
+                    style={{
+                      border: '1px solid #D1D5DB',
+                      backgroundColor: '#FFFFFF',
+                      color: '#0F172A',
+                    }}
                   />
                   <button
                     type="button"
                     onClick={() => openColorPicker('appBg')}
-                    className="w-16 h-16 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors relative flex-shrink-0"
-                    style={{ backgroundColor: normalizeToHex(previewTheme.appBg) }}
+                    className="w-16 h-16 rounded border-2 cursor-pointer transition-colors relative flex-shrink-0"
+                    style={{ 
+                      backgroundColor: normalizeToHex(previewTheme.appBg),
+                      borderColor: '#D1D5DB',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#27C499'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
                     aria-label="Pick background color"
                   />
                   <button
                     type="button"
                     onClick={() => copyToClipboard(previewTheme.appBg)}
-                    className="p-2 text-white/70 hover:text-white transition-colors"
+                    style={{ color: '#475569', cursor: 'pointer' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
                     aria-label="Copy color"
                   >
                     {copied === previewTheme.appBg ? (
@@ -610,14 +638,14 @@ export default function ThemePage() {
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-white/70">
+                <p className="text-xs" style={{ color: '#94A3B8' }}>
                   This color will be used for all components (text, boxes, frames).
                 </p>
               </div>
 
               {/* Menu Page Background Image */}
-              <div className="space-y-2 pt-4 border-t border-white/10">
-                <label className="block text-sm font-medium text-white">
+              <div className="space-y-2 pt-4 border-t" style={{ borderColor: '#E5E7EB' }}>
+                <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                   Menu Page Background Image
                 </label>
                 <div className="space-y-2">
@@ -626,7 +654,8 @@ export default function ThemePage() {
                       <img
                         src={menuBgPreview}
                         alt="Menu Background Preview"
-                        className="h-32 w-auto object-cover rounded-lg border-2 border-white/20"
+                        className="h-32 w-auto object-cover rounded-lg border-2"
+                        style={{ borderColor: '#D1D5DB' }}
                       />
                       <button
                         type="button"
@@ -637,12 +666,19 @@ export default function ThemePage() {
                       </button>
                     </div>
                   )}
-                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:bg-white/5 transition-colors">
+                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
+                    style={{ 
+                      borderColor: '#D1D5DB',
+                      backgroundColor: '#F7F9F8',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E6F7F2'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F7F9F8'}
+                  >
                     {!menuBgPreview && (
                       <div className="flex flex-col items-center justify-center pt-3 pb-4">
-                        <Upload className="w-6 h-6 mb-2 text-white/70" />
-                        <p className="text-sm text-white/70">Click to upload background</p>
-                        <p className="text-xs text-white/50 mt-1">PNG, JPG, WEBP (max 10MB)</p>
+                        <Upload className="w-6 h-6 mb-2" style={{ color: '#475569' }} />
+                        <p className="text-sm" style={{ color: '#475569' }}>Click to upload background</p>
+                        <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>PNG, JPG, WEBP (max 10MB)</p>
                       </div>
                     )}
                     <input
@@ -654,20 +690,20 @@ export default function ThemePage() {
                     />
                   </label>
                   {uploadingMenuBg && (
-                    <p className="text-sm text-white/70">Uploading background...</p>
+                    <p className="text-sm" style={{ color: '#475569' }}>Uploading background...</p>
                   )}
-                  <p className="text-xs text-white/50">
+                  <p className="text-xs" style={{ color: '#94A3B8' }}>
                     Background image will appear on menu page only (not welcome page). Leave empty to use default background color.
                   </p>
                 </div>
               </div>
 
               {/* Header Background Color */}
-              <div className="space-y-4 pt-4 border-t border-white/10">
-                <h3 className="text-base font-semibold text-white">Header</h3>
+              <div className="space-y-4 pt-4 border-t" style={{ borderColor: '#E5E7EB' }}>
+                <h3 className="text-base font-semibold" style={{ color: '#0F172A' }}>Header</h3>
                 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
+                  <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                     Header Background Color
                   </label>
                   <div className="flex items-center gap-2">
@@ -689,12 +725,22 @@ export default function ThemePage() {
                       }}
                       className="flex-1 text-sm"
                       placeholder="Default: current background"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#FFFFFF',
+                        color: '#0F172A',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => openColorPicker('headerFooterBgColor')}
-                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
-                      style={{ backgroundColor: previewTheme.headerFooterBgColor ? normalizeToHex(previewTheme.headerFooterBgColor) : 'transparent' }}
+                      className="w-12 h-12 rounded border-2 cursor-pointer transition-colors flex-shrink-0"
+                      style={{ 
+                        backgroundColor: previewTheme.headerFooterBgColor ? normalizeToHex(previewTheme.headerFooterBgColor) : 'transparent',
+                        borderColor: '#D1D5DB',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#27C499'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
                       aria-label="Pick header background color"
                     />
                   </div>
@@ -708,22 +754,38 @@ export default function ThemePage() {
                         setPreviewTheme(updatedTheme)
                         await handleSave(updatedTheme)
                       }}
-                      variant="outline"
-                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                      style={{
+                        width: '100%',
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: 'transparent',
+                        color: '#475569',
+                        fontSize: '0.75rem',
+                        padding: '0.5rem',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F7F9F8'
+                        e.currentTarget.style.borderColor = '#27C499'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.borderColor = '#D1D5DB'
+                      }}
                     >
                       Reset / Clear
                     </Button>
                   )}
-                  <p className="text-xs text-white/50">Applies to header background only. Footer is always transparent.</p>
+                  <p className="text-xs" style={{ color: '#94A3B8' }}>Applies to header background only. Footer is always transparent.</p>
                 </div>
               </div>
 
               {/* Surface Background Color */}
-              <div className="space-y-4 pt-4 border-t border-white/10">
-                <h3 className="text-base font-semibold text-white">Surface Background</h3>
+              <div className="space-y-4 pt-4 border-t" style={{ borderColor: '#E5E7EB' }}>
+                <h3 className="text-base font-semibold" style={{ color: '#0F172A' }}>Surface Background</h3>
                 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
+                  <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                     Background Color (Items + Bottom Nav + Categories + Basket)
                   </label>
                   <div className="flex items-center gap-2">
@@ -745,12 +807,22 @@ export default function ThemePage() {
                       }}
                       className="flex-1 text-sm"
                       placeholder="Default: liquid glass effect"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#FFFFFF',
+                        color: '#0F172A',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => openColorPicker('glassTintColor')}
-                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
-                      style={{ backgroundColor: previewTheme.glassTintColor ? normalizeToHex(previewTheme.glassTintColor) : 'transparent' }}
+                      className="w-12 h-12 rounded border-2 cursor-pointer transition-colors flex-shrink-0"
+                      style={{ 
+                        backgroundColor: previewTheme.glassTintColor ? normalizeToHex(previewTheme.glassTintColor) : 'transparent',
+                        borderColor: '#D1D5DB',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#27C499'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
                       aria-label="Pick surface background color"
                     />
                   </div>
@@ -763,22 +835,38 @@ export default function ThemePage() {
                       setPreviewTheme(updatedTheme)
                       await handleSave(updatedTheme)
                     }}
-                    variant="outline"
-                    className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                    style={{
+                      width: '100%',
+                      border: '1px solid #D1D5DB',
+                      backgroundColor: 'transparent',
+                      color: '#475569',
+                      fontSize: '0.75rem',
+                      padding: '0.5rem',
+                      borderRadius: '0.5rem',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#F7F9F8'
+                      e.currentTarget.style.borderColor = '#27C499'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.borderColor = '#D1D5DB'
+                    }}
                   >
                     Reset to Default (Liquid Glass)
                   </Button>
-                  <p className="text-xs text-white/50">Applies solid background color to item cards, bottom nav box, category headers, and basket drawer. Reset to restore liquid glass effect.</p>
+                  <p className="text-xs" style={{ color: '#94A3B8' }}>Applies solid background color to item cards, bottom nav box, category headers, and basket drawer. Reset to restore liquid glass effect.</p>
                 </div>
               </div>
 
               {/* Text Color Options */}
-              <div className="space-y-4 pt-4 border-t border-white/10">
-                <h3 className="text-base font-semibold text-white">Text Colors</h3>
+              <div className="space-y-4 pt-4 border-t" style={{ borderColor: '#E5E7EB' }}>
+                <h3 className="text-base font-semibold" style={{ color: '#0F172A' }}>Text Colors</h3>
                 
                 {/* Item Name Text Color */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
+                  <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                     Item Name Text Color
                   </label>
                   <div className="flex items-center gap-2">
@@ -800,12 +888,22 @@ export default function ThemePage() {
                       }}
                       className="flex-1 text-sm"
                       placeholder="Default: #FFFFFF"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#FFFFFF',
+                        color: '#0F172A',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => openColorPicker('itemNameTextColor')}
-                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
-                      style={{ backgroundColor: previewTheme.itemNameTextColor ? normalizeToHex(previewTheme.itemNameTextColor) : '#FFFFFF' }}
+                      className="w-12 h-12 rounded border-2 cursor-pointer transition-colors flex-shrink-0"
+                      style={{ 
+                        backgroundColor: previewTheme.itemNameTextColor ? normalizeToHex(previewTheme.itemNameTextColor) : '#FFFFFF',
+                        borderColor: '#D1D5DB',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#27C499'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
                       aria-label="Pick item name text color"
                     />
                   </div>
@@ -818,18 +916,34 @@ export default function ThemePage() {
                         setPreviewTheme(updatedTheme)
                         await handleSave(updatedTheme)
                       }}
-                      variant="outline"
-                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                      style={{
+                        width: '100%',
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: 'transparent',
+                        color: '#475569',
+                        fontSize: '0.75rem',
+                        padding: '0.5rem',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F7F9F8'
+                        e.currentTarget.style.borderColor = '#27C499'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.borderColor = '#D1D5DB'
+                      }}
                     >
                       Reset to Default
                     </Button>
                   )}
-                  <p className="text-xs text-white/50">Leave empty to use default (white)</p>
+                  <p className="text-xs" style={{ color: '#94A3B8' }}>Leave empty to use default (white)</p>
                 </div>
 
                 {/* Item Price Text Color */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
+                  <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                     Item Price Text Color
                   </label>
                   <div className="flex items-center gap-2">
@@ -851,12 +965,22 @@ export default function ThemePage() {
                       }}
                       className="flex-1 text-sm"
                       placeholder="Default: #FBBF24"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#FFFFFF',
+                        color: '#0F172A',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => openColorPicker('itemPriceTextColor')}
-                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
-                      style={{ backgroundColor: previewTheme.itemPriceTextColor ? normalizeToHex(previewTheme.itemPriceTextColor) : '#FBBF24' }}
+                      className="w-12 h-12 rounded border-2 cursor-pointer transition-colors flex-shrink-0"
+                      style={{ 
+                        backgroundColor: previewTheme.itemPriceTextColor ? normalizeToHex(previewTheme.itemPriceTextColor) : '#FBBF24',
+                        borderColor: '#D1D5DB',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#27C499'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
                       aria-label="Pick item price text color"
                     />
                   </div>
@@ -869,18 +993,34 @@ export default function ThemePage() {
                         setPreviewTheme(updatedTheme)
                         await handleSave(updatedTheme)
                       }}
-                      variant="outline"
-                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                      style={{
+                        width: '100%',
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: 'transparent',
+                        color: '#475569',
+                        fontSize: '0.75rem',
+                        padding: '0.5rem',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F7F9F8'
+                        e.currentTarget.style.borderColor = '#27C499'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.borderColor = '#D1D5DB'
+                      }}
                     >
                       Reset to Default
                     </Button>
                   )}
-                  <p className="text-xs text-white/50">Leave empty to use default (gold)</p>
+                  <p className="text-xs" style={{ color: '#94A3B8' }}>Leave empty to use default (gold)</p>
                 </div>
 
                 {/* Item Description Text Color */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
+                  <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                     Item Description Text Color
                   </label>
                   <div className="flex items-center gap-2">
@@ -902,12 +1042,22 @@ export default function ThemePage() {
                       }}
                       className="flex-1 text-sm"
                       placeholder="Default: #E2E8F0"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#FFFFFF',
+                        color: '#0F172A',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => openColorPicker('itemDescriptionTextColor')}
-                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
-                      style={{ backgroundColor: previewTheme.itemDescriptionTextColor ? normalizeToHex(previewTheme.itemDescriptionTextColor) : '#E2E8F0' }}
+                      className="w-12 h-12 rounded border-2 cursor-pointer transition-colors flex-shrink-0"
+                      style={{ 
+                        backgroundColor: previewTheme.itemDescriptionTextColor ? normalizeToHex(previewTheme.itemDescriptionTextColor) : '#E2E8F0',
+                        borderColor: '#D1D5DB',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#27C499'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
                       aria-label="Pick item description text color"
                     />
                   </div>
@@ -920,18 +1070,34 @@ export default function ThemePage() {
                         setPreviewTheme(updatedTheme)
                         await handleSave(updatedTheme)
                       }}
-                      variant="outline"
-                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                      style={{
+                        width: '100%',
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: 'transparent',
+                        color: '#475569',
+                        fontSize: '0.75rem',
+                        padding: '0.5rem',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F7F9F8'
+                        e.currentTarget.style.borderColor = '#27C499'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.borderColor = '#D1D5DB'
+                      }}
                     >
                       Reset to Default
                     </Button>
                   )}
-                  <p className="text-xs text-white/50">Leave empty to use default (light gray)</p>
+                  <p className="text-xs" style={{ color: '#94A3B8' }}>Leave empty to use default (light gray)</p>
                 </div>
 
                 {/* Category Name Color */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
+                  <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                     Category Name Color
                   </label>
                   <div className="flex items-center gap-2">
@@ -953,12 +1119,22 @@ export default function ThemePage() {
                       }}
                       className="flex-1 text-sm"
                       placeholder="Default: #FFFFFF"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#FFFFFF',
+                        color: '#0F172A',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => openColorPicker('categoryNameColor')}
-                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
-                      style={{ backgroundColor: previewTheme.categoryNameColor ? normalizeToHex(previewTheme.categoryNameColor) : '#FFFFFF' }}
+                      className="w-12 h-12 rounded border-2 cursor-pointer transition-colors flex-shrink-0"
+                      style={{ 
+                        backgroundColor: previewTheme.categoryNameColor ? normalizeToHex(previewTheme.categoryNameColor) : '#FFFFFF',
+                        borderColor: '#D1D5DB',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#27C499'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
                       aria-label="Pick category name color"
                     />
                   </div>
@@ -971,18 +1147,34 @@ export default function ThemePage() {
                         setPreviewTheme(updatedTheme)
                         await handleSave(updatedTheme)
                       }}
-                      variant="outline"
-                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                      style={{
+                        width: '100%',
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: 'transparent',
+                        color: '#475569',
+                        fontSize: '0.75rem',
+                        padding: '0.5rem',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F7F9F8'
+                        e.currentTarget.style.borderColor = '#27C499'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.borderColor = '#D1D5DB'
+                      }}
                     >
                       Reset to Default
                     </Button>
                   )}
-                  <p className="text-xs text-white/50">Applies to category names in menu page and bottom nav</p>
+                  <p className="text-xs" style={{ color: '#94A3B8' }}>Applies to category names in menu page and bottom nav</p>
                 </div>
 
                 {/* Bottom Nav Section Name Color */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
+                  <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                     Bottom Nav Section Name Color
                   </label>
                   <div className="flex items-center gap-2">
@@ -1004,12 +1196,22 @@ export default function ThemePage() {
                       }}
                       className="flex-1 text-sm"
                       placeholder="Default: #FFFFFF"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#FFFFFF',
+                        color: '#0F172A',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => openColorPicker('bottomNavSectionNameColor')}
-                      className="w-12 h-12 rounded border-2 border-white/20 cursor-pointer hover:border-white/40 transition-colors flex-shrink-0"
-                      style={{ backgroundColor: previewTheme.bottomNavSectionNameColor ? normalizeToHex(previewTheme.bottomNavSectionNameColor) : '#FFFFFF' }}
+                      className="w-12 h-12 rounded border-2 cursor-pointer transition-colors flex-shrink-0"
+                      style={{ 
+                        backgroundColor: previewTheme.bottomNavSectionNameColor ? normalizeToHex(previewTheme.bottomNavSectionNameColor) : '#FFFFFF',
+                        borderColor: '#D1D5DB',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#27C499'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#D1D5DB'}
                       aria-label="Pick bottom nav section name color"
                     />
                   </div>
@@ -1022,22 +1224,38 @@ export default function ThemePage() {
                         setPreviewTheme(updatedTheme)
                         await handleSave(updatedTheme)
                       }}
-                      variant="outline"
-                      className="w-full border-white/20 text-white hover:bg-white/10 text-xs"
+                      style={{
+                        width: '100%',
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: 'transparent',
+                        color: '#475569',
+                        fontSize: '0.75rem',
+                        padding: '0.5rem',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F7F9F8'
+                        e.currentTarget.style.borderColor = '#27C499'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.borderColor = '#D1D5DB'
+                      }}
                     >
                       Reset to Default
                     </Button>
                   )}
-                  <p className="text-xs text-white/50">Applies to section labels in bottom navigation</p>
+                  <p className="text-xs" style={{ color: '#94A3B8' }}>Applies to section labels in bottom navigation</p>
                 </div>
               </div>
 
               {/* Currency Settings */}
-              <div className="space-y-4 pt-4 border-t border-white/10">
-                <h3 className="text-base font-semibold text-white">Price Currency</h3>
+              <div className="space-y-4 pt-4 border-t" style={{ borderColor: '#E5E7EB' }}>
+                <h3 className="text-base font-semibold" style={{ color: '#0F172A' }}>Price Currency</h3>
                 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
+                  <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                     Currency
                   </label>
                   <select
@@ -1069,28 +1287,43 @@ export default function ThemePage() {
                         toast.error('Failed to update currency')
                       }
                     }}
-                    className="w-full px-3 py-2 rounded-lg border border-white/20 bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-[#FBBF24] focus:border-transparent"
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid #D1D5DB',
+                      backgroundColor: '#FFFFFF',
+                      color: '#0F172A',
+                    }}
+                    className="focus:outline-none focus:ring-2 focus:ring-[#27C499] focus:border-transparent"
                   >
                     <option value="IQD">IQD (Iraqi Dinar)</option>
                     <option value="USD">USD (US Dollar)</option>
                   </select>
-                  <p className="text-xs text-white/50">
+                  <p className="text-xs" style={{ color: '#94A3B8' }}>
                     Select the currency to display for all prices in the menu
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-4 pt-6 mt-6 border-t border-white/20">
+            <div className="flex gap-4 pt-6 mt-6 border-t" style={{ borderColor: '#E5E7EB' }}>
               <Button 
                 onClick={() => handleSave()} 
                 disabled={isLoading} 
-                variant="ghost"
                 className="flex-1"
                 style={{
-                  backgroundColor: 'var(--app-bg, #400810)',
-                  color: 'var(--auto-text-primary, #FFFFFF)',
+                  backgroundColor: '#27C499',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  padding: '0.75rem',
+                  fontWeight: '500',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  opacity: isLoading ? 0.7 : 1,
                 }}
+                onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#20B08A')}
+                onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#27C499')}
               >
                 {isLoading ? 'Saving...' : 'Save Theme'}
               </Button>
@@ -1102,20 +1335,22 @@ export default function ThemePage() {
             {selectedColor ? (
               <div
                 ref={colorPickerRef}
-                className="backdrop-blur-xl rounded-2xl border p-4 sm:p-6 sticky top-4"
+                className="admin-card rounded-2xl p-4 sm:p-6 sticky top-4"
                 style={{
-                  backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-                  borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-                  boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #D1D5DB',
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
                 }}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-white">
+                  <h2 className="text-lg font-bold" style={{ color: '#0F172A' }}>
                     Pick {selectedColor === 'appBg' ? 'Background' : selectedColor === 'itemNameTextColor' ? 'Item Name Text' : selectedColor === 'itemPriceTextColor' ? 'Item Price Text' : selectedColor === 'itemDescriptionTextColor' ? 'Item Description Text' : selectedColor === 'categoryNameColor' ? 'Category Name' : selectedColor === 'bottomNavSectionNameColor' ? 'Bottom Nav Section Name' : selectedColor === 'headerFooterBgColor' ? 'Header Background' : selectedColor === 'glassTintColor' ? 'Surface Background' : 'Color'} Color
                   </h2>
                   <button
                     onClick={closeColorPicker}
-                    className="text-white/70 hover:text-white transition-colors"
+                    style={{ color: '#475569', cursor: 'pointer' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1137,7 +1372,7 @@ export default function ThemePage() {
 
                   {/* HEX Input */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-white">
+                    <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                       HEX Color
                     </label>
                     <div className="flex items-center gap-2">
@@ -1153,11 +1388,18 @@ export default function ThemePage() {
                         }}
                         className="flex-1"
                         placeholder="#000000"
+                        style={{
+                          border: '1px solid #D1D5DB',
+                          backgroundColor: '#FFFFFF',
+                          color: '#0F172A',
+                        }}
                       />
                       <button
                         type="button"
                         onClick={() => copyToClipboard(tempColor)}
-                        className="p-2 text-white/70 hover:text-white transition-colors"
+                        style={{ color: '#475569', cursor: 'pointer' }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
                         aria-label="Copy color"
                       >
                         {copied === tempColor ? (
@@ -1171,12 +1413,15 @@ export default function ThemePage() {
 
                   {/* Color Preview */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-white">
+                    <label className="block text-sm font-medium" style={{ color: '#0F172A' }}>
                       Preview
                     </label>
                     <div
-                      className="w-full h-16 rounded border-2 border-white/20"
-                      style={{ backgroundColor: tempColor }}
+                      className="w-full h-16 rounded border-2"
+                      style={{ 
+                        backgroundColor: tempColor,
+                        borderColor: '#D1D5DB',
+                      }}
                     />
                   </div>
 
@@ -1184,14 +1429,39 @@ export default function ThemePage() {
                   <div className="flex gap-2 pt-2">
                     <Button
                       onClick={applyColor}
-                      className="flex-1 bg-[#800020] hover:bg-[#A00028] text-white"
+                      style={{
+                        flex: 1,
+                        backgroundColor: '#27C499',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '0.5rem',
+                        padding: '0.5rem',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#20B08A'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27C499'}
                     >
                       Apply
                     </Button>
                     <Button
                       onClick={closeColorPicker}
-                      variant="outline"
-                      className="border-white/20 text-white hover:bg-white/10"
+                      style={{
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: 'transparent',
+                        color: '#475569',
+                        borderRadius: '0.5rem',
+                        padding: '0.5rem',
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F7F9F8'
+                        e.currentTarget.style.borderColor = '#27C499'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.borderColor = '#D1D5DB'
+                      }}
                     >
                       Cancel
                     </Button>

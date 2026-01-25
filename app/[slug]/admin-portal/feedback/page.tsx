@@ -48,11 +48,11 @@ export default function FeedbackPage() {
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`w-4 h-4 ${
-              star <= rating
-                ? 'fill-[var(--price-text)] text-[var(--price-text)]'
-                : 'text-white/50'
-            }`}
+            className="w-4 h-4"
+            style={{
+              fill: star <= rating ? '#FBBF24' : 'transparent',
+              color: star <= rating ? '#FBBF24' : '#E5E7EB',
+            }}
           />
         ))}
       </div>
@@ -60,35 +60,50 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: 'var(--app-bg, #400810)' }}>
+    <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: '#F7F9F8' }}>
       <div className="max-w-6xl mx-auto">
         <div 
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 backdrop-blur-xl rounded-2xl p-3 sm:p-4 border"
+          className="admin-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6"
           style={{
-            backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-            boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #D1D5DB',
+            borderRadius: '0.75rem',
+            padding: '1rem 1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
           }}
         >
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">Customer Feedback</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold" style={{ color: '#0F172A' }}>Customer Feedback</h1>
           <Button 
             onClick={() => router.push(`/${slug}/admin-portal`)} 
-            className="bg-white/10 hover:bg-white/15 border border-white/20 text-white shadow-lg text-sm sm:text-base w-full sm:w-auto"
+            style={{
+              backgroundColor: '#27C499',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              width: '100%',
+            }}
+            className="sm:w-auto"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#20B08A'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27C499'}
           >
             Back
           </Button>
         </div>
 
         {isLoading ? (
-          <div className="text-center text-white py-12">Loading feedback...</div>
+          <div className="text-center py-12" style={{ color: '#475569' }}>Loading feedback...</div>
         ) : feedbacks.length === 0 ? (
           <div 
-            className="backdrop-blur-xl rounded-2xl p-12 text-center border"
+            className="admin-card rounded-2xl p-12 text-center"
             style={{
-              backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-              borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-              color: 'var(--auto-text-secondary, rgba(255, 255, 255, 0.9))',
-              boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              color: '#475569',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
             }}
           >
             No feedback received yet
@@ -98,24 +113,32 @@ export default function FeedbackPage() {
             {feedbacks.map((feedback) => (
               <div
                 key={feedback.id}
-                className="bg-white/[0.08] backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/30 hover:shadow-xl transition-all"
+                className="admin-card rounded-2xl p-6 transition-all"
                 style={{
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #D1D5DB',
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
                 }}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                       <div>
-                        <div className="text-sm text-white/70 mb-1">Staff</div>
+                        <div className="text-sm mb-1" style={{ color: '#475569' }}>Staff</div>
                         {renderStars(feedback.staffRating)}
                       </div>
                       <div>
-                        <div className="text-sm text-white/70 mb-1">Service</div>
+                        <div className="text-sm mb-1" style={{ color: '#475569' }}>Service</div>
                         {renderStars(feedback.serviceRating)}
                       </div>
                       <div>
-                        <div className="text-sm text-white/70 mb-1">Hygiene</div>
+                        <div className="text-sm mb-1" style={{ color: '#475569' }}>Hygiene</div>
                         {renderStars(feedback.hygieneRating)}
                       </div>
                     </div>
@@ -123,11 +146,11 @@ export default function FeedbackPage() {
                       <div className="text-2xl mb-2">{feedback.satisfactionEmoji}</div>
                     )}
                     {feedback.comment && (
-                      <p className="text-white mb-2">
+                      <p className="mb-2" style={{ color: '#0F172A' }}>
                         {feedback.comment}
                       </p>
                     )}
-                    <div className="flex gap-4 text-sm text-white/70">
+                    <div className="flex gap-4 text-sm" style={{ color: '#94A3B8' }}>
                       {feedback.phoneNumber && (
                         <span>Phone: {feedback.phoneNumber}</span>
                       )}
@@ -136,7 +159,7 @@ export default function FeedbackPage() {
                       )}
                     </div>
                   </div>
-                  <div className="text-sm text-white/70">
+                  <div className="text-sm" style={{ color: '#94A3B8' }}>
                     {new Date(feedback.createdAt).toLocaleDateString()}
                   </div>
                 </div>

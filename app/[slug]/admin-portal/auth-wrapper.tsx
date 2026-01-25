@@ -13,7 +13,7 @@ export function AdminAuthWrapper({
   const router = useRouter()
   const params = useParams()
   const slug = params.slug as string
-  const { session, isLoading } = useAdmin()
+  const { session, isLoadingSession } = useAdmin()
 
   useEffect(() => {
     // Skip auth check for login page
@@ -22,7 +22,7 @@ export function AdminAuthWrapper({
     }
 
     // Wait for session to load
-    if (isLoading) {
+    if (isLoadingSession) {
       return
     }
 
@@ -40,10 +40,10 @@ export function AdminAuthWrapper({
       router.push(`/${slug}/admin-portal/login`)
       return
     }
-  }, [pathname, router, slug, session, isLoading])
+  }, [pathname, router, slug, session, isLoadingSession])
 
   // Show loading state briefly while checking auth
-  if (!pathname?.endsWith('/admin-portal/login') && isLoading) {
+  if (!pathname?.endsWith('/admin-portal/login') && isLoadingSession) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F7F9F8' }}>
         <div className="text-center">

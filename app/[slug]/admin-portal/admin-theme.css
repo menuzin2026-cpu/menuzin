@@ -72,21 +72,38 @@
 }
 
 /* Admin Input Styles */
-.admin-root .admin-input {
+.admin-root .admin-input,
+.admin-root input[type="text"],
+.admin-root input[type="number"],
+.admin-root input[type="url"],
+.admin-root input[type="email"],
+.admin-root input[type="password"],
+.admin-root textarea {
   width: 100%;
   padding: 0.625rem 0.75rem;
-  border: 1px solid var(--admin-border);
+  border: 1px solid var(--admin-border) !important;
   border-radius: 0.5rem;
-  background-color: var(--admin-card-bg);
-  color: var(--admin-heading);
+  background-color: var(--admin-card-bg) !important;
+  color: var(--admin-heading) !important;
   font-size: 1rem;
   transition: border-color 0.2s;
 }
 
-.admin-root .admin-input:focus {
+.admin-root .admin-input:focus,
+.admin-root input[type="text"]:focus,
+.admin-root input[type="number"]:focus,
+.admin-root input[type="url"]:focus,
+.admin-root input[type="email"]:focus,
+.admin-root input[type="password"]:focus,
+.admin-root textarea:focus {
   outline: none;
-  border-color: var(--admin-primary);
+  border-color: var(--admin-primary) !important;
   box-shadow: 0 0 0 3px var(--admin-primary-soft);
+}
+
+.admin-root input::placeholder,
+.admin-root textarea::placeholder {
+  color: var(--admin-muted) !important;
 }
 
 /* Admin Text Styles */
