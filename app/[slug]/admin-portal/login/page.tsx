@@ -15,6 +15,7 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
+  // Fetch logo only for display, not for styling
   useEffect(() => {
     const fetchRestaurantLogo = async () => {
       try {
@@ -68,35 +69,24 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--app-bg, #400810)' }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#F7F9F8' }}>
       <div 
-        className="backdrop-blur-xl rounded-3xl border p-8 w-full max-w-md"
+        className="admin-card w-full max-w-md"
         style={{
-          backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-          borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-          boxShadow: `0 20px 50px -12px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 8px 16px -4px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+          backgroundColor: '#FFFFFF',
+          border: '1px solid #D1D5DB',
+          borderRadius: '1rem',
+          padding: '2rem',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         }}
       >
         <div className="text-center mb-8">
           {logoUrl ? (
-            <div className="flex items-center justify-center mb-4">
+            <div className="flex items-center justify-center mb-6">
               <div
                 className="rounded-full p-4 flex items-center justify-center"
                 style={{
-                  backgroundColor: 'var(--app-bg, #400810)',
-                  boxShadow: `
-                    0 0 4px var(--auto-primary-glow-strong, rgba(64, 8, 16, 1)),
-                    0 0 8px var(--auto-primary-glow-strong, rgba(64, 8, 16, 0.9)),
-                    0 0 12px var(--auto-primary-glow, rgba(64, 8, 16, 0.8)),
-                    0 0 16px var(--auto-primary-glow, rgba(64, 8, 16, 0.7)),
-                    0 0 20px var(--auto-primary-glow, rgba(64, 8, 16, 0.6)),
-                    0 0 24px var(--auto-primary-glow-subtle, rgba(64, 8, 16, 0.6)),
-                    0 0 32px var(--auto-primary-glow-subtle, rgba(64, 8, 16, 0.5)),
-                    0 0 40px var(--auto-edge-accent, rgba(64, 8, 16, 0.5)),
-                    0 0 50px var(--auto-edge-accent, rgba(64, 8, 16, 0.4)),
-                    0 0 60px var(--auto-edge-accent, rgba(64, 8, 16, 0.3)),
-                    0 2px 4px var(--auto-shadow-color, rgba(0, 0, 0, 0.5))
-                  `,
+                  backgroundColor: '#E6F7F2',
                   width: '100px',
                   height: '100px',
                   minWidth: '100px',
@@ -110,7 +100,7 @@ export default function AdminLoginPage() {
                   height={24}
                   className="object-contain"
                   style={{ 
-                    height: 'var(--header-logo-size, 24px)',
+                    height: 'auto',
                     width: 'auto',
                     maxWidth: '70px',
                     maxHeight: '70px',
@@ -124,29 +114,16 @@ export default function AdminLoginPage() {
             </div>
           ) : (
             <div 
-              className="inline-flex items-center justify-center w-[100px] h-[100px] rounded-full mb-4"
+              className="inline-flex items-center justify-center w-[100px] h-[100px] rounded-full mb-6"
               style={{
-                backgroundColor: 'var(--app-bg, #400810)',
-                boxShadow: `
-                  0 0 4px var(--auto-primary-glow-strong, rgba(64, 8, 16, 1)),
-                  0 0 8px var(--auto-primary-glow-strong, rgba(64, 8, 16, 0.9)),
-                  0 0 12px var(--auto-primary-glow, rgba(64, 8, 16, 0.8)),
-                  0 0 16px var(--auto-primary-glow, rgba(64, 8, 16, 0.7)),
-                  0 0 20px var(--auto-primary-glow, rgba(64, 8, 16, 0.6)),
-                  0 0 24px var(--auto-primary-glow-subtle, rgba(64, 8, 16, 0.6)),
-                  0 0 32px var(--auto-primary-glow-subtle, rgba(64, 8, 16, 0.5)),
-                  0 0 40px var(--auto-edge-accent, rgba(64, 8, 16, 0.5)),
-                  0 0 50px var(--auto-edge-accent, rgba(64, 8, 16, 0.4)),
-                  0 0 60px var(--auto-edge-accent, rgba(64, 8, 16, 0.3)),
-                  0 2px 4px var(--auto-shadow-color, rgba(0, 0, 0, 0.5))
-                `,
+                backgroundColor: '#E6F7F2',
               }}
             />
           )}
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-2xl font-bold mb-2" style={{ color: '#0F172A' }}>
             Admin Login
           </h1>
-          <p className="text-white/70">Enter your 4-digit PIN</p>
+          <p style={{ color: '#475569' }}>Enter your 4-digit PIN</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -163,19 +140,41 @@ export default function AdminLoginPage() {
             }}
             placeholder="0000"
             className="text-center text-2xl tracking-widest"
+            style={{
+              border: '1px solid #E5E7EB',
+              borderRadius: '0.5rem',
+              padding: '0.75rem',
+              backgroundColor: '#FFFFFF',
+              color: '#0F172A',
+            }}
             autoFocus
             required
           />
 
           <Button
             type="submit"
-            variant="ghost"
             disabled={isLoading || pin.length !== 4}
             className="w-full"
             size="lg"
             style={{
-              backgroundColor: 'var(--app-bg, #400810)',
-              color: 'var(--auto-text-primary, #FFFFFF)',
+              backgroundColor: isLoading || pin.length !== 4 ? '#94A3B8' : '#27C499',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.75rem',
+              fontWeight: '500',
+              cursor: isLoading || pin.length !== 4 ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading && pin.length === 4) {
+                e.currentTarget.style.backgroundColor = '#20B08A'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading && pin.length === 4) {
+                e.currentTarget.style.backgroundColor = '#27C499'
+              }
             }}
           >
             {isLoading ? 'Logging in...' : 'Login'}
@@ -185,7 +184,15 @@ export default function AdminLoginPage() {
         <div className="mt-6 text-center">
           <button
             onClick={() => router.push(`/${slug}/menu`)}
-            className="text-white/70 hover:text-white transition-colors text-sm"
+            style={{ 
+              color: '#475569',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#0F172A'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#475569'}
           >
             ← Back to Menu
           </button>

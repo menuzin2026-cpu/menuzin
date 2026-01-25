@@ -1,32 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { Menu, MessageSquare, Settings, LogOut, Type, Palette } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import toast from 'react-hot-toast'
-import { isLightColor, normalizeToHex } from '@/lib/color-utils'
 
 export default function AdminDashboard() {
   const router = useRouter()
   const params = useParams()
   const slug = params.slug as string
-  const [isLightBg, setIsLightBg] = useState(false)
-
-  // Check if background is light to adjust card colors
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const checkBackground = () => {
-        const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--app-bg').trim() || '#400810'
-        const normalizedColor = normalizeToHex(bgColor)
-        setIsLightBg(isLightColor(normalizedColor))
-      }
-      checkBackground()
-      // Listen for theme changes
-      window.addEventListener('theme-updated', checkBackground)
-      return () => window.removeEventListener('theme-updated', checkBackground)
-    }
-  }, [])
 
   const handleLogout = async () => {
     try {
@@ -40,23 +22,38 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen p-4" style={{ backgroundColor: 'var(--app-bg, #400810)' }}>
+    <div className="min-h-screen p-4" style={{ backgroundColor: '#F7F9F8' }}>
       <div className="max-w-4xl mx-auto">
         <div 
-          className="flex items-center justify-between mb-8 backdrop-blur-xl rounded-2xl p-4 border"
+          className="admin-card flex items-center justify-between mb-8"
           style={{
-            backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-            boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #D1D5DB',
+            borderRadius: '0.75rem',
+            padding: '1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
           }}
         >
-          <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold" style={{ color: '#0F172A' }}>Admin Dashboard</h1>
           <Button 
             onClick={handleLogout} 
-            className="bg-white/10 hover:bg-white/15 border border-white/20 text-white shadow-lg"
+            style={{
+              backgroundColor: '#27C499',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#20B08A'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27C499'}
             size="sm"
           >
-            <LogOut className="w-4 h-4 mr-2" />
+            <LogOut className="w-4 h-4" />
             Logout
           </Button>
         </div>
@@ -64,80 +61,145 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button
             onClick={() => router.push(`/${slug}/admin-portal/menu-builder`)}
-            className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
+            className="admin-card text-left group transition-all hover:scale-[1.02]"
             style={{
-              boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.borderColor = '#27C499'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.borderColor = '#D1D5DB'
             }}
           >
-            <Menu className="w-8 h-8 text-[#FBBF24] mb-4 group-hover:scale-110 transition-transform" />
-            <h2 className={`text-xl font-bold mb-2 ${isLightBg ? 'text-white' : 'text-white'}`}>
+            <Menu className="w-8 h-8 mb-4 group-hover:scale-110 transition-transform" style={{ color: '#27C499' }} />
+            <h2 className="text-xl font-bold mb-2" style={{ color: '#0F172A' }}>
               Menu Builder
             </h2>
-            <p className={isLightBg ? 'text-white/90' : 'text-white/90'}>
+            <p style={{ color: '#475569' }}>
               Manage sections, categories, and items
             </p>
           </button>
 
           <button
             onClick={() => router.push(`/${slug}/admin-portal/feedback`)}
-            className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
+            className="admin-card text-left group transition-all hover:scale-[1.02]"
             style={{
-              boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.borderColor = '#27C499'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.borderColor = '#D1D5DB'
             }}
           >
-            <MessageSquare className="w-8 h-8 text-[#FBBF24] mb-4 group-hover:scale-110 transition-transform" />
-            <h2 className={`text-xl font-bold mb-2 ${isLightBg ? 'text-white' : 'text-white'}`}>
+            <MessageSquare className="w-8 h-8 mb-4 group-hover:scale-110 transition-transform" style={{ color: '#27C499' }} />
+            <h2 className="text-xl font-bold mb-2" style={{ color: '#0F172A' }}>
               Feedback
             </h2>
-            <p className={isLightBg ? 'text-white/90' : 'text-white/90'}>
+            <p style={{ color: '#475569' }}>
               View customer feedback
             </p>
           </button>
 
           <button
             onClick={() => router.push(`/${slug}/admin-portal/settings`)}
-            className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
+            className="admin-card text-left group transition-all hover:scale-[1.02]"
             style={{
-              boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.borderColor = '#27C499'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.borderColor = '#D1D5DB'
             }}
           >
-            <Settings className="w-8 h-8 text-[#FBBF24] mb-4 group-hover:scale-110 transition-transform" />
-            <h2 className={`text-xl font-bold mb-2 ${isLightBg ? 'text-white' : 'text-white'}`}>
+            <Settings className="w-8 h-8 mb-4 group-hover:scale-110 transition-transform" style={{ color: '#27C499' }} />
+            <h2 className="text-xl font-bold mb-2" style={{ color: '#0F172A' }}>
               Settings
             </h2>
-            <p className={isLightBg ? 'text-white/90' : 'text-white/90'}>
+            <p style={{ color: '#475569' }}>
               Restaurant settings and preferences
             </p>
           </button>
 
           <button
             onClick={() => router.push(`/${slug}/admin-portal/typography`)}
-            className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
+            className="admin-card text-left group transition-all hover:scale-[1.02]"
             style={{
-              boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.borderColor = '#27C499'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.borderColor = '#D1D5DB'
             }}
           >
-            <Type className="w-8 h-8 text-[#FBBF24] mb-4 group-hover:scale-110 transition-transform" />
-            <h2 className={`text-xl font-bold mb-2 ${isLightBg ? 'text-white' : 'text-white'}`}>
+            <Type className="w-8 h-8 mb-4 group-hover:scale-110 transition-transform" style={{ color: '#27C499' }} />
+            <h2 className="text-xl font-bold mb-2" style={{ color: '#0F172A' }}>
               Typography
             </h2>
-            <p className={isLightBg ? 'text-white/90' : 'text-white/90'}>
+            <p style={{ color: '#475569' }}>
               Customize font sizes and UI appearance
             </p>
           </button>
 
           <button
             onClick={() => router.push(`/${slug}/admin-portal/theme`)}
-            className={`${isLightBg ? 'bg-gray-800/90' : 'bg-white/[0.08]'} backdrop-blur-xl rounded-2xl p-6 shadow-lg border ${isLightBg ? 'border-gray-700/50' : 'border-white/30'} hover:shadow-xl hover:scale-[1.02] ${isLightBg ? 'hover:bg-gray-800' : 'hover:bg-white/[0.12]'} transition-all text-left group`}
+            className="admin-card text-left group transition-all hover:scale-[1.02]"
             style={{
-              boxShadow: isLightBg ? '0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' : '0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #D1D5DB',
+              borderRadius: '0.75rem',
+              padding: '1.5rem',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.borderColor = '#27C499'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+              e.currentTarget.style.borderColor = '#D1D5DB'
             }}
           >
-            <Palette className="w-8 h-8 text-[#FBBF24] mb-4 group-hover:scale-110 transition-transform" />
-            <h2 className={`text-xl font-bold mb-2 ${isLightBg ? 'text-white' : 'text-white'}`}>
+            <Palette className="w-8 h-8 mb-4 group-hover:scale-110 transition-transform" style={{ color: '#27C499' }} />
+            <h2 className="text-xl font-bold mb-2" style={{ color: '#0F172A' }}>
               Theme & Colors
             </h2>
-            <p className={isLightBg ? 'text-white/90' : 'text-white/90'}>
+            <p style={{ color: '#475569' }}>
               Customize colors for the entire site
             </p>
           </button>

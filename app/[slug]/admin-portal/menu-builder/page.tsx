@@ -1595,25 +1595,40 @@ export default function MenuBuilderPage() {
   }
 
   return (
-    <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: 'var(--app-bg, #400810)' }}>
+    <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: '#F7F9F8' }}>
       <div className="max-w-6xl mx-auto">
         <div 
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 backdrop-blur-xl rounded-2xl p-3 sm:p-4 border"
+          className="admin-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6"
           style={{
-            backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-            boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #D1D5DB',
+            borderRadius: '0.75rem',
+            padding: '1rem 1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
           }}
         >
           <h1 
             className="text-xl sm:text-2xl md:text-3xl font-bold"
-            style={{ color: 'var(--auto-text-primary, #FFFFFF)' }}
+            style={{ color: '#0F172A' }}
           >
             Menu Builder
           </h1>
           <Button 
             onClick={() => router.push(`/${slug}/admin-portal`)} 
-            className="bg-white/10 hover:bg-white/15 border border-white/20 text-white shadow-lg text-sm sm:text-base w-full sm:w-auto"
+            style={{
+              backgroundColor: '#27C499',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              width: '100%',
+            }}
+            className="sm:w-auto"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#20B08A'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27C499'}
           >
             Back
           </Button>

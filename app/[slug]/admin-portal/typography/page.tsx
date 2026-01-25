@@ -152,39 +152,56 @@ export default function TypographyPage() {
   }
 
   return (
-    <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: 'var(--app-bg, #400810)' }}>
+    <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: '#F7F9F8' }}>
       <div className="max-w-6xl mx-auto">
         <div 
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 backdrop-blur-xl rounded-2xl p-3 sm:p-4 border"
+          className="admin-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6"
           style={{
-            backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-            boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #D1D5DB',
+            borderRadius: '0.75rem',
+            padding: '1rem 1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
           }}
         >
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">Typography Settings</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold" style={{ color: '#0F172A' }}>Typography Settings</h1>
           <Button 
             onClick={() => router.push(`/${slug}/admin-portal`)} 
-            className="bg-white/10 hover:bg-white/15 border border-white/20 text-white shadow-lg text-sm sm:text-base w-full sm:w-auto"
+            style={{
+              backgroundColor: '#27C499',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              width: '100%',
+            }}
+            className="sm:w-auto"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#20B08A'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27C499'}
           >
             Back
           </Button>
         </div>
 
         <div 
-          className="backdrop-blur-xl rounded-2xl border p-4 sm:p-6 space-y-6"
+          className="admin-card space-y-6"
           style={{
-            backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-            boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #D1D5DB',
+            borderRadius: '0.75rem',
+            padding: '1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
           }}
         >
           {/* Font Size Controls */}
           <div>
-            <h2 className="text-xl font-semibold text-white mb-4">Font Sizes (px)</h2>
+            <h2 className="text-xl font-semibold mb-4" style={{ color: '#0F172A' }}>Font Sizes (px)</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Section Title Size (px)
                 </label>
                 <Input
@@ -199,7 +216,7 @@ export default function TypographyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Category Title Size (px)
                 </label>
                 <Input
@@ -214,7 +231,7 @@ export default function TypographyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Item Name Size (px)
                 </label>
                 <Input
@@ -229,7 +246,7 @@ export default function TypographyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Item Description Size (px)
                 </label>
                 <Input
@@ -244,7 +261,7 @@ export default function TypographyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Item Price Size (px)
                 </label>
                 <Input
@@ -259,7 +276,7 @@ export default function TypographyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Header Logo Size (px)
                 </label>
                 <Input
@@ -274,7 +291,7 @@ export default function TypographyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Bottom Navigation Section Size (px)
                 </label>
                 <Input
@@ -289,7 +306,7 @@ export default function TypographyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Bottom Navigation Category Size (px)
                 </label>
                 <Input
@@ -307,7 +324,7 @@ export default function TypographyPage() {
 
           {/* Preview */}
           <div>
-            <h2 className="text-xl font-semibold text-white mb-4">Preview</h2>
+            <h2 className="text-xl font-semibold mb-4" style={{ color: '#0F172A' }}>Preview</h2>
             <div 
               className="backdrop-blur-xl bg-white/10 rounded-2xl p-6 border border-white/20 space-y-4"
               style={{
@@ -324,10 +341,11 @@ export default function TypographyPage() {
               {/* Section Preview */}
               <div>
                 <div 
-                  className="px-3 py-1.5 rounded-lg text-white font-medium mb-3 inline-block"
+                  className="px-3 py-1.5 rounded-lg font-medium mb-3 inline-block"
                   style={{ 
                     fontSize: 'var(--menu-section-size)',
-                    backgroundColor: 'var(--app-bg, #400810)',
+                    backgroundColor: '#27C499',
+                    color: '#FFFFFF',
                   }}
                 >
                   Sample Section
@@ -337,14 +355,15 @@ export default function TypographyPage() {
               {/* Category Preview */}
               <div>
                 <div 
-                  className="relative inline-block px-6 py-3 backdrop-blur-sm rounded-xl border border-white/20 mb-4"
+                  className="relative inline-block px-6 py-3 rounded-xl border mb-4"
                   style={{
-                    backgroundColor: 'var(--app-bg, #400810)',
+                    backgroundColor: '#E6F7F2',
+                    borderColor: '#D1D5DB',
                   }}
                 >
                   <h2 
-                    className="font-bold text-white"
-                    style={{ fontSize: 'var(--menu-category-size)' }}
+                    className="font-bold"
+                    style={{ fontSize: 'var(--menu-category-size)', color: '#0F172A' }}
                   >
                     Sample Category
                   </h2>
@@ -354,7 +373,7 @@ export default function TypographyPage() {
               {/* Item Card Preview */}
               <div className="rounded-2xl overflow-hidden shadow-xl border border-white/30 bg-white/10 backdrop-blur-xl p-4">
                 <div 
-                  className="aspect-square w-full rounded-xl mb-3 flex items-center justify-center text-white/60"
+                  className="aspect-square w-full rounded-xl mb-3 flex items-center justify-center admin-heading/60"
                   style={{
                     backgroundColor: 'var(--app-bg, #400810)',
                   }}
@@ -363,13 +382,13 @@ export default function TypographyPage() {
                 </div>
                 <div className="space-y-2">
                   <h3 
-                    className="font-semibold text-white"
+                    className="font-semibold admin-heading"
                     style={{ fontSize: 'var(--menu-item-name-size)' }}
                   >
                     Sample Item Name
                   </h3>
                   <p 
-                    className="text-white/80"
+                    className="admin-heading/80"
                     style={{ fontSize: 'var(--menu-item-desc-size)' }}
                   >
                     Sample item description text
@@ -387,15 +406,16 @@ export default function TypographyPage() {
 
               {/* Header Logo Preview */}
               <div>
-                <h3 className="text-sm font-medium text-white/80 mb-2">Header Logo Preview</h3>
-                <div className="backdrop-blur-xl bg-white/10 rounded-xl p-4 border border-white/20">
+                <h3 className="text-sm font-medium mb-2" style={{ color: '#475569' }}>Header Logo Preview</h3>
+                <div className="bg-white rounded-xl p-4 border" style={{ borderColor: '#D1D5DB' }}>
                   <div className="flex items-center justify-center">
                     <div 
-                      className="bg-white/20 rounded-lg backdrop-blur-sm flex items-center justify-center text-white/60"
+                      className="bg-gray-100 rounded-lg flex items-center justify-center"
                       style={{ 
                         height: `${settings.headerLogoSize}px`,
                         width: `${settings.headerLogoSize * 2.5}px`,
-                        fontSize: `${settings.headerLogoSize * 0.4}px`
+                        fontSize: `${settings.headerLogoSize * 0.4}px`,
+                        color: '#94A3B8',
                       }}
                     >
                       Logo
@@ -406,20 +426,22 @@ export default function TypographyPage() {
 
               {/* Bottom Navigation Preview */}
               <div>
-                <h3 className="text-sm font-medium text-white/80 mb-2">Bottom Navigation Preview</h3>
+                <h3 className="text-sm font-medium admin-heading/80 mb-2">Bottom Navigation Preview</h3>
                 <div 
-                  className="backdrop-blur-xl rounded-xl p-4 border border-white/20"
+                  className="rounded-xl p-4 border"
                   style={{
-                    backgroundColor: 'var(--app-bg, #400810)',
+                    backgroundColor: '#F7F9F8',
+                    borderColor: '#D1D5DB',
                   }}
                 >
                   <div className="space-y-3">
                     <div className="flex gap-2 items-center justify-center">
                       <div 
-                        className="px-3 py-1.5 rounded-lg text-white font-medium"
+                        className="px-3 py-1.5 rounded-lg font-medium"
                         style={{ 
                           fontSize: 'var(--bottom-nav-section-size)',
-                          backgroundColor: 'var(--app-bg, #400810)',
+                          backgroundColor: '#27C499',
+                          color: '#FFFFFF',
                         }}
                       >
                         Section
@@ -427,10 +449,11 @@ export default function TypographyPage() {
                     </div>
                     <div className="flex gap-2 items-center justify-center">
                       <div 
-                        className="px-3 py-1.5 rounded-lg text-white font-semibold"
+                        className="px-3 py-1.5 rounded-lg font-semibold"
                         style={{ 
                           fontSize: 'var(--bottom-nav-category-size)',
-                          backgroundColor: 'var(--app-bg, #400810)',
+                          backgroundColor: '#27C499',
+                          color: '#FFFFFF',
                         }}
                       >
                         Category
@@ -448,8 +471,19 @@ export default function TypographyPage() {
             className="w-full" 
             size="lg"
             style={{
-              backgroundColor: 'var(--app-bg, #400810)',
+              backgroundColor: isLoading ? '#94A3B8' : '#27C499',
               color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.75rem',
+              fontWeight: '500',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading) e.currentTarget.style.backgroundColor = '#20B08A'
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading) e.currentTarget.style.backgroundColor = '#27C499'
             }}
           >
             {isLoading ? 'Saving...' : 'Save Typography Settings'}

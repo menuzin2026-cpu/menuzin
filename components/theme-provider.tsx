@@ -15,8 +15,8 @@ export function ThemeProvider() {
         const pathParts = (pathname || window.location.pathname).split('/').filter(Boolean)
         const slug = pathParts.length > 0 && pathParts[0] !== 'super-admin' && pathParts[0] !== 'admin' ? pathParts[0] : 'legends-restaurant'
         
-        // Skip theme loading for super-admin (it uses hardcoded black theme)
-        if (pathParts[0] === 'super-admin' || pathname?.startsWith('/super-admin')) {
+        // Skip theme loading for super-admin and admin-portal (admin uses hardcoded theme)
+        if (pathParts[0] === 'super-admin' || pathname?.startsWith('/super-admin') || pathname?.includes('/admin-portal')) {
           return
         }
         

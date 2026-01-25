@@ -1,0 +1,104 @@
+/* Admin-only theme - hard-coded colors, never affected by restaurant theme */
+
+.admin-root {
+  /* Backgrounds */
+  --admin-bg: #F7F9F8;
+  --admin-card-bg: #FFFFFF;
+  
+  /* Primary Green */
+  --admin-primary: #27C499;
+  --admin-primary-hover: #20B08A;
+  --admin-primary-soft: #E6F7F2;
+  
+  /* Text */
+  --admin-heading: #0F172A;
+  --admin-body: #475569;
+  --admin-muted: #94A3B8;
+  
+  /* Borders */
+  --admin-border: #E5E7EB;
+  --admin-border-strong: #D1D5DB;
+  
+  /* Shadows */
+  --admin-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --admin-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  
+  /* Override any theme variables that might leak */
+  --app-bg: var(--admin-bg) !important;
+  --auto-surface-bg: var(--admin-card-bg) !important;
+  --auto-border: var(--admin-border) !important;
+  --auto-text-primary: var(--admin-heading) !important;
+  --auto-text-secondary: var(--admin-body) !important;
+}
+
+.admin-root {
+  background-color: var(--admin-bg);
+  color: var(--admin-heading);
+  min-height: 100vh;
+}
+
+.admin-root * {
+  box-sizing: border-box;
+}
+
+/* Admin Button Styles */
+.admin-root .admin-btn-primary {
+  background-color: var(--admin-primary);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.admin-root .admin-btn-primary:hover:not(:disabled) {
+  background-color: var(--admin-primary-hover);
+}
+
+.admin-root .admin-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Admin Card Styles */
+.admin-root .admin-card {
+  background-color: var(--admin-card-bg);
+  border: 1px solid var(--admin-border-strong);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: var(--admin-shadow);
+}
+
+/* Admin Input Styles */
+.admin-root .admin-input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 0.5rem;
+  background-color: var(--admin-card-bg);
+  color: var(--admin-heading);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.admin-root .admin-input:focus {
+  outline: none;
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px var(--admin-primary-soft);
+}
+
+/* Admin Text Styles */
+.admin-root .admin-heading {
+  color: var(--admin-heading);
+  font-weight: 600;
+}
+
+.admin-root .admin-body {
+  color: var(--admin-body);
+}
+
+.admin-root .admin-muted {
+  color: var(--admin-muted);
+}

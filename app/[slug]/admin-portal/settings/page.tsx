@@ -66,8 +66,6 @@ export default function SettingsPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingFooterLogo, setUploadingFooterLogo] = useState(false)
   const [uploadingBackground, setUploadingBackground] = useState(false)
-  const [appBgColor, setAppBgColor] = useState<string>('#400810')
-
   // Helper function to handle restaurant mismatch error
   const handleMismatchError = async (response: Response, errorData: any): Promise<boolean> => {
     if (response.status === 401 || response.status === 403) {
@@ -90,33 +88,8 @@ export default function SettingsPage() {
   }
 
   useEffect(() => {
-    // Parallelize fetches for better performance
-    Promise.all([fetchSettings(), fetchTheme()])
+    fetchSettings()
   }, [])
-
-  const fetchTheme = async (retryCount = 0) => {
-    const startTime = performance.now()
-    try {
-      const response = await fetch('/api/admin/theme', {
-        credentials: 'include',
-      })
-      if (response.ok) {
-        const data = await response.json()
-        if (data.theme?.appBg) {
-          setAppBgColor(data.theme.appBg)
-        }
-        const fetchTime = performance.now() - startTime
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[PERF] Theme fetch (client): ${fetchTime.toFixed(2)}ms`)
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching theme:', error)
-      if (retryCount < 1) {
-        setTimeout(() => fetchTheme(retryCount + 1), 500)
-      }
-    }
-  }
 
   const fetchSettings = async () => {
     const startTime = performance.now()
@@ -510,40 +483,57 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: 'var(--app-bg, #400810)' }}>
+    <div className="min-h-screen p-2 sm:p-4" style={{ backgroundColor: '#F7F9F8' }}>
       <div className="max-w-6xl mx-auto">
         <div 
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6 backdrop-blur-xl rounded-2xl p-3 sm:p-4 border"
+          className="admin-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6"
           style={{
-            backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-            boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #D1D5DB',
+            borderRadius: '0.75rem',
+            padding: '1rem 1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
           }}
         >
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">Settings</h1>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold" style={{ color: '#0F172A' }}>Settings</h1>
           <Button 
             onClick={() => router.push(`/${slug}/admin-portal`)} 
-            className="bg-white/10 hover:bg-white/15 border border-white/20 text-white shadow-lg text-sm sm:text-base w-full sm:w-auto"
+            style={{
+              backgroundColor: '#27C499',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 1rem',
+              fontWeight: '500',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              width: '100%',
+            }}
+            className="sm:w-auto"
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#20B08A'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#27C499'}
           >
             Back
           </Button>
         </div>
 
         <div 
-          className="backdrop-blur-xl rounded-2xl border p-6 space-y-6"
+          className="admin-card space-y-6"
           style={{
-            backgroundColor: 'var(--auto-surface-bg, rgba(255, 255, 255, 0.1))',
-            borderColor: 'var(--auto-border, rgba(255, 255, 255, 0.2))',
-            boxShadow: `0 10px 25px -5px var(--auto-shadow-color, rgba(0, 0, 0, 0.3)), 0 4px 6px -2px var(--auto-shadow-color-light, rgba(0, 0, 0, 0.1))`,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #D1D5DB',
+            borderRadius: '0.75rem',
+            padding: '1.5rem',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
           }}
         >
           <div>
-            <h2 className="text-xl font-semibold text-white mb-4">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: '#0F172A' }}>
               Restaurant Information
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Restaurant Logo
                 </label>
                 <div className="space-y-2">
@@ -552,7 +542,7 @@ export default function SettingsPage() {
                       <img
                         src={logoPreview}
                         alt="Restaurant Logo"
-                        className="h-24 w-auto object-contain rounded-lg border-2 border-white/20"
+                        className="h-24 w-auto object-contain rounded-lg border-2 border-gray-300"
                       />
                       <button
                         type="button"
@@ -565,18 +555,18 @@ export default function SettingsPage() {
                             logoR2Url: null
                           })
                         }}
-                        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full admin-heading hover:bg-red-600"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   )}
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:bg-white/5 transition-colors">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     {!logoPreview && (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 mb-2 text-white/70" />
-                        <p className="text-sm text-white/70">Click to upload logo</p>
-                        <p className="text-xs text-white/50 mt-1">PNG, JPG, WEBP (max 5MB)</p>
+                        <Upload className="w-8 h-8 mb-2" style={{ color: '#475569' }} />
+                        <p className="text-sm" style={{ color: '#475569' }}>Click to upload logo</p>
+                        <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>PNG, JPG, WEBP (max 5MB)</p>
                       </div>
                     )}
                     <input
@@ -588,7 +578,7 @@ export default function SettingsPage() {
                     />
                   </label>
                   {uploadingLogo && (
-                    <p className="text-sm text-white/70">Uploading logo...</p>
+                    <p className="text-sm" style={{ color: '#475569' }}>Uploading logo...</p>
                   )}
                 </div>
               </div>
@@ -596,12 +586,12 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold text-white mb-4">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: '#0F172A' }}>
               Contact Information
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Google Maps URL
                 </label>
                 <Input
@@ -612,7 +602,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Phone Number
                 </label>
                 <Input
@@ -624,11 +614,11 @@ export default function SettingsPage() {
               </div>
               
               {/* Social Media Links */}
-              <div className="pt-4 border-t border-white/10">
-                <h3 className="text-lg font-semibold text-white mb-4">Social Media</h3>
+              <div className="pt-4 border-t border-gray-200">
+                <h3 className="text-lg font-semibold mb-4" style={{ color: '#0F172A' }}>Social Media</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-white mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                       Instagram URL
                     </label>
                     <Input
@@ -637,12 +627,12 @@ export default function SettingsPage() {
                       onChange={(e) => setSettings({ ...settings, instagramUrl: e.target.value || null })}
                       placeholder="https://instagram.com/yourpage"
                     />
-                    <p className="text-xs text-white/50 mt-1">
+                    <p className="text-xs mt-1" style={{ color: '#94A3B8' }}>
                       Leave empty to hide Instagram icon
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                       Snapchat URL
                     </label>
                     <Input
@@ -651,12 +641,12 @@ export default function SettingsPage() {
                       onChange={(e) => setSettings({ ...settings, snapchatUrl: e.target.value || null })}
                       placeholder="https://snapchat.com/add/yourusername"
                     />
-                    <p className="text-xs text-white/50 mt-1">
+                    <p className="text-xs admin-heading/50 mt-1">
                       Leave empty to hide Snapchat icon
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white mb-2">
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                       TikTok URL
                     </label>
                     <Input
@@ -665,7 +655,7 @@ export default function SettingsPage() {
                       onChange={(e) => setSettings({ ...settings, tiktokUrl: e.target.value || null })}
                       placeholder="https://tiktok.com/@yourusername"
                     />
-                    <p className="text-xs text-white/50 mt-1">
+                    <p className="text-xs admin-heading/50 mt-1">
                       Leave empty to hide TikTok icon
                     </p>
                   </div>
@@ -673,9 +663,9 @@ export default function SettingsPage() {
               </div>
               
               {/* Service Charge */}
-              <div className="pt-4 border-t border-white/10">
+              <div className="pt-4 border-t" style={{ borderColor: '#E5E7EB' }}>
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                     Service Charge (%)
                   </label>
                   <Input
@@ -722,7 +712,7 @@ export default function SettingsPage() {
                     }}
                     placeholder="0"
                   />
-                  <p className="text-xs text-white/50 mt-1">
+                  <p className="text-xs admin-heading/50 mt-1">
                     Percentage added to basket subtotal (0-100, decimals allowed, e.g., 10 or 2.5)
                   </p>
                 </div>
@@ -730,7 +720,7 @@ export default function SettingsPage() {
               
               {settings.slug && (
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium admin-heading mb-2">
                     QR Code URL
                   </label>
                   <div className="flex items-center gap-2">
@@ -738,7 +728,7 @@ export default function SettingsPage() {
                       type="text"
                       value={`https://menuzin.com/${settings.slug}`}
                       readOnly
-                      className="bg-white/5 text-white/70 cursor-not-allowed"
+                      className="bg-gray-50 admin-heading/70 cursor-not-allowed"
                     />
                     <Button
                       type="button"
@@ -752,7 +742,7 @@ export default function SettingsPage() {
                       Copy
                     </Button>
                   </div>
-                  <p className="text-xs text-white/50 mt-1">
+                  <p className="text-xs admin-heading/50 mt-1">
                     Use this URL for your QR code
                   </p>
                 </div>
@@ -761,24 +751,24 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold text-white mb-4">
+            <h2 className="text-xl font-semibold mb-4" style={{ color: '#0F172A' }}>
               Welcome Page Settings
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium admin-heading mb-2">
                   Welcome Text
                 </label>
                 <textarea
                   value={settings.welcomeTextEn}
                   onChange={(e) => setSettings({ ...settings, welcomeTextEn: e.target.value })}
-                  className="w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/70 focus-visible:outline-none focus-visible:ring-2"
+                  className="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm admin-heading placeholder:admin-heading/70 focus-visible:outline-none focus-visible:ring-2"
                   rows={3}
                   placeholder="Enter welcome message..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Welcome Background (Photo/Video)
                 </label>
                 <div className="space-y-2">
@@ -787,7 +777,7 @@ export default function SettingsPage() {
                       {backgroundPreview.startsWith('data:video/') || settings.welcomeBackgroundMediaId ? (
                         <video
                           src={backgroundPreview.startsWith('data:') ? backgroundPreview : backgroundPreview}
-                          className="w-full h-48 object-cover rounded-lg border-2 border-white/20"
+                          className="w-full h-48 object-cover rounded-lg border-2 border-gray-300"
                           controls={false}
                           muted
                           loop
@@ -797,7 +787,7 @@ export default function SettingsPage() {
                         <img
                           src={backgroundPreview}
                           alt="Welcome Background"
-                          className="w-full h-48 object-cover rounded-lg border-2 border-white/20"
+                          className="w-full h-48 object-cover rounded-lg border-2 border-gray-300"
                         />
                       )}
                       <button
@@ -812,18 +802,18 @@ export default function SettingsPage() {
                             welcomeBgMimeType: null
                           })
                         }}
-                        className="absolute top-2 right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                        className="absolute top-2 right-2 p-1 bg-red-500 rounded-full admin-heading hover:bg-red-600"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   )}
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:bg-white/5 transition-colors">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                     {!backgroundPreview && (
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 mb-2 text-white/70" />
-                        <p className="text-sm text-white/70">Click to upload background</p>
-                        <p className="text-xs text-white/50 mt-1">PNG, JPG, WEBP, MP4 (max 4MB)</p>
+                        <Upload className="w-8 h-8 mb-2 admin-heading/70" />
+                        <p className="text-sm admin-heading/70">Click to upload background</p>
+                        <p className="text-xs admin-heading/50 mt-1">PNG, JPG, WEBP, MP4 (max 4MB)</p>
                       </div>
                     )}
                     <input
@@ -835,12 +825,12 @@ export default function SettingsPage() {
                     />
                   </label>
                   {uploadingBackground && (
-                    <p className="text-sm text-white/70">Uploading background...</p>
+                    <p className="text-sm admin-heading/70">Uploading background...</p>
                   )}
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Overlay Color
                 </label>
                 <div className="flex items-center gap-2">
@@ -859,7 +849,7 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: '#0F172A' }}>
                   Overlay Opacity ({settings.welcomeOverlayOpacity})
                 </label>
                 <Input
@@ -879,7 +869,21 @@ export default function SettingsPage() {
             disabled={isLoading} 
             className="w-full" 
             size="lg"
-            style={{ backgroundColor: appBgColor }}
+            style={{ 
+              backgroundColor: isLoading ? '#94A3B8' : '#27C499',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.75rem',
+              fontWeight: '500',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading) e.currentTarget.style.backgroundColor = '#20B08A'
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading) e.currentTarget.style.backgroundColor = '#27C499'
+            }}
           >
             {isLoading ? 'Saving...' : 'Save Settings'}
           </Button>
