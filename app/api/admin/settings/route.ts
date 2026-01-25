@@ -4,13 +4,11 @@ import { requireAdminSession, SessionExpiredError, deleteAdminSession } from '@/
 import { ensureRestaurantWelcomeBgMimeTypeColumn, ensureRestaurantSocialMediaColumns } from '@/lib/ensure-columns'
 import { unstable_cache } from 'next/cache'
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
   try {
-    // Ensure DB columns exist in production before querying
-    await ensureRestaurantWelcomeBgMimeTypeColumn(prisma)
-    await ensureRestaurantSocialMediaColumns(prisma)
-
     let session
     try {
       session = await requireAdminSession()
@@ -27,16 +25,36 @@ export async function GET(request: NextRequest) {
     const slugParam = searchParams.get('slug')
     
     // Get restaurant by session restaurantId (CRITICAL: Always use session restaurantId for data isolation)
-    // Cache for 30 seconds (settings don't change frequently)
-    const restaurant = await unstable_cache(
-      async () => {
-        return await prisma.restaurant.findUnique({
-          where: { id: session.restaurantId },
-        })
+    // Select only needed fields for better performance
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: session.restaurantId },
+      select: {
+        id: true,
+        nameKu: true,
+        nameEn: true,
+        nameAr: true,
+        slug: true,
+        googleMapsUrl: true,
+        phoneNumber: true,
+        instagramUrl: true,
+        snapchatUrl: true,
+        tiktokUrl: true,
+        serviceChargePercent: true,
+        welcomeOverlayColor: true,
+        welcomeOverlayOpacity: true,
+        welcomeTextEn: true,
+        logoMediaId: true,
+        footerLogoMediaId: true,
+        welcomeBackgroundMediaId: true,
+        logoR2Key: true,
+        logoR2Url: true,
+        footerLogoR2Key: true,
+        footerLogoR2Url: true,
+        welcomeBgR2Key: true,
+        welcomeBgR2Url: true,
+        welcomeBgMimeType: true,
       },
-      [`admin-settings-${session.restaurantId}`],
-      { revalidate: 30 } // 30 seconds cache
-    )()
+    })
     if (!restaurant) {
       console.error(`[SECURITY] Restaurant not found for session restaurantId=${session.restaurantId}`)
       return NextResponse.json({ error: 'Restaurant not found' }, { status: 404 })
@@ -53,22 +71,7 @@ export async function GET(request: NextRequest) {
       console.log(`[SETTINGS GET] Fetching settings for restaurantId=${session.restaurantId}, slug=${restaurant.slug}`)
     }
 
-    // Safely access fields that might not exist
-    const restaurantData = restaurant as any
-    
-    // Safely access footerLogoMediaId - may not exist if migration hasn't run
-    const footerLogoMediaId = restaurantData.footerLogoMediaId || null
-
-    // Safely access R2 fields - may not exist if migration hasn't run
-    const getR2Field = (fieldName: string) => {
-      try {
-        return restaurantData[fieldName] || null
-      } catch {
-        return null
-      }
-    }
-
-    const restaurantServiceCharge = (restaurant as any).serviceChargePercent ?? 0
+    const restaurantServiceCharge = restaurant.serviceChargePercent ?? 0
     // Log for debugging
     console.log('[SETTINGS GET] Restaurant ID:', session.restaurantId)
     console.log('[SETTINGS GET] Service charge percent from DB:', restaurantServiceCharge, '(type:', typeof restaurantServiceCharge, ')')
@@ -87,24 +90,24 @@ export async function GET(request: NextRequest) {
       slug: restaurant.slug,
       googleMapsUrl: restaurant.googleMapsUrl || '',
       phoneNumber: restaurant.phoneNumber || '',
-      instagramUrl: (restaurant as any).instagramUrl || null,
-      snapchatUrl: (restaurant as any).snapchatUrl || null,
-      tiktokUrl: (restaurant as any).tiktokUrl || null,
+      instagramUrl: restaurant.instagramUrl || null,
+      snapchatUrl: restaurant.snapchatUrl || null,
+      tiktokUrl: restaurant.tiktokUrl || null,
       serviceChargePercent: restaurantServiceCharge,
       welcomeOverlayColor: restaurant.welcomeOverlayColor,
       welcomeOverlayOpacity: restaurant.welcomeOverlayOpacity,
       welcomeTextEn: restaurant.welcomeTextEn || '',
       logoMediaId: restaurant.logoMediaId,
-      footerLogoMediaId: footerLogoMediaId,
+      footerLogoMediaId: restaurant.footerLogoMediaId || null,
       welcomeBackgroundMediaId: restaurant.welcomeBackgroundMediaId,
-      // R2 fields - safely accessed
-      logoR2Key: getR2Field('logoR2Key'),
-      logoR2Url: getR2Field('logoR2Url'),
-      footerLogoR2Key: getR2Field('footerLogoR2Key'),
-      footerLogoR2Url: getR2Field('footerLogoR2Url'),
-      welcomeBgR2Key: getR2Field('welcomeBgR2Key'),
-      welcomeBgR2Url: getR2Field('welcomeBgR2Url'),
-      welcomeBgMimeType: getR2Field('welcomeBgMimeType'),
+      // R2 fields
+      logoR2Key: restaurant.logoR2Key || null,
+      logoR2Url: restaurant.logoR2Url || null,
+      footerLogoR2Key: restaurant.footerLogoR2Key || null,
+      footerLogoR2Url: restaurant.footerLogoR2Url || null,
+      welcomeBgR2Key: restaurant.welcomeBgR2Key || null,
+      welcomeBgR2Url: restaurant.welcomeBgR2Url || null,
+      welcomeBgMimeType: restaurant.welcomeBgMimeType || null,
     },
     {
       headers: {

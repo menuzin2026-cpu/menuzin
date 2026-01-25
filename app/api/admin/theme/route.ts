@@ -1,8 +1,8 @@
+export const dynamic = "force-dynamic"
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminSession } from '@/lib/auth'
-import { ensureThemeColumns } from '@/lib/ensure-columns'
-import { unstable_cache } from 'next/cache'
 import { z } from 'zod'
 
 const themeSchema = z.object({
@@ -21,22 +21,14 @@ const themeSchema = z.object({
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
   try {
-    // Ensure DB columns exist in production before querying
-    await ensureThemeColumns(prisma)
-    
     const session = await requireAdminSession()
 
-    // Get restaurant by session restaurantId to get its slug - cache for 10 seconds
-    const restaurant = await unstable_cache(
-      async () => {
-        return await prisma.restaurant.findUnique({
-          where: { id: session.restaurantId },
-          select: { id: true, slug: true },
-        })
-      },
-      [`restaurant-theme-${session.restaurantId}`],
-      { revalidate: 10 } // 10 seconds cache
-    )()
+    // Get restaurant by session restaurantId to get its slug
+    // Select only needed fields for better performance
+    const restaurant = await prisma.restaurant.findUnique({
+      where: { id: session.restaurantId },
+      select: { id: true, slug: true },
+    })
     
     if (!restaurant) {
       return NextResponse.json({ error: 'SESSION_RESTAURANT_MISMATCH', message: 'Restaurant not found for session' }, { status: 403 })
@@ -51,16 +43,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'SESSION_RESTAURANT_MISMATCH', message: 'Session restaurant does not match URL restaurant' }, { status: 403 })
     }
 
-    // Cache theme lookup for 30 seconds
-    let theme = await unstable_cache(
-      async () => {
-        return await prisma.theme.findUnique({
-          where: { restaurantId: session.restaurantId },
-        })
+    // Get theme - select only needed fields
+    let theme = await prisma.theme.findUnique({
+      where: { restaurantId: session.restaurantId },
+      select: {
+        id: true,
+        appBg: true,
+        menuBackgroundR2Key: true,
+        menuBackgroundR2Url: true,
+        itemNameTextColor: true,
+        itemPriceTextColor: true,
+        itemDescriptionTextColor: true,
+        bottomNavSectionNameColor: true,
+        categoryNameColor: true,
+        headerFooterBgColor: true,
+        glassTintColor: true,
+        restaurantId: true,
+        createdAt: true,
+        updatedAt: true,
       },
-      [`admin-theme-${session.restaurantId}`],
-      { revalidate: 30 } // 30 seconds cache
-    )()
+    })
 
     // If theme doesn't exist, create it with neutral defaults (don't cache creation)
     if (!theme) {
@@ -72,9 +74,6 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Safely access new fields that may not exist yet
-    const themeResponse = theme as any
-
     const fetchTime = Date.now() - startTime
     if (process.env.NODE_ENV === 'development') {
       console.log(`[PERF] Theme fetch: ${fetchTime}ms`)
@@ -84,15 +83,15 @@ export async function GET(request: NextRequest) {
       { theme: {
         id: theme.id,
         appBg: theme.appBg,
-        menuBackgroundR2Key: themeResponse.menuBackgroundR2Key || null,
-        menuBackgroundR2Url: themeResponse.menuBackgroundR2Url || null,
-        itemNameTextColor: themeResponse.itemNameTextColor || null,
-        itemPriceTextColor: themeResponse.itemPriceTextColor || null,
-        itemDescriptionTextColor: themeResponse.itemDescriptionTextColor || null,
-        bottomNavSectionNameColor: themeResponse.bottomNavSectionNameColor || null,
-        categoryNameColor: themeResponse.categoryNameColor || null,
-        headerFooterBgColor: themeResponse.headerFooterBgColor || null,
-        glassTintColor: themeResponse.glassTintColor || null,
+        menuBackgroundR2Key: theme.menuBackgroundR2Key || null,
+        menuBackgroundR2Url: theme.menuBackgroundR2Url || null,
+        itemNameTextColor: theme.itemNameTextColor || null,
+        itemPriceTextColor: theme.itemPriceTextColor || null,
+        itemDescriptionTextColor: theme.itemDescriptionTextColor || null,
+        bottomNavSectionNameColor: theme.bottomNavSectionNameColor || null,
+        categoryNameColor: theme.categoryNameColor || null,
+        headerFooterBgColor: theme.headerFooterBgColor || null,
+        glassTintColor: theme.glassTintColor || null,
         restaurantId: theme.restaurantId,
         createdAt: theme.createdAt,
         updatedAt: theme.updatedAt,
@@ -137,8 +136,6 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Ensure DB columns exist in production before updating
-    await ensureThemeColumns(prisma)
     
     const session = await requireAdminSession()
 

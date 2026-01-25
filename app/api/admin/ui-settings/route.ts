@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminSession } from '@/lib/auth'
 
-import { unstable_cache } from 'next/cache'
+export const dynamic = "force-dynamic"
 
 // Default values
 const DEFAULT_SETTINGS = {
@@ -28,16 +28,22 @@ export async function GET() {
       return NextResponse.json(DEFAULT_SETTINGS)
     }
 
-    // Get or create UI settings for this restaurant - cache for 30 seconds
-    let settings = await unstable_cache(
-      async () => {
-        return await prisma.uiSettings.findUnique({
-          where: { restaurantId: session.restaurantId },
-        })
+    // Get or create UI settings for this restaurant
+    // Select only needed fields for better performance
+    let settings = await prisma.uiSettings.findUnique({
+      where: { restaurantId: session.restaurantId },
+      select: {
+        sectionTitleSize: true,
+        categoryTitleSize: true,
+        itemNameSize: true,
+        itemDescriptionSize: true,
+        itemPriceSize: true,
+        headerLogoSize: true,
+        bottomNavSectionSize: true,
+        bottomNavCategorySize: true,
+        currency: true,
       },
-      [`admin-ui-settings-${session.restaurantId}`],
-      { revalidate: 30 } // 30 seconds cache
-    )()
+    })
     
     if (!settings) {
       // Create default settings if none exist (don't cache creation, needs to be fresh)

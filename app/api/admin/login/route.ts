@@ -41,28 +41,33 @@ export async function POST(request: NextRequest) {
     // Verify restaurant exists
     const restaurant = await requireRestaurantBySlug(slug)
 
-    // Get admin users for this restaurant only
-    const admins = await prisma.adminUser.findMany({
+    // Get admin users for this restaurant only - select only needed fields for better performance
+    const adminList = await prisma.adminUser.findMany({
       where: {
         restaurantId: restaurant.id,
         isActive: true,
       },
+      select: {
+        id: true,
+        pinHash: true,
+        restaurantId: true,
+      },
     })
 
-    if (admins.length === 0) {
+    if (adminList.length === 0) {
       return NextResponse.json({ error: 'No admin accounts found for this restaurant' }, { status: 404 })
     }
 
     // Try to find an admin with matching PIN (parallelize for performance)
-    const startTime = Date.now()
+    const pinCheckStartTime = Date.now()
     const pinChecks = await Promise.all(
-      admins.map(admin => verifyPin(pin, admin.pinHash))
+      adminList.map(admin => verifyPin(pin, admin.pinHash))
     )
-    const matchedAdmin = admins.find((_, i) => pinChecks[i]) || null
+    const matchedAdmin = adminList.find((_, i) => pinChecks[i]) || null
     const pinCheckTime = Date.now() - startTime
     
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[PERF] Login PIN verification: ${pinCheckTime}ms (${admins.length} admins checked in parallel)`)
+      console.log(`[PERF] Login PIN verification: ${pinCheckTime}ms (${adminList.length} admins checked in parallel)`)
     }
 
     if (!matchedAdmin) {

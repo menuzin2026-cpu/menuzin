@@ -1,34 +1,58 @@
+export const dynamic = "force-dynamic"
+
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAdminSession, SessionExpiredError, deleteAdminSession } from '@/lib/auth'
-import { unstable_cache } from 'next/cache'
 
 export async function GET() {
   const startTime = Date.now()
   try {
     const session = await requireAdminSession()
 
-    // Cache menu data for 30 seconds (admin data changes infrequently)
-    const sections = await unstable_cache(
-      async () => {
-        return await prisma.section.findMany({
+    // Optimize query - select only needed fields
+    const sections = await prisma.section.findMany({
+      where: {
+        restaurantId: session.restaurantId,
+      },
+      select: {
+        id: true,
+        nameKu: true,
+        nameEn: true,
+        nameAr: true,
+        sortOrder: true,
+        isActive: true,
+        categories: {
           where: {
             restaurantId: session.restaurantId,
           },
-          include: {
-            categories: {
+          select: {
+            id: true,
+            nameKu: true,
+            nameEn: true,
+            nameAr: true,
+            imageMediaId: true,
+            imageR2Key: true,
+            imageR2Url: true,
+            sortOrder: true,
+            isActive: true,
+            items: {
               where: {
                 restaurantId: session.restaurantId,
               },
-              include: {
-                items: {
-                  where: {
-                    restaurantId: session.restaurantId,
-                  },
-                  orderBy: {
-                    sortOrder: 'asc',
-                  },
-                },
+              select: {
+                id: true,
+                nameKu: true,
+                nameEn: true,
+                nameAr: true,
+                descriptionKu: true,
+                descriptionEn: true,
+                descriptionAr: true,
+                price: true,
+                imageMediaId: true,
+                imageR2Key: true,
+                imageR2Url: true,
+                sortOrder: true,
+                isActive: true,
               },
               orderBy: {
                 sortOrder: 'asc',
@@ -38,11 +62,12 @@ export async function GET() {
           orderBy: {
             sortOrder: 'asc',
           },
-        })
+        },
       },
-      [`admin-menu-${session.restaurantId}`],
-      { revalidate: 30 } // 30 seconds cache
-    )()
+      orderBy: {
+        sortOrder: 'asc',
+      },
+    })
 
     // Ensure we always return a valid structure
     const normalizedSections = (sections || []).map((section) => ({

@@ -1,6 +1,7 @@
+export const dynamic = "force-dynamic"
+
 import { NextResponse } from 'next/server'
 import { getAdminSession } from '@/lib/auth'
-import { unstable_cache } from 'next/cache'
 
 export async function GET() {
   const startTime = Date.now()
@@ -15,18 +16,13 @@ export async function GET() {
     )
   }
   
-  // Verify restaurant still exists (not deleted) - cache for 10 seconds
+  // Verify restaurant still exists (not deleted)
+  // Select only needed fields for better performance
   const { prisma } = await import('@/lib/prisma')
-  const restaurant = await unstable_cache(
-    async () => {
-      return await prisma.restaurant.findUnique({
-        where: { id: session.restaurantId },
-        select: { id: true, slug: true },
-      })
-    },
-    [`restaurant-check-${session.restaurantId}`],
-    { revalidate: 10 } // 10 seconds cache
-  )()
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: session.restaurantId },
+    select: { id: true, slug: true },
+  })
   
   if (!restaurant) {
     // Restaurant was deleted - clear session and return 404
@@ -43,19 +39,12 @@ export async function GET() {
     console.log(`[PERF] Session check: ${checkTime}ms`)
   }
 
-  return NextResponse.json(
-    { 
-      authenticated: true,
-      restaurantId: session.restaurantId,
-      restaurantSlug: restaurant.slug, // Include slug for validation in auth wrapper
-      adminUserId: session.adminUserId,
-    },
-    {
-      headers: {
-        'Cache-Control': 'private, s-maxage=10, stale-while-revalidate=20',
-      },
-    }
-  )
+  return NextResponse.json({ 
+    authenticated: true,
+    restaurantId: session.restaurantId,
+    restaurantSlug: restaurant.slug, // Include slug for validation in auth wrapper
+    adminUserId: session.adminUserId,
+  })
 }
 
 
