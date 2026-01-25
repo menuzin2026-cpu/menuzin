@@ -258,8 +258,8 @@ export default function MenuBuilderPage() {
       // Sections start collapsed - user clicks to expand
       const fetchTime = performance.now() - startTime
       if (process.env.NODE_ENV === 'development') {
-        const totalItems = normalizedSections.reduce((sum, s) => 
-          sum + s.categories.reduce((catSum, c) => catSum + c.items.length, 0), 0
+        const totalItems = normalizedSections.reduce((sum: number, s: Section) => 
+          sum + s.categories.reduce((catSum: number, c: Category) => catSum + c.items.length, 0), 0
         )
         console.log(`[PERF] Menu fetch (client): ${fetchTime.toFixed(2)}ms (${normalizedSections.length} sections, ${totalItems} items)`)
       }
