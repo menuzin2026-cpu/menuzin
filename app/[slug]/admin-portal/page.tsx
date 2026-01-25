@@ -40,7 +40,7 @@ export default function AdminDashboard() {
             border: '1px solid #D1D5DB',
             borderRadius: '0.75rem',
             padding: '1.5rem',
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06), 0 0 20px rgba(39, 196, 153, 0.3), 0 0 40px rgba(39, 196, 153, 0.15)',
           }}
         >
           <h1 className="text-3xl font-bold" style={{ color: '#0F172A' }}>Admin Dashboard</h1>
