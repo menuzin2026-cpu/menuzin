@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import toast from 'react-hot-toast'
+import { useAdmin } from '../admin-context'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function AdminLoginPage() {
   const [pin, setPin] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const { mutateSession } = useAdmin()
 
   // Fetch logo only for display, not for styling
   useEffect(() => {
@@ -56,6 +58,9 @@ export default function AdminLoginPage() {
           console.log(`[PERF] Login total (client): ${loginTime.toFixed(2)}ms`)
         }
         
+        // Revalidate session cache immediately so auth wrapper doesn't redirect back
+        await mutateSession()
+        
         // Prefetch admin routes for instant navigation
         router.prefetch(`/${slug}/admin-portal`)
         router.prefetch(`/${slug}/admin-portal/menu-builder`)
@@ -64,7 +69,11 @@ export default function AdminLoginPage() {
         router.prefetch(`/${slug}/admin-portal/typography`)
         
         toast.success('Login successful!')
-        router.push(`/${slug}/admin-portal`)
+        
+        // Small delay to ensure session is set before redirect
+        setTimeout(() => {
+          router.push(`/${slug}/admin-portal`)
+        }, 100)
       } else {
         toast.error(data.error || 'Invalid PIN')
       }
