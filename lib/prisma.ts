@@ -92,13 +92,15 @@ if (!globalForPrisma.prisma) {
 
 // Graceful shutdown (development only)
 if (process.env.NODE_ENV !== 'production') {
-  process.on('beforeExit', async () => {
-    try {
-      await prisma.$disconnect()
-    } catch (error) {
-      // Silently handle disconnect errors
-    }
-  })
+  if (typeof process !== 'undefined' && typeof process.on === 'function') {
+    process.on('beforeExit', async () => {
+      try {
+        await prisma.$disconnect()
+      } catch (error) {
+        // Silently handle disconnect errors
+      }
+    })
+  }
 }
 
 
