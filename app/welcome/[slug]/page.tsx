@@ -5,12 +5,13 @@ import WelcomePageClient from './welcome-client'
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
-export default async function WelcomePage({ params }: PageProps) {
+export default async function WelcomePage(props: PageProps) {
+  const params = await props.params;
   const { slug } = params
 
   // Fetch restaurant data server-side

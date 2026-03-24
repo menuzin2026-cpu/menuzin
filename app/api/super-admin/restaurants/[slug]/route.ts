@@ -5,10 +5,8 @@ import { prisma } from '@/lib/prisma'
 import { getSuperAdminSession } from '@/lib/auth'
 import { deleteR2Object, deleteR2ObjectsByPrefix } from '@/lib/r2-client'
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     // Verify super admin authentication
     const isAuthenticated = await getSuperAdminSession()

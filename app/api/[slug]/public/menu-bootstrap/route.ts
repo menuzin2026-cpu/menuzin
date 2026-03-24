@@ -118,10 +118,8 @@ async function fetchBootstrapData(restaurantId: string) {
 // Cached version of fetchBootstrapData
 // Note: unstable_cache needs to be called at module level, so we'll call it in the route handler
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const { slug } = params
     if (!slug) {

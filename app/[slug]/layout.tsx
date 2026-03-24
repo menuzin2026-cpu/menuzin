@@ -7,9 +7,9 @@ export const revalidate = 0
 
 interface LayoutProps {
   children: React.ReactNode
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 // Cached function to get restaurant ID by slug (only caches existence check)
@@ -20,7 +20,13 @@ const getRestaurantIdBySlug = async (slug: string) => {
   })
 }
 
-export default async function SlugLayout({ children, params }: LayoutProps) {
+export default async function SlugLayout(props: LayoutProps) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const { slug } = params
 
   try {

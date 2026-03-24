@@ -19,10 +19,8 @@ const themeSchema = z.object({
   glassTintColor: z.string().nullable().optional(),
 })
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     // Ensure DB columns exist in production before querying
     await ensureThemeColumns(prisma)
@@ -121,10 +119,8 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     // Ensure DB columns exist in production before updating
     await ensureThemeColumns(prisma)

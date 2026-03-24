@@ -5,10 +5,8 @@ import { prisma } from '@/lib/prisma'
 export const revalidate = 30 // Revalidate every 30 seconds
 export const dynamic = 'force-dynamic'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   try {
     const { slug } = params
     const { searchParams } = new URL(request.url)
