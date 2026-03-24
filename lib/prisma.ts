@@ -83,12 +83,29 @@ const createPrismaClient = () => {
  * CRITICAL: In serverless (Vercel), each function invocation could create a new PrismaClient.
  * Using globalThis ensures we reuse the same instance across all invocations.
  */
-export const prisma = globalForPrisma.prisma ?? createPrismaClient()
-
-// Always set global in both dev and production to prevent multiple instances
-if (!globalForPrisma.prisma) {
-  globalForPrisma.prisma = prisma
+/**
+ * Lazy Prisma Client getter - ensures the client is only created when first needed.
+ */
+function getPrisma() {
+  if (globalForPrisma.prisma) {
+    return globalForPrisma.prisma
+  }
+  globalForPrisma.prisma = createPrismaClient()
+  return globalForPrisma.prisma
 }
+
+/**
+ * Lazy Prisma Client Proxy
+ * Ensures the PrismaClient is only instantiated when first accessed.
+ */
+const prismaProxy = new Proxy({} as PrismaClient, {
+  get: (target, prop, receiver) => {
+    const instance = getPrisma()
+    return Reflect.get(instance, prop, receiver)
+  }
+})
+
+export const prisma = prismaProxy
 
 // Graceful shutdown (development only)
 if (process.env.NODE_ENV !== 'production') {
