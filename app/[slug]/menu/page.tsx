@@ -506,6 +506,14 @@ function MenuPageContent() {
 
     // Fetch menu data with progressive loading (bootstrap first, then full menu)
     const fetchMenu = async (retryCount = 0) => {
+      // Defensive check for missing slug
+      if (!slug || slug === 'undefined' || slug === '') {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Skipping fetchMenu: slug is missing or empty')
+        }
+        setIsLoadingMenu(false)
+        return
+      }
       try {
         // First, try to get bootstrap data (fast, cached) for immediate structure
         try {
@@ -748,6 +756,14 @@ function MenuPageContent() {
     const abortController = new AbortController()
     
     const fetchUiSettings = () => {
+      // Defensive check for missing slug
+      if (!slug || slug === 'undefined' || slug === '') {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Skipping fetchUiSettings: slug is missing or empty')
+        }
+        return
+      }
+
       // Add timestamp to bypass any cache and ensure instant update
       fetch(`/api/ui-settings?slug=${encodeURIComponent(slug)}&t=${Date.now()}`, {
         cache: 'no-store',

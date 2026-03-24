@@ -43,7 +43,14 @@ export async function GET(request: NextRequest) {
 
     // Validate query parameters
     const validation = querySchema.safeParse(query)
-    if (!validation.success || (!query.slug && !query.restaurantId)) {
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid parameters: ' + validation.error.message },
+        { status: 400 }
+      )
+    }
+
+    if (!query.slug && !query.restaurantId) {
       return NextResponse.json(
         { error: 'Either slug or restaurantId parameter is required' },
         { status: 400 }
