@@ -85,5 +85,3 @@ export default function SuperAdminLoginPage() {
 }
 
 
-
-export const runtime = 'edge';

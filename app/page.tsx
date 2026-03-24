@@ -4,5 +4,3 @@ export default function Page() {
   notFound();
 }
 
-
-export const runtime = 'edge';

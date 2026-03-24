@@ -9,5 +9,3 @@ export default function SuperAdminLayout({
 }
 
 
-
-export const runtime = 'edge';

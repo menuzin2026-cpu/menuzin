@@ -99,10 +99,3 @@ export function ThemeScript() {
 
   return <script dangerouslySetInnerHTML={{ __html: themeScript }} />;
 }
-
-
-
-
-
-
-export const runtime = 'edge';
