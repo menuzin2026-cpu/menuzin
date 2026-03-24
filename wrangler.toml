@@ -6,8 +6,6 @@ compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".open-next"
 
 [vars]
-# Non-secret R2 Metadata (Secrets like Keys are in Cloudflare Dashboard)
+# Non-secret R2 Metadata (Secrets like Keys and Endpoints are already in Cloudflare Dashboard)
 R2_ACCOUNT_ID = "60cc949e4c90a00e296962f3fad0530b"
 R2_BUCKET_NAME = "menuzin-assets"
-R2_ENDPOINT = "https://60cc949e4c90a00e296962f3fad0530b.r2.cloudflarestorage.com"
-R2_PUBLIC_BASE_URL = "https://pub-9cd3003b9b9d4cb28be12c9edf1b82cb.r2.dev"
