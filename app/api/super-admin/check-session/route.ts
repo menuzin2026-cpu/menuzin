@@ -11,3 +11,6 @@ export async function GET() {
   return NextResponse.json({ authenticated: false }, { status: 401 })
 }
 
+
+
+export const runtime = 'edge';

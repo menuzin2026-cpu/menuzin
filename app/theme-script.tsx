@@ -103,3 +103,6 @@ export function ThemeScript() {
 
 
 
+
+
+export const runtime = 'edge';

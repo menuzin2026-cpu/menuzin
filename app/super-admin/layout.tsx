@@ -8,3 +8,6 @@ export default function SuperAdminLayout({
   return <SuperAdminAuthWrapper>{children}</SuperAdminAuthWrapper>
 }
 
+
+
+export const runtime = 'edge';

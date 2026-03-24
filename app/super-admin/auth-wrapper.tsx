@@ -41,3 +41,6 @@ export function SuperAdminAuthWrapper({
   return <>{children}</>
 }
 
+
+
+export const runtime = 'edge';

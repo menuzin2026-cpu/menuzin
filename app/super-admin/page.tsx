@@ -802,3 +802,6 @@ export default function SuperAdminPage() {
   )
 }
 
+
+
+export const runtime = 'edge';

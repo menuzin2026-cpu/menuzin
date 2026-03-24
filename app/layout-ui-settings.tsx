@@ -58,3 +58,6 @@ export async function getUiSettings() {
   return uiSettings
 }
 
+
+
+export const runtime = 'edge';
