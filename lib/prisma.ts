@@ -107,18 +107,7 @@ const prismaProxy = new Proxy({} as PrismaClient, {
 
 export const prisma = prismaProxy
 
-// Graceful shutdown (development only)
-if (process.env.NODE_ENV !== 'production') {
-  if (typeof process !== 'undefined' && typeof process.on === 'function') {
-    process.on('beforeExit', async () => {
-      try {
-        await prisma.$disconnect()
-      } catch (error) {
-        // Silently handle disconnect errors
-      }
-    })
-  }
-}
+// Note: Graceful shutdown (process.on) is disabled for Edge/Cloudflare compatibility
 
 
 
